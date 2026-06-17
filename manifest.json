@@ -1,0 +1,46 @@
+{
+  "name": "保險銷售視覺化培訓系統",
+  "short_name": "保險培訓",
+  "description": "持牌保險從業員內部培訓工具 — 產品對比、保費融資精算、客戶備忘錄生成",
+  "lang": "zh-Hant",
+  "dir": "ltr",
+  "start_url": "./index.html?source=pwa",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f0f4ff",
+  "theme_color": "#1a5fb4",
+  "categories": ["business", "finance", "education"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "保費融資計算",
+      "short_name": "融資",
+      "url": "./index.html?scene=2"
+    },
+    {
+      "name": "同步最新數據",
+      "short_name": "同步",
+      "url": "./index.html?action=sync"
+    }
+  ]
+}

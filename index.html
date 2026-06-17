@@ -3,10 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>保險銷售視覺化培訓系統 v1.0</title>
+  <title>保險銷售視覺化培訓系統 v2.0</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- PWA 基礎 -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#1a5fb4" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="保險培訓" />
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
@@ -20,11 +30,17 @@
       <span class="brand-icon">🛡</span>
       <div>
         <h1>保險銷售培訓系統</h1>
-        <p>Insurance Sales Visualisation Tool <span class="version-tag">v1.0</span></p>
+        <p>Insurance Sales Visualisation Tool <span class="version-tag">v2.0</span></p>
       </div>
     </div>
     <div class="header-meta">
       <span id="current-time" class="time-display"></span>
+      <!-- v2.0 數據同步面板 -->
+      <div class="sync-panel">
+        <span class="sync-status" id="sync-status">v<span id="sync-version">--</span></span>
+        <button class="btn-sync" id="btn-sync" onclick="syncData()" title="檢查並同步最新數據">🔄</button>
+        <button class="btn-token" id="btn-token" onclick="openTokenModal()" title="設定 GitHub Token">⚙️</button>
+      </div>
     </div>
   </div>
 </header>
@@ -356,10 +372,40 @@
 
 <footer class="app-footer">
   <p>⚠️ 本系統僅供持牌保險從業員內部培訓使用，所有數據計算僅供參考，不構成任何投保或財務建議。</p>
-  <p>Insurance Sales Training Tool v1.0 · 所有精算數據請以正式計劃書為準</p>
+  <p>Insurance Sales Training Tool v2.0 · 所有精算數據請以正式計劃書為準</p>
 </footer>
 
+<!-- v2.0 Token 輸入 Modal -->
+<div class="modal-overlay" id="token-modal" style="display:none;">
+  <div class="modal-card">
+    <h3>🔑 設定 GitHub Access Token</h3>
+    <p class="modal-desc">
+      輸入您的 GitHub Personal Access Token 以同步最新產品數據。<br>
+      建議使用 Fine-grained PAT，僅授予 <code>contents:read</code> 權限。
+    </p>
+    <input type="password" id="token-input" class="input-field"
+           placeholder="github_pat_xxxx... 或 ghp_xxxx..." />
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeTokenModal()">取消</button>
+      <button class="btn btn-primary" onclick="saveTokenAndSync()">儲存並同步</button>
+    </div>
+    <p class="hint-text">⚠ Token 僅儲存於本機 localStorage，不會上傳任何伺服器。</p>
+    <p class="hint-text">📋 <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener">按此建立 Token</a> · 請勾選 <code>repo</code> 權限</p>
+  </div>
+</div>
+
+<script src="sync.js"></script>
 <script src="data.js"></script>
 <script src="app.js"></script>
+<script>
+  /* Service Worker 註冊 */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./service-worker.js')
+        .then(reg => console.log('✅ SW registered:', reg.scope))
+        .catch(err => console.warn('⚠ SW failed:', err));
+    });
+  }
+</script>
 </body>
 </html>

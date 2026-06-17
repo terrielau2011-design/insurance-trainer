@@ -83,6 +83,128 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
+/* ═══ SYNC PANEL (v2.0) ═══ */
+.header-meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.sync-panel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255,255,255,.12);
+  padding: 0.3rem 0.6rem;
+  border-radius: 20px;
+}
+
+.sync-status {
+  font-size: 0.75rem;
+  color: rgba(255,255,255,.9);
+  font-variant-numeric: tabular-nums;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.btn-sync, .btn-token {
+  background: rgba(255,255,255,.2);
+  border: none;
+  color: #fff;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition);
+}
+
+.btn-sync:hover, .btn-token:hover {
+  background: rgba(255,255,255,.35);
+  transform: scale(1.1);
+}
+
+.btn-sync:disabled {
+  cursor: not-allowed;
+}
+
+/* ═══ TOKEN MODAL (v2.0) ═══ */
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,.5);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn .2s ease;
+}
+
+.modal-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  max-width: 460px;
+  width: 90%;
+  box-shadow: var(--shadow-lg);
+  animation: slideUp .25s ease;
+}
+
+.modal-card h3 {
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  color: var(--text-primary);
+}
+
+.modal-desc {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.modal-desc code, .hint-text code {
+  background: var(--surface-3);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.78rem;
+}
+
+.modal-card .input-field {
+  margin-bottom: 1rem;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.modal-card .hint-text {
+  margin-top: 0.75rem;
+}
+
+.modal-card a {
+  color: var(--primary);
+  text-decoration: none;
+}
+.modal-card a:hover { text-decoration: underline; }
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 /* ═══ MAIN LAYOUT ═══ */
 .app-main {
   max-width: 1280px;

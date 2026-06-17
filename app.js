@@ -1,11 +1,12 @@
 /**
  * ════════════════════════════════════════════════════════════
  * app.js — 核心應用邏輯
- * 保險銷售視覺化培訓系統 v1.0
+ * 保險銷售視覺化培訓系統 v2.0
  *
  * 依賴：
  *   - Chart.js (CDN)
- *   - data.js (productList, bankList, appConfig)
+ *   - data.js (productList, bankList, appConfig, initData)
+ *   - sync.js (syncData, initSync, openTokenModal 等)
  * ════════════════════════════════════════════════════════════
  */
 
@@ -31,15 +32,42 @@ let chartComparison   = null;
 /* ══════════════════════════════════════════
    2. 初始化
 ══════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   initClock();
+
+  /* v2.0: 初始化同步面板 */
+  if (typeof initSync === 'function') {
+    initSync();
+  }
+
+  /* v2.0: 載入產品數據（localStorage 快取 → 預設 JSON） */
+  if (typeof initData === 'function') {
+    await initData();
+  }
+
+  /* 數據載入完成後初始化 UI */
+  onDataReady();
+});
+
+/* 數據準備完成後的 UI 初始化（可被 data.js 回調或 sync.js 重新觸發） */
+function onDataReady() {
   initProductList();
   initBankList();
   initCharts();
   initPrivilegesWall();
   calcScene1();
   calcScene2();
-});
+}
+
+/* v2.0: 同步後刷新所有 UI */
+function refreshAllUI() {
+  initProductList();
+  initBankList();
+  updateWealthChart();
+  updateSafetyPie();
+  updateDualReturnChart();
+  updateComparisonSection();
+}
 
 /* 頁頭時鐘 */
 function initClock() {
@@ -864,13 +892,12 @@ function getProductById(id) {
   return productList.find(p => p.id === id) || null;
 }
 
-/* 獲取產品的基準保費單位（policyData 中第一年 principal）*/
+/* 獲取產品的基準保費單位（policyData 中第一年 premiumPaid）*/
+/* v2.0: principal → premiumPaid 欄位名變更 */
 function getBasePremiumUnit(prod) {
   if (!prod || !prod.policyData || prod.policyData.length === 0) return 1;
-  return prod.policyData[prod.policyData.length <= 2
-    ? 0
-    : prod.policyData.findIndex(d => d.year === 1)
-  ]?.principal || prod.policyData[0].principal || 1;
+  const y1 = prod.policyData.find(d => d.year === 1) || prod.policyData[0];
+  return y1?.premiumPaid || y1?.principal || 1;  /* 向後兼容 v1.0 */
 }
 
 /* 線性插值獲取任意年度的精算數據 */
@@ -896,7 +923,9 @@ function getPolicyDataAtYear(prod, targetYear) {
   const t = (targetYear - before.year) / (after.year - before.year);
   return {
     year: targetYear,
-    principal:            lerp(before.principal,            after.principal,            t),
+    /* v2.0: 支援 premiumPaid（新）和 principal（舊）雙欄位名 */
+    premiumPaid:         lerp(before.premiumPaid ?? before.principal ?? 0,         after.premiumPaid ?? after.principal ?? 0,         t),
+    principal:           lerp(before.premiumPaid ?? before.principal ?? 0,         after.premiumPaid ?? after.principal ?? 0,         t),
     guaranteedCV:         lerp(before.guaranteedCV,         after.guaranteedCV,         t),
     nonGuaranteedBonus:   lerp(before.nonGuaranteedBonus,   after.nonGuaranteedBonus,   t)
   };
@@ -915,10 +944,11 @@ function getInterpolatedData(prod, maxYear, ratio = 1) {
     const d = getPolicyDataAtYear(prod, yr);
     return d ? {
       year: yr,
-      principal:          d.principal          * ratio,
+      premiumPaid:        (d.premiumPaid ?? d.principal ?? 0) * ratio,
+      principal:          (d.premiumPaid ?? d.principal ?? 0) * ratio,
       guaranteedCV:       d.guaranteedCV        * ratio,
       nonGuaranteedBonus: d.nonGuaranteedBonus  * ratio
-    } : { year: yr, principal: 0, guaranteedCV: 0, nonGuaranteedBonus: 0 };
+    } : { year: yr, premiumPaid: 0, principal: 0, guaranteedCV: 0, nonGuaranteedBonus: 0 };
   });
 }
 

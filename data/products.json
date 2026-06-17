@@ -1,0 +1,174 @@
+{
+  "version": "2.0.0",
+  "lastUpdated": "2025-06-17",
+  "config": {
+    "currencySymbols": {
+      "HKD": "HK$",
+      "USD": "US$",
+      "RMB": "¥"
+    },
+    "productCategories": ["分紅儲蓄", "多元貨幣", "可融資", "人壽保障"],
+    "banks": [
+      {
+        "id": "bank_gdb",
+        "name": "廣發銀行香港分行",
+        "maxLTV": 95,
+        "baseRate": "P - 2.5%",
+        "minAmount": 500000
+      },
+      {
+        "id": "bank_hsbc",
+        "name": "匯豐銀行 HSBC",
+        "maxLTV": 90,
+        "baseRate": "P - 2.5%",
+        "minAmount": 500000
+      },
+      {
+        "id": "bank_bochk",
+        "name": "中銀香港 BOCHK",
+        "maxLTV": 85,
+        "baseRate": "H + 1.8%",
+        "minAmount": 300000
+      },
+      {
+        "id": "bank_hangseng",
+        "name": "恒生銀行 Hang Seng",
+        "maxLTV": 80,
+        "baseRate": "P - 2.0%",
+        "minAmount": 500000
+      }
+    ]
+  },
+  "products": [
+    {
+      "id": "feng_sheng_ren_sheng",
+      "name": "豐盛人生儲蓄計劃",
+      "category": "分紅儲蓄",
+      "currency": "HKD",
+      "payTerms": [5, 10, 15, 20],
+      "isFinanceable": false,
+      "highlights": [
+        { "icon": "💰", "title": "高達 30% 首年折扣", "desc": "有效降低入場門檻，首年保費折後更抵買，提升客戶投保意願。" },
+        { "icon": "📈", "title": "長線分紅持續增值", "desc": "非保證分紅歷史實現率達 95% 以上，長期複利回報可觀。" },
+        { "icon": "🎁", "title": "多重會員禮遇", "desc": "指定保費門檻自動解鎖尊尚體檢、高球、機場接送等專屬權益。" },
+        { "icon": "🏦", "title": "保證現金價值穩健", "desc": "首 10 年保證現金價值達投入本金 102%，安全感十足。" },
+        { "icon": "🔄", "title": "靈活提取安排", "desc": "第 3 年起支援部分提款，資金流動性高，應急無需清盤。" }
+      ],
+      "discounts": {
+        "firstYear": { "maxPercent": 30, "defaultPercent": 25 },
+        "product": { "renewalPercent": 5, "defaultPercent": 5, "maxPercent": 15 }
+      },
+      "privileges": [
+        { "threshold": 50000,   "icon": "🏥", "name": "星級體檢禮遇" },
+        { "threshold": 100000,  "icon": "🚗", "name": "機場或高鐵站接送" },
+        { "threshold": 200000,  "icon": "💻", "name": "線上問診" },
+        { "threshold": 500000,  "icon": "📋", "name": "第二醫療資訊" },
+        { "threshold": 1000000, "icon": "🟢", "name": "綠色通道" }
+      ],
+      "policyData": [
+        { "year": 1,  "premiumPaid": 100000, "guaranteedCV": 62000,   "nonGuaranteedBonus": 1500 },
+        { "year": 2,  "premiumPaid": 200000, "guaranteedCV": 128000,  "nonGuaranteedBonus": 4200 },
+        { "year": 3,  "premiumPaid": 300000, "guaranteedCV": 198000,  "nonGuaranteedBonus": 8100 },
+        { "year": 4,  "premiumPaid": 400000, "guaranteedCV": 271000,  "nonGuaranteedBonus": 13500 },
+        { "year": 5,  "premiumPaid": 500000, "guaranteedCV": 348000,  "nonGuaranteedBonus": 20800 },
+        { "year": 6,  "premiumPaid": 500000, "guaranteedCV": 378000,  "nonGuaranteedBonus": 30200 },
+        { "year": 7,  "premiumPaid": 500000, "guaranteedCV": 409000,  "nonGuaranteedBonus": 41500 },
+        { "year": 8,  "premiumPaid": 500000, "guaranteedCV": 442000,  "nonGuaranteedBonus": 55000 },
+        { "year": 9,  "premiumPaid": 500000, "guaranteedCV": 477000,  "nonGuaranteedBonus": 70200 },
+        { "year": 10, "premiumPaid": 500000, "guaranteedCV": 513000,  "nonGuaranteedBonus": 87500 },
+        { "year": 15, "premiumPaid": 500000, "guaranteedCV": 660000,  "nonGuaranteedBonus": 208300 },
+        { "year": 20, "premiumPaid": 500000, "guaranteedCV": 842000,  "nonGuaranteedBonus": 410000 },
+        { "year": 25, "premiumPaid": 500000, "guaranteedCV": 1074000, "nonGuaranteedBonus": 731500 },
+        { "year": 30, "premiumPaid": 500000, "guaranteedCV": 1370000, "nonGuaranteedBonus": 1225000 }
+      ]
+    },
+    {
+      "id": "fu_ying_chuan_cheng",
+      "name": "富盈傳承儲蓄計劃",
+      "category": "多元貨幣",
+      "currency": "USD",
+      "payTerms": [5, 10, 20],
+      "isFinanceable": false,
+      "highlights": [
+        { "icon": "🌍", "title": "美元保單抗匯率風險", "desc": "以美元計價，對沖港元貶值風險，適合有海外資產配置需求客戶。" },
+        { "icon": "📊", "title": "長期 IRR 達 6.5%", "desc": "於第 15 年突破保費回本，長期持有複利倍增。" },
+        { "icon": "🔒", "title": "保證現金價值穩健", "desc": "首 20 年保證現金價值達投入本金 120%，安全感十足。" },
+        { "icon": "💱", "title": "多貨幣轉換功能", "desc": "支援美元、港元、人民幣自由轉換，靈活應對環球資產配置。" },
+        { "icon": "👨‍👩‍👧", "title": "無限次更換受保人", "desc": "支援保單延續至下一代，實現跨代財富傳承。" }
+      ],
+      "discounts": {
+        "firstYear": { "maxPercent": 25, "defaultPercent": 20 },
+        "product": { "renewalPercent": 3, "defaultPercent": 3, "maxPercent": 10 }
+      },
+      "privileges": [
+        { "threshold": 30000,  "icon": "🏥", "name": "星級體檢禮遇" },
+        { "threshold": 60000,  "icon": "✈️", "name": "機場貴賓室" },
+        { "threshold": 150000, "icon": "🏨", "name": "星級酒店甜品券" },
+        { "threshold": 300000, "icon": "📋", "name": "第二醫療資訊" },
+        { "threshold": 500000, "icon": "👑", "name": "私人財富顧問" }
+      ],
+      "policyData": [
+        { "year": 1,  "premiumPaid": 10000, "guaranteedCV": 6200,  "nonGuaranteedBonus": 200 },
+        { "year": 2,  "premiumPaid": 20000, "guaranteedCV": 12900, "nonGuaranteedBonus": 600 },
+        { "year": 3,  "premiumPaid": 30000, "guaranteedCV": 20000, "nonGuaranteedBonus": 1300 },
+        { "year": 5,  "premiumPaid": 50000, "guaranteedCV": 35200, "nonGuaranteedBonus": 4000 },
+        { "year": 10, "premiumPaid": 50000, "guaranteedCV": 52300, "nonGuaranteedBonus": 19700 },
+        { "year": 15, "premiumPaid": 50000, "guaranteedCV": 67000, "nonGuaranteedBonus": 48000 },
+        { "year": 20, "premiumPaid": 50000, "guaranteedCV": 86000, "nonGuaranteedBonus": 98000 },
+        { "year": 25, "premiumPaid": 50000, "guaranteedCV": 110000,"nonGuaranteedBonus": 182000 },
+        { "year": 30, "premiumPaid": 50000, "guaranteedCV": 140000,"nonGuaranteedBonus": 310000 }
+      ]
+    },
+    {
+      "id": "rong_zi_zhuan_cheng",
+      "name": "融資傳承儲蓄計劃",
+      "category": "可融資",
+      "currency": "HKD",
+      "payTerms": [3, 5],
+      "isFinanceable": true,
+      "firstDayCVRatio": 0.7869,
+      "highlights": [
+        { "icon": "⚖️", "title": "保費融資最優選", "desc": "首日現金價值高達總保費 78.7%，作抵押品時融資成數可達 95%，槓桿效益最大化。" },
+        { "icon": "🚀", "title": "正常環境年單利 18.9%", "desc": "基準利率 3.275% 環境下，第 9 年總回報達 170%，平均年度化單利 18.9%。" },
+        { "icon": "🛡", "title": "最壞環境仍保 15.6% 年單利", "desc": "封頂利率情景下，第 9 年總回報仍達 140.7%，年單利 15.6%，下行風險可控。" },
+        { "icon": "🏦", "title": "銀行貸款手續費僅 2%", "desc": "貸款手續費率低至 2%，預計貸款年期 9 年（上限 10 年），資金成本透明。" },
+        { "icon": "💎", "title": "資產安全結構比率高", "desc": "保證現金價值佔保單總價值比重高，NAV 穩健，適合高淨值客戶傳承規劃。" }
+      ],
+      "discounts": {
+        "firstYear": { "maxPercent": 25, "defaultPercent": 12.5 },
+        "product": { "renewalPercent": 0, "defaultPercent": 0, "maxPercent": 0 }
+      },
+      "privileges": [
+        { "threshold": 300000,  "icon": "🏥", "name": "尊尚體檢" },
+        { "threshold": 600000,  "icon": "🚗", "name": "機場或高鐵站接送" },
+        { "threshold": 1000000, "icon": "📋", "name": "第二醫療資訊" },
+        { "threshold": 3000000, "icon": "🟢", "name": "綠色通道" },
+        { "threshold": 5000000, "icon": "👥", "name": "導醫導診或陪診服務" }
+      ],
+      "policyData": [
+        { "year": 1,  "premiumPaid": 600000, "guaranteedCV": 480000, "nonGuaranteedBonus": 5000 },
+        { "year": 2,  "premiumPaid": 600000, "guaranteedCV": 510000, "nonGuaranteedBonus": 20000 },
+        { "year": 3,  "premiumPaid": 600000, "guaranteedCV": 540000, "nonGuaranteedBonus": 38000 },
+        { "year": 4,  "premiumPaid": 600000, "guaranteedCV": 570000, "nonGuaranteedBonus": 60000 },
+        { "year": 5,  "premiumPaid": 600000, "guaranteedCV": 600000, "nonGuaranteedBonus": 85000 },
+        { "year": 6,  "premiumPaid": 600000, "guaranteedCV": 620000, "nonGuaranteedBonus": 98000 },
+        { "year": 7,  "premiumPaid": 600000, "guaranteedCV": 640000, "nonGuaranteedBonus": 110000 },
+        { "year": 8,  "premiumPaid": 600000, "guaranteedCV": 660000, "nonGuaranteedBonus": 125000 },
+        { "year": 9,  "premiumPaid": 600000, "guaranteedCV": 680000, "nonGuaranteedBonus": 140449 },
+        { "year": 10, "premiumPaid": 600000, "guaranteedCV": 705000, "nonGuaranteedBonus": 165000 },
+        { "year": 15, "premiumPaid": 600000, "guaranteedCV": 850000, "nonGuaranteedBonus": 320000 },
+        { "year": 20, "premiumPaid": 600000, "guaranteedCV": 1050000,"nonGuaranteedBonus": 580000 },
+        { "year": 25, "premiumPaid": 600000, "guaranteedCV": 1300000,"nonGuaranteedBonus": 950000 },
+        { "year": 30, "premiumPaid": 600000, "guaranteedCV": 1620000,"nonGuaranteedBonus": 1500000 }
+      ],
+      "financing": {
+        "loanFeeRate": 2.0,
+        "defaultLoanTerm": 9,
+        "maxLoanTerm": 10,
+        "defaultLTV": 95,
+        "benchmarkRate": 3.275,
+        "capRate": 4.5
+      }
+    }
+  ]
+}
