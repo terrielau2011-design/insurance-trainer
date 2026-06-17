@@ -59,12 +59,21 @@
     </div>
 
     <div class="hook-grid">
-      <!-- 產品選擇區 -->
+      <!-- 產品選擇區 + 貨幣切換 -->
       <div class="product-selector-area">
         <label class="field-label">選擇產品</label>
         <div class="product-list" id="product-list">
           <!-- 由 JS 動態渲染 -->
         </div>
+
+        <!-- v2.1 貨幣切換下拉選單 -->
+        <div class="input-group" style="margin-top:0.75rem;">
+          <label class="field-label">顯示貨幣</label>
+          <select id="currency-selector" class="select-field" onchange="onCurrencyChange()">
+            <!-- 由 JS 根據產品 supportedCurrencies 動態渲染 -->
+          </select>
+        </div>
+
         <p class="hint-text">💡 勾選多個產品可啟動跨產品對比模式</p>
       </div>
 
@@ -534,20 +543,21 @@
     </div>
   </section>
 
-  <!-- v2.0 官方計劃書離線存檔庫 -->
+  <!-- v2.1 官方計劃書離線存檔庫（連動當前產品） -->
   <section class="section-card" id="section-brochures">
     <div class="section-header">
       <span class="section-badge">📚</span>
       <h2>官方計劃書存檔庫</h2>
       <span class="section-tag">Brochures</span>
-      <button class="btn btn-secondary" style="margin-left:auto; padding:0.4rem 0.8rem; font-size:0.8rem;"
-              onclick="loadBrochuresList()" id="btn-load-brochures">
-        🔄 載入計劃書
-      </button>
     </div>
+    <p class="chart-hint" id="brochures-hint">選擇產品後，這裡會顯示對應的官方 PDF 說明書。點擊下方按鈕從 GitHub 同步。</p>
     <div id="brochures-list" class="brochures-grid">
-      <p class="hint-text">點擊「載入計劃書」從 GitHub 倉庫同步官方 PDF 說明書至本地，支援離線查閱。</p>
+      <p class="hint-text">📄 當前產品的官方計劃書將在此顯示。點擊「載入計劃書」從 GitHub 倉庫同步。</p>
     </div>
+    <button class="btn btn-secondary" style="margin-top:0.75rem; padding:0.4rem 0.8rem; font-size:0.8rem;"
+            onclick="loadBrochuresList()" id="btn-load-brochures">
+      🔄 載入全部計劃書
+    </button>
   </section>
 
 </main>

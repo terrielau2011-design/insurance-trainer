@@ -23,6 +23,7 @@ const state = {
   s2Results:        {},       // 場景二計算結果
   advisorTags:      [],       // v2.0 顧問標籤
   financeEnabled:   true,     // v2.0 融資開關
+  displayCurrency:  null,     // v2.1 當前顯示貨幣（可跨產品切換）
 };
 
 /* Chart.js 實例 */
@@ -60,6 +61,7 @@ function onDataReady() {
   calcScene1();
   calcScene2();
   updateOpportunityTable();  /* v2.0 Phase 4 */
+  updateBrochureForProduct();  /* v2.1 */
 }
 
 /* v2.0: 同步後刷新所有 UI */
@@ -70,6 +72,8 @@ function refreshAllUI() {
   updateSafetyPie();
   updateDualReturnChart();
   updateComparisonSection();
+  updateOpportunityTable();
+  updateBrochureForProduct();
 }
 
 /* 頁頭時鐘 */
@@ -156,24 +160,63 @@ function handleProductSelect(evt, prodId) {
   updateProductCurrencyHints();
   updatePayTermOptions();
   updateComparisonSection();
+  updateBrochureForProduct();  /* v2.1: 連動 brochures */
   calcScene1();
   calcScene2();
 }
 
-/* v2.0：更新幣別提示 */
+/* v2.0：更新幣別提示 + v2.1 貨幣切換下拉選單 */
 function updateProductCurrencyHints() {
   const prod = getProductById(state.primaryProduct);
   if (!prod) return;
-  const sym = appConfig.currencySymbols[prod.currency] || 'HK$';
+
+  /* v2.1：渲染貨幣下拉選單 */
+  const supportedCurrencies = prod.supportedCurrencies || [prod.currency];
+  const sel = document.getElementById('currency-selector');
+  if (sel) {
+    sel.innerHTML = '';
+    supportedCurrencies.forEach(cur => {
+      const opt = document.createElement('option');
+      opt.value = cur;
+      const sym = appConfig.currencySymbols[cur] || cur;
+      opt.textContent = `${cur} (${sym})`;
+      sel.appendChild(opt);
+    });
+
+    /* 若當前 displayCurrency 在支援列表中，保持選中；否則用產品預設 */
+    if (state.displayCurrency && supportedCurrencies.includes(state.displayCurrency)) {
+      sel.value = state.displayCurrency;
+    } else {
+      state.displayCurrency = prod.currency;
+      sel.value = prod.currency;
+    }
+  }
+
+  /* 更新所有幣別提示文字 */
+  const cur = state.displayCurrency || prod.currency;
+  const sym = appConfig.currencySymbols[cur] || 'HK$';
   const hint1 = document.getElementById('s1-currency-hint');
   const hint2 = document.getElementById('s2-currency-hint');
   const hintPT = document.getElementById('s1-payterm-hint');
   if (hint1) hint1.textContent = `(${sym})`;
   if (hint2) hint2.textContent = `(${sym})`;
-  if (hintPT) hintPT.textContent = `· ${prod.currency}`;
+  if (hintPT) hintPT.textContent = `· ${cur}`;
 }
 
-/* v2.0：根據產品 payTerms 動態渲染繳費年期選項 */
+/* v2.1：貨幣切換處理 */
+function onCurrencyChange() {
+  const sel = document.getElementById('currency-selector');
+  if (sel) {
+    state.displayCurrency = sel.value;
+  }
+  /* 重新渲染所有 UI */
+  updateProductCurrencyHints();
+  calcScene1();
+  calcScene2();
+  updateOpportunityTable();
+}
+
+/* v2.0：根據產品 payTerms 動態渲染繳費年期選項 + v2.1 躉繳標籤 */
 function updatePayTermOptions() {
   const prod = getProductById(state.primaryProduct);
   if (!prod) return;
@@ -189,8 +232,14 @@ function updatePayTermOptions() {
     radio.value = term;
     radio.onchange = calcScene1;
     if (idx === 0) radio.checked = true;
+
+    /* v2.1：使用 payTermLabels 顯示自訂標籤（如「躉繳」「2年繳」）*/
+    const labelText = (prod.payTermLabels && prod.payTermLabels[String(term)])
+      ? prod.payTermLabels[String(term)]
+      : `${term}年`;
+
     label.appendChild(radio);
-    label.appendChild(document.createTextNode(` ${term}年`));
+    label.appendChild(document.createTextNode(` ${labelText}`));
     container.appendChild(label);
   });
 }
@@ -277,7 +326,7 @@ function calcScene1() {
   };
 
   const prod = getProductById(state.primaryProduct);
-  const sym  = prod ? appConfig.currencySymbols[prod.currency] : 'HK$';
+  const sym  = prod ? (appConfig.currencySymbols[state.displayCurrency || prod.currency] || 'HK$') : 'HK$';
 
   document.getElementById('s1-net-total').textContent = `${sym} ${fmt(netTotal)}`;
   document.getElementById('s1-net-breakdown').textContent =
@@ -311,7 +360,7 @@ function calcScene2() {
   const loanTermYears = Math.min(10, parseInt(document.getElementById('s2-loan-term').value) || 9);
 
   const prod = getProductById(state.primaryProduct);
-  const sym  = prod ? appConfig.currencySymbols[prod.currency] : 'HK$';
+  const sym  = prod ? (appConfig.currencySymbols[state.displayCurrency || prod.currency] || 'HK$') : 'HK$';
 
   /* ── v2.0 公式鏈 ── */
 
@@ -1009,7 +1058,7 @@ function generateReport() {
   const s1 = state.s1Results;
   const s2 = state.s2Results;
   const prod = getProductById(state.primaryProduct);
-  const sym  = prod ? appConfig.currencySymbols[prod.currency] : 'HK$';
+  const sym  = prod ? (appConfig.currencySymbols[state.displayCurrency || prod.currency] || 'HK$') : 'HK$';
   const now = new Date().toLocaleString('zh-HK');
   const intro = generateAdvisorIntro();
 
@@ -1198,7 +1247,7 @@ function printReport() {
   window.print();
 }
 
-/* v2.0 計劃書存檔庫載入 */
+/* v2.1 計劃書存檔庫載入 */
 async function loadBrochuresList() {
   const container = document.getElementById('brochures-list');
   const btn = document.getElementById('btn-load-brochures');
@@ -1229,7 +1278,7 @@ async function loadBrochuresList() {
     const resp = await fetch(apiUrl, { headers });
 
     if (!resp.ok) {
-      container.innerHTML = '<p class="hint-text">📂 brochures/ 資料夾暫無 PDF 說明書。培訓員可上傳 PDF 至 GitHub 倉庫的 brochures/ 資料夾。</p>';
+      updateBrochureForProduct();  /* 回退到當前產品提示 */
       btn.disabled = false;
       return;
     }
@@ -1238,7 +1287,7 @@ async function loadBrochuresList() {
     const pdfFiles = files.filter(f => f.name.endsWith('.pdf'));
 
     if (pdfFiles.length === 0) {
-      container.innerHTML = '<p class="hint-text">📂 brochures/ 資料夾暫無 PDF 說明書。</p>';
+      updateBrochureForProduct();
     } else {
       const fileList = pdfFiles.map(f => ({
         name: f.name,
@@ -1249,10 +1298,53 @@ async function loadBrochuresList() {
       renderBrochures(fileList);
     }
   } catch (err) {
-    container.innerHTML = '<p class="hint-text">⚠ 載入失敗，請確認網路連線或先同步數據。</p>';
+    updateBrochureForProduct();
   }
 
   btn.disabled = false;
+}
+
+/* v2.1：根據當前選定產品顯示對應說明書 */
+function updateBrochureForProduct() {
+  const prod = getProductById(state.primaryProduct);
+  const container = document.getElementById('brochures-list');
+  const hint = document.getElementById('brochures-hint');
+  if (!container || !prod) return;
+
+  /* 先檢查快取索引中是否有該產品的 PDF */
+  const cachedIndex = localStorage.getItem('it_brochures_index');
+  let cachedFiles = [];
+  if (cachedIndex) {
+    try { cachedFiles = JSON.parse(cachedIndex); } catch {}
+  }
+
+  /* 檢查是否已有該產品的 PDF（按 brochureFile 或 id 匹配） */
+  const expectedFile = prod.brochureFile || `${prod.id}.pdf`;
+  const matched = cachedFiles.find(f => f.name === expectedFile || f.name === `${prod.id}.pdf`);
+
+  if (matched) {
+    /* 已快取，直接顯示 */
+    hint.textContent = `當前產品：${prod.name} — 點擊下方卡片查閱官方 PDF 說明書`;
+    container.innerHTML = `
+      <div class="brochure-card" onclick="openBrochure('${matched.url}', '${matched.name}')">
+        <span class="brochure-icon">📄</span>
+        <span class="brochure-name">${prod.name}</span>
+        <span class="brochure-size">${(matched.size / 1024).toFixed(0)} KB</span>
+        <span style="font-size:0.72rem;color:var(--primary);">點擊查閱 →</span>
+      </div>
+    `;
+  } else {
+    /* 未快取，顯示提示 */
+    hint.textContent = `當前產品：${prod.name} — 官方計劃書檔名：${expectedFile}`;
+    container.innerHTML = `
+      <div class="brochure-card" style="cursor:default; border-style:dashed;">
+        <span class="brochure-icon">📄</span>
+        <span class="brochure-name">${prod.name}</span>
+        <span style="font-size:0.72rem;color:var(--text-muted);">尚未同步至本地</span>
+        <span style="font-size:0.72rem;color:var(--primary);">點擊上方「載入全部」同步</span>
+      </div>
+    `;
+  }
 }
 
 function renderBrochures(files) {
