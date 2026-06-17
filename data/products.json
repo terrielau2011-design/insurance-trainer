@@ -167,7 +167,7 @@
         "maxLoanTerm": 10,
         "defaultLTV": 95,
         "benchmarkRate": 3.275,
-        "capRate": 4.5
+        "capRate": 3.9
       }
     }
   ]

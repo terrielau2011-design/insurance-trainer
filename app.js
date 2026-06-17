@@ -85,7 +85,7 @@ function initClock() {
   setInterval(tick, 1000);
 }
 
-/* 渲染產品列表 */
+/* 渲染產品列表（v2.0：顯示 category） */
 function initProductList() {
   const container = document.getElementById('product-list');
   container.innerHTML = '';
@@ -99,13 +99,14 @@ function initProductList() {
         onchange="handleProductSelect(event, '${prod.id}')" />
       <div>
         <div class="prod-name">${prod.name}</div>
-        <div class="prod-type">${prod.type} · ${prod.currency}</div>
+        <div class="prod-type">${prod.category} · ${prod.currency}${prod.isFinanceable ? ' · 可融資' : ''}</div>
       </div>
     `;
     container.appendChild(item);
 
-    // 預設選中第一個
-    if (idx === 0) {
+    // 預設選中第一個可融資產品（若有），否則第一個
+    const shouldSelect = idx === 0 || (prod.isFinanceable && !container.querySelector('input:checked'));
+    if (shouldSelect && !state.primaryProduct) {
       const chk = item.querySelector('input');
       chk.checked = true;
       handleProductSelect({ target: chk }, prod.id);
@@ -149,8 +150,46 @@ function handleProductSelect(evt, prodId) {
 
   updateProductItemStyles();
   renderHighlights();
+  updateProductCurrencyHints();
+  updatePayTermOptions();
   updateComparisonSection();
   calcScene1();
+  calcScene2();
+}
+
+/* v2.0：更新幣別提示 */
+function updateProductCurrencyHints() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod) return;
+  const sym = appConfig.currencySymbols[prod.currency] || 'HK$';
+  const hint1 = document.getElementById('s1-currency-hint');
+  const hint2 = document.getElementById('s2-currency-hint');
+  const hintPT = document.getElementById('s1-payterm-hint');
+  if (hint1) hint1.textContent = `(${sym})`;
+  if (hint2) hint2.textContent = `(${sym})`;
+  if (hintPT) hintPT.textContent = `· ${prod.currency}`;
+}
+
+/* v2.0：根據產品 payTerms 動態渲染繳費年期選項 */
+function updatePayTermOptions() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod) return;
+  const container = document.getElementById('s1-pay-term');
+  if (!container) return;
+
+  container.innerHTML = '';
+  prod.payTerms.forEach((term, idx) => {
+    const label = document.createElement('label');
+    const radio = document.createElement('input');
+    radio.type = 'radio';
+    radio.name = 's1pt';
+    radio.value = term;
+    radio.onchange = calcScene1;
+    if (idx === 0) radio.checked = true;
+    label.appendChild(radio);
+    label.appendChild(document.createTextNode(` ${term}年`));
+    container.appendChild(label);
+  });
 }
 
 function updateProductItemStyles() {
@@ -210,34 +249,30 @@ function switchScene(num) {
 }
 
 /* ══════════════════════════════════════════
-   5. 場景一：儲蓄險計算邏輯
+   5. 場景一：儲蓄險計算邏輯（v2.0 雙軌制輸入）
 ══════════════════════════════════════════ */
 function calcScene1() {
   const basePremium = parseFloat(document.getElementById('s1-premium').value) || 0;
   const payTerm     = parseInt(document.querySelector('input[name="s1pt"]:checked')?.value || '10');
-  const discY1Pct   = parseFloat(document.getElementById('s1-discount-y1').value) / 100;
-  const discY2Pct   = parseFloat(document.getElementById('s1-discount-y2').value) / 100;
-  const prepayRate  = parseFloat(document.getElementById('s1-prepay').value) / 100;
+  const discY1Pct   = (parseFloat(document.getElementById('s1-discount-y1').value) || 0) / 100;
+  const discY2Pct   = (parseFloat(document.getElementById('s1-discount-y2').value) || 0) / 100;
+  const prepayRate  = (parseFloat(document.getElementById('s1-prepay').value) || 0) / 100;
 
-  /* ── 折後保費計算 ── */
+  /* ── 折後保費計算（v2.0：次年折扣僅第2年適用，第3年起無折扣）── */
   const premY1  = basePremium * (1 - discY1Pct);
   const premY2  = basePremium * (1 - discY2Pct);
-  const premRest = basePremium; // 其餘年份無折扣
+  const premRest = basePremium;
 
-  /* 預繳儲蓄率：一次繳清全部年份，可額外享受 prepayRate 利息折讓 */
-  /* 簡化公式：淨出資 = Σ(各年保費) × (1 - prepayRate × 剩餘年數平均) */
   const remainingYears = Math.max(0, payTerm - 2);
   const totalBeforePrepay = premY1 + premY2 + premRest * remainingYears;
-  const prepayDiscount = totalBeforePrepay * prepayRate * (payTerm / 2) / 12; // 按月折算，保守估算
+  const prepayDiscount = totalBeforePrepay * prepayRate * (payTerm / 2) / 12;
   const netTotal = Math.max(0, totalBeforePrepay - prepayDiscount);
 
-  /* 存儲場景一結果 */
   state.s1Results = {
     basePremium, payTerm, discY1Pct, discY2Pct, prepayRate,
     premY1, premY2, premRest, totalBeforePrepay, prepayDiscount, netTotal
   };
 
-  /* ── 更新 UI ── */
   const prod = getProductById(state.primaryProduct);
   const sym  = prod ? appConfig.currencySymbols[prod.currency] : 'HK$';
 
@@ -249,36 +284,55 @@ function calcScene1() {
   document.getElementById('s1-remaining-net').textContent =
     remainingYears > 0 ? `${sym} ${fmt(premRest)} × ${remainingYears} 年` : '—';
 
-  /* 更新權益牆 */
-  updatePrivilegesWall(basePremium);
-
-  /* 更新財富圖 */
+  updatePrivilegesWall(basePremium * payTerm);
   updateWealthChart();
 }
 
+/* v2.0 快捷按鈕函數 */
+function setS1Premium(v)    { document.getElementById('s1-premium').value = v; calcScene1(); }
+function setS1DiscountY1(v) { document.getElementById('s1-discount-y1').value = v; calcScene1(); }
+function setS1DiscountY2(v) { document.getElementById('s1-discount-y2').value = v; calcScene1(); }
+function setS1Prepay(v)     { document.getElementById('s1-prepay').value = v; calcScene1(); }
+function setS1YearRange(v)  { document.getElementById('s1-year-range').value = v; document.getElementById('s1-year-label').textContent = v; updateWealthChart(); }
+
 /* ══════════════════════════════════════════
-   6. 場景二：保費融資計算邏輯
+   6. 場景二：保費融資精算邏輯（v2.0 完整 8 步 NAV 公式）
 ══════════════════════════════════════════ */
 function calcScene2() {
   const totalPremium  = parseFloat(document.getElementById('s2-total-premium').value) || 0;
-  const bankId        = document.getElementById('s2-bank').value;
-  const ltvPct        = parseFloat(document.getElementById('s2-ltv').value) / 100;
-  const annualRate    = parseFloat(document.getElementById('s2-rate').value) / 100;
-  const capRate       = parseFloat(document.getElementById('s2-cap-rate').value) / 100;
-  const loanTermYears = parseInt(document.getElementById('s2-loan-term').value);
+  const ltvPct        = (parseFloat(document.getElementById('s2-ltv').value) || 0) / 100;
+  const annualRate    = (parseFloat(document.getElementById('s2-rate').value) || 0) / 100;
+  const capRate       = (parseFloat(document.getElementById('s2-cap-rate').value) || 0) / 100;
+  const loanFeeRate   = (parseFloat(document.getElementById('s2-loan-fee').value) || 0) / 100;
+  const loanTermYears = Math.min(10, parseInt(document.getElementById('s2-loan-term').value) || 9);
 
-  /* ── 基礎融資計算 ── */
-  const loanAmount   = totalPremium * ltvPct;
-  const clientCash   = totalPremium - loanAmount;
-  const clientPct    = (1 - ltvPct) * 100;
-  const bankPct      = ltvPct * 100;
-
-  /* ── 利息總成本計算（按到期還款，簡單利息）── */
-  const totalInterestCurrent = loanAmount * annualRate * loanTermYears;
-  const totalInterestCap     = loanAmount * capRate    * loanTermYears;
-
-  /* ── 從 policyData 獲取對應年期的保單價值 ── */
   const prod = getProductById(state.primaryProduct);
+  const sym  = prod ? appConfig.currencySymbols[prod.currency] : 'HK$';
+
+  /* ── v2.0 公式鏈 ── */
+
+  /* 首日現金價值 = 總保費 × firstDayCVRatio */
+  const firstDayCVRatio = prod?.firstDayCVRatio || 0.7869;
+  const firstDayCV = totalPremium * firstDayCVRatio;
+
+  /* ① 實際貸款金額 = 首日現價 × LTV */
+  const loanAmount = firstDayCV * ltvPct;
+
+  /* ② 貸款手續費 = 貸款金額 × 手續費率 */
+  const loanFee = loanAmount * loanFeeRate;
+
+  /* ③ 實際本金 = 折扣後實付總保費 − 貸款金額 */
+  /* 實付總保費 = 總保費 × (1 − 首年折扣) */
+  const firstYearDisc = prod?.discounts?.firstYear?.defaultPercent || 12.5;
+  const firstYearDiscPct = firstYearDisc / 100;
+  const paidTotal = totalPremium * (1 - firstYearDiscPct);
+  const actualPrincipal = paidTotal - loanAmount;
+
+  /* ④ 客戶總出資成本 = 實際本金 + 貸款手續費（手續費雙重計入）*/
+  const clientTotalCost = actualPrincipal + loanFee;
+
+  /* ⑤ 保單淨資產價值 NAV = 保單總價值 − 貸款本金 − 累計利息 − 手續費 */
+  /* 從 policyData 獲取退出年份的保單價值 */
   let policyValueAtEnd = 0;
   let guaranteedCVAtEnd = 0;
   let nonGuaranteedAtEnd = 0;
@@ -293,50 +347,68 @@ function calcScene2() {
     }
   }
 
-  /* ── IRR / 年化回報估算 ── */
-  // 淨回報 = 保單總值 - 本金 - 利息
-  const netReturnCurrent = policyValueAtEnd - totalPremium - totalInterestCurrent;
-  const netReturnCap     = policyValueAtEnd - totalPremium - totalInterestCap;
+  const totalInterestCurrent = loanAmount * annualRate * loanTermYears;
+  const totalInterestCap     = loanAmount * capRate    * loanTermYears;
 
-  // 簡單年化回報率（對客戶出資）
-  const simpleIRRCurrent = clientCash > 0
-    ? ((netReturnCurrent / clientCash) / loanTermYears) * 100 : 0;
-  const simpleIRRCap     = clientCash > 0
-    ? ((netReturnCap / clientCash) / loanTermYears) * 100 : 0;
+  const navCurrent = policyValueAtEnd - loanAmount - totalInterestCurrent - loanFee;
+  const navCap     = policyValueAtEnd - loanAmount - totalInterestCap     - loanFee;
 
-  /* 存儲場景二結果 */
+  /* ⑥ 真·淨回報 = NAV − 客戶總出資成本 */
+  const netProfitCurrent = navCurrent - clientTotalCost;
+  const netProfitCap     = navCap     - clientTotalCost;
+
+  /* ⑦ 槓桿後總回報率 = 淨回報 / 客戶總出資成本 */
+  const roiCurrent = clientTotalCost > 0 ? (netProfitCurrent / clientTotalCost) * 100 : 0;
+  const roiCap     = clientTotalCost > 0 ? (netProfitCap     / clientTotalCost) * 100 : 0;
+
+  /* ⑧ 平均年度化單利 = 總回報率 / 貸款年期 */
+  const annualCurrent = loanTermYears > 0 ? roiCurrent / loanTermYears : 0;
+  const annualCap     = loanTermYears > 0 ? roiCap     / loanTermYears : 0;
+
+  /* 槓桿比例 */
+  const clientPct = totalPremium > 0 ? (clientTotalCost / totalPremium) * 100 : 0;
+  const bankPct   = totalPremium > 0 ? (loanAmount / totalPremium) * 100 : 0;
+
   state.s2Results = {
-    totalPremium, bankId, ltvPct, annualRate, capRate, loanTermYears,
-    loanAmount, clientCash, clientPct, bankPct,
-    totalInterestCurrent, totalInterestCap,
+    totalPremium, ltvPct, annualRate, capRate, loanFeeRate, loanTermYears,
+    firstDayCV, loanAmount, loanFee, paidTotal, actualPrincipal, clientTotalCost,
     policyValueAtEnd, guaranteedCVAtEnd, nonGuaranteedAtEnd,
-    simpleIRRCurrent, simpleIRRCap,
-    netReturnCurrent, netReturnCap
+    totalInterestCurrent, totalInterestCap,
+    navCurrent, navCap, netProfitCurrent, netProfitCap,
+    roiCurrent, roiCap, annualCurrent, annualCap,
+    clientPct, bankPct
   };
 
-  /* ── 更新 UI ── */
-  const sym = prod ? appConfig.currencySymbols[prod.currency] : 'HK$';
+  /* ── 更新 UI：公式鏈步驟 ── */
+  document.getElementById('s2-first-day-cv').textContent    = `${sym} ${fmt(firstDayCV)}`;
+  document.getElementById('s2-loan-amount').textContent      = `${sym} ${fmt(loanAmount)}`;
+  document.getElementById('s2-loan-fee-amount').textContent  = `${sym} ${fmt(loanFee)}`;
+  document.getElementById('s2-actual-principal').textContent = `${sym} ${fmt(actualPrincipal)}`;
+  document.getElementById('s2-client-total-cost').textContent= `${sym} ${fmt(clientTotalCost)}`;
 
-  document.getElementById('s2-client-cash').textContent  = `${sym} ${fmt(clientCash)}`;
-  document.getElementById('s2-ltv-pct').textContent       = `客戶出資比例 ${clientPct.toFixed(1)}%`;
-  document.getElementById('s2-loan-amount').textContent  = `${sym} ${fmt(loanAmount)}`;
-  document.getElementById('s2-irr-current').textContent  = `${simpleIRRCurrent.toFixed(2)}%`;
-  document.getElementById('s2-irr-cap').textContent      = `${simpleIRRCap.toFixed(2)}%`;
+  /* 雙極限回報卡片 */
+  document.getElementById('s2-roi-current').textContent    = `${roiCurrent.toFixed(1)}%`;
+  document.getElementById('s2-annual-current').textContent = `${annualCurrent.toFixed(2)}%`;
+  document.getElementById('s2-roi-cap').textContent        = `${roiCap.toFixed(1)}%`;
+  document.getElementById('s2-annual-cap').textContent     = `${annualCap.toFixed(2)}%`;
 
   /* 槓桿條形圖 */
-  const clientBar = document.getElementById('leverage-client-bar');
-  const bankBar   = document.getElementById('leverage-bank-bar');
-  clientBar.style.width = `${clientPct}%`;
-  bankBar.style.width   = `${bankPct}%`;
-  document.getElementById('leverage-client-label').textContent = `客戶 ${clientPct.toFixed(0)}%`;
-  document.getElementById('leverage-bank-label').textContent   = `銀行 ${bankPct.toFixed(0)}%`;
+  document.getElementById('leverage-client-bar').style.width = `${Math.min(clientPct, 100)}%`;
+  document.getElementById('leverage-bank-bar').style.width   = `${Math.min(bankPct, 100)}%`;
+  document.getElementById('leverage-client-label').textContent = `客戶 ${clientPct.toFixed(1)}%`;
+  document.getElementById('leverage-bank-label').textContent   = `銀行 ${bankPct.toFixed(1)}%`;
 
-  /* 圓餅圖 */
   updateSafetyPie();
-
-  /* 雙極限回報圖 */
   updateDualReturnChart();
 }
+
+/* v2.0 場景二快捷按鈕函數 */
+function setS2Premium(v)  { document.getElementById('s2-total-premium').value = v; calcScene2(); }
+function setS2LTV(v)      { document.getElementById('s2-ltv').value = v; calcScene2(); }
+function setS2Rate(v)     { document.getElementById('s2-rate').value = v; calcScene2(); }
+function setS2CapRate(v)  { document.getElementById('s2-cap-rate').value = v; calcScene2(); }
+function setS2LoanFee(v)  { document.getElementById('s2-loan-fee').value = v; calcScene2(); }
+function setS2LoanTerm(v) { document.getElementById('s2-loan-term').value = v; calcScene2(); }
 
 /* ══════════════════════════════════════════
    7. 初始化圖表
@@ -439,7 +511,7 @@ function initCharts() {
     }
   );
 
-  /* ── 7c. 雙極限回報分析折線圖 ── */
+  /* ── 7c. v2.0 10年期雙極限 NAV 分析圖 ── */
   chartDualReturn = new Chart(
     document.getElementById('chart-dual-return'),
     {
@@ -448,31 +520,37 @@ function initCharts() {
         labels: [],
         datasets: [
           {
-            label: '預期回報（現行利率）',
+            label: '藍線：正常環境 NAV（現行利率）',
             data: [],
-            borderColor: '#26a269',
-            backgroundColor: 'rgba(38,162,105,0.1)',
-            fill: true,
-            tension: 0.4,
-            borderWidth: 2.5
-          },
-          {
-            label: '最壞情況（封頂利率）',
-            data: [],
-            borderColor: '#e5a50a',
-            backgroundColor: 'rgba(229,165,10,0.07)',
+            borderColor: '#1a5fb4',
+            backgroundColor: 'rgba(26,95,180,0.1)',
             fill: true,
             tension: 0.4,
             borderWidth: 2.5,
-            borderDash: [6, 3]
+            pointRadius: 4,
+            pointBackgroundColor: '#1a5fb4'
           },
           {
-            label: '保本線',
+            label: '紅線：最壞環境 NAV（封頂利率）',
             data: [],
             borderColor: '#c01c28',
-            borderDash: [4, 4],
-            borderWidth: 1.5,
-            pointRadius: 0,
+            backgroundColor: 'rgba(192,28,40,0.07)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2.5,
+            borderDash: [6, 3],
+            pointRadius: 4,
+            pointBackgroundColor: '#c01c28'
+          },
+          {
+            label: '⭐ 黃金退出點',
+            data: [],
+            borderColor: '#f5a623',
+            backgroundColor: '#f5a623',
+            pointRadius: 10,
+            pointHoverRadius: 14,
+            pointStyle: 'star',
+            showLine: false,
             fill: false
           }
         ]
@@ -480,10 +558,18 @@ function initCharts() {
       options: {
         ...chartDefaults,
         scales: {
-          x: { title: { display: true, text: '保單年度' } },
+          x: { title: { display: true, text: '保單年度（10年期）' } },
           y: {
-            title: { display: true, text: '淨回報（對客戶出資）%' },
-            ticks: { callback: v => v.toFixed(1) + '%' }
+            title: { display: true, text: '保單淨資產價值 NAV' },
+            ticks: { callback: v => fmtShort(v) }
+          }
+        },
+        plugins: {
+          ...chartDefaults.plugins,
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.raw)}`
+            }
           }
         }
       }
@@ -572,50 +658,64 @@ function updateSafetyPie() {
   document.getElementById('pie-nonguaranteed').textContent = `${ngbPct.toFixed(1)}%`;
 }
 
-/* 8c. 雙極限回報折線圖 */
+/* 8c. v2.0 10年期雙極限 NAV 分析圖（藍線正常 + 紅線封頂 + 退出錨點） */
 function updateDualReturnChart() {
   const prod = getProductById(state.primaryProduct);
   if (!prod || !chartDualReturn) return;
 
-  const totalPrem  = parseFloat(document.getElementById('s2-total-premium').value) || 1000000;
-  const ltvPct     = parseFloat(document.getElementById('s2-ltv').value) / 100;
-  const annualRate = parseFloat(document.getElementById('s2-rate').value) / 100;
-  const capRate    = parseFloat(document.getElementById('s2-cap-rate').value) / 100;
+  const totalPrem   = parseFloat(document.getElementById('s2-total-premium').value) || 600000;
+  const ltvPct      = (parseFloat(document.getElementById('s2-ltv').value) || 95) / 100;
+  const annualRate  = (parseFloat(document.getElementById('s2-rate').value) || 3.275) / 100;
+  const capRate     = (parseFloat(document.getElementById('s2-cap-rate').value) || 3.9) / 100;
+  const loanFeeRate = (parseFloat(document.getElementById('s2-loan-fee').value) || 2) / 100;
+  const exitYear    = Math.min(10, parseInt(document.getElementById('s2-loan-term').value) || 9);
+
+  const firstDayCVRatio = prod.firstDayCVRatio || 0.7869;
+  const firstDayCV = totalPrem * firstDayCVRatio;
+  const loanAmount = firstDayCV * ltvPct;
+  const loanFee    = loanAmount * loanFeeRate;
   const ratio      = totalPrem / getBasePremiumUnit(prod);
-  const clientCash = totalPrem * (1 - ltvPct);
-  const loanAmount = totalPrem * ltvPct;
 
-  const maxYear = Math.max(...prod.policyData.map(d => d.year));
-  const years   = Array.from({ length: maxYear }, (_, i) => i + 1);
+  /* v2.0：固定 10 年期，橫軸第 1~10 年 */
+  const years = Array.from({ length: 10 }, (_, i) => i + 1);
 
-  const retCurrent = [];
-  const retCap     = [];
-  const breakEven  = [];
+  const navCurrent = [];
+  const navCap     = [];
 
   years.forEach(yr => {
     const data = getPolicyDataAtYear(prod, yr);
     if (!data) {
-      retCurrent.push(null);
-      retCap.push(null);
-      breakEven.push(0);
+      navCurrent.push(null);
+      navCap.push(null);
       return;
     }
 
     const policyVal    = (data.guaranteedCV + data.nonGuaranteedBonus) * ratio;
     const interestCurr = loanAmount * annualRate * yr;
     const interestCap  = loanAmount * capRate    * yr;
-    const netCurr = policyVal - totalPrem - interestCurr;
-    const netCap  = policyVal - totalPrem - interestCap;
 
-    retCurrent.push(clientCash > 0 ? (netCurr / clientCash) * 100 : 0);
-    retCap.push(clientCash > 0     ? (netCap  / clientCash) * 100 : 0);
-    breakEven.push(0);
+    /* ⑤ NAV = 保單總值 − 貸款 − 利息 − 手續費 */
+    const navCurr  = policyVal - loanAmount - interestCurr - loanFee;
+    const navWorst = policyVal - loanAmount - interestCap  - loanFee;
+
+    navCurrent.push(navCurr);
+    navCap.push(navWorst);
   });
 
+  /* 退出年份的 NAV 值（用於錨點標註） */
+  const exitIdx = exitYear - 1;
+  const exitNavCurr = navCurrent[exitIdx];
+
+  /* 更新圖表數據 */
   chartDualReturn.data.labels = years.map(y => `第${y}年`);
-  chartDualReturn.data.datasets[0].data = retCurrent;
-  chartDualReturn.data.datasets[1].data = retCap;
-  chartDualReturn.data.datasets[2].data = breakEven;
+  chartDualReturn.data.datasets[0].data = navCurrent;
+  chartDualReturn.data.datasets[1].data = navCap;
+
+  /* 退出錨點：在退出年份加一個閃爍標記點 */
+  const anchorData = new Array(10).fill(null);
+  if (exitNavCurr != null) anchorData[exitIdx] = exitNavCurr;
+  chartDualReturn.data.datasets[2].data = anchorData;
+
   chartDualReturn.update();
 }
 

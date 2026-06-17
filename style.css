@@ -524,6 +524,113 @@ body {
   margin-bottom: 1.25rem;
 }
 
+/* ═══ v2.0 雙軌制輸入（數值輸入框 + 快捷按鈕）═══ */
+.dual-input-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.dual-input-row .input-field {
+  flex: 1;
+  min-width: 0;
+}
+
+.quick-buttons {
+  display: flex;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.quick-btn {
+  padding: 0.4rem 0.6rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: var(--transition);
+  white-space: nowrap;
+  min-width: 42px;
+}
+
+.quick-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: #e8f0ff;
+}
+
+.quick-btn:active {
+  transform: scale(0.95);
+}
+
+.currency-hint {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+/* ═══ v2.0 公式鏈步驟展示 ═══ */
+.formula-chain {
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+}
+
+.formula-step {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 1px dashed var(--border);
+  font-size: 0.82rem;
+}
+
+.formula-step:last-child {
+  border-bottom: none;
+}
+
+.formula-step.highlight {
+  background: #fff9ec;
+  border-radius: var(--radius-sm);
+  margin: 0.25rem 0;
+  padding: 0.5rem 0.5rem;
+  border: 1.5px solid var(--accent);
+}
+
+.step-num {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--primary);
+  min-width: 22px;
+  text-align: center;
+}
+
+.formula-step.highlight .step-num {
+  color: var(--accent);
+}
+
+.step-label {
+  flex: 1;
+  color: var(--text-secondary);
+}
+
+.step-value {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.formula-step.highlight .step-value {
+  color: var(--accent);
+  font-size: 1rem;
+}
+
 .result-card {
   background: var(--surface-2);
   border: 1px solid var(--border);
