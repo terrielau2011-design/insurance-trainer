@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>保險銷售視覺化培訓系統 v1.0</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     頂部 HEADER
+════════════════════════════════════════════════ -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-icon">🛡</span>
+      <div>
+        <h1>保險銷售培訓系統</h1>
+        <p>Insurance Sales Visualisation Tool <span class="version-tag">v1.0</span></p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span id="current-time" class="time-display"></span>
+    </div>
+  </div>
+</header>
+
+<main class="app-main">
+
+  <!-- ═══════════════════════════════════════════════
+       區塊 A：產品選擇與三大亮點 (The Hook)
+  ════════════════════════════════════════════════ -->
+  <section class="section-card" id="section-hook">
+    <div class="section-header">
+      <span class="section-badge">A</span>
+      <h2>產品選擇與核心亮點</h2>
+      <span class="section-tag">The Hook</span>
+    </div>
+
+    <div class="hook-grid">
+      <!-- 產品選擇區 -->
+      <div class="product-selector-area">
+        <label class="field-label">選擇產品</label>
+        <div class="product-list" id="product-list">
+          <!-- 由 JS 動態渲染 -->
+        </div>
+        <p class="hint-text">💡 勾選多個產品可啟動跨產品對比模式</p>
+      </div>
+
+      <!-- 三大亮點區 -->
+      <div class="highlights-area" id="highlights-area">
+        <div class="highlight-placeholder">
+          <span class="ph-icon">👈</span>
+          <p>請先選擇一個主力產品以查看核心銷售亮點</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       區塊 B：動態財務決策區 (The Presentation)
+  ════════════════════════════════════════════════ -->
+  <section class="section-card" id="section-presentation">
+    <div class="section-header">
+      <span class="section-badge">B</span>
+      <h2>動態財務決策分析</h2>
+      <span class="section-tag">The Presentation</span>
+      <!-- 場景切換 -->
+      <div class="scene-toggle">
+        <button class="toggle-btn active" id="btn-scene1" onclick="switchScene(1)">
+          📈 場景一：儲蓄險
+        </button>
+        <button class="toggle-btn" id="btn-scene2" onclick="switchScene(2)">
+          🏦 場景二：保費融資
+        </button>
+      </div>
+    </div>
+
+    <!-- ── 場景一：一般分紅儲蓄險 ── -->
+    <div id="scene1" class="scene-panel active">
+      <div class="panel-grid two-col">
+
+        <!-- 左欄：輸入控制 -->
+        <div class="input-panel">
+          <h3 class="panel-title">⚙️ 計算參數</h3>
+
+          <div class="input-group">
+            <label class="field-label">基本年保費 (HK$)</label>
+            <input type="number" id="s1-premium" class="input-field" value="100000"
+              min="1000" step="1000" oninput="calcScene1()" />
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">繳費年期</label>
+            <div class="radio-group" id="s1-pay-term">
+              <label><input type="radio" name="s1pt" value="5" onchange="calcScene1()"> 5年</label>
+              <label><input type="radio" name="s1pt" value="10" checked onchange="calcScene1()"> 10年</label>
+              <label><input type="radio" name="s1pt" value="15" onchange="calcScene1()"> 15年</label>
+              <label><input type="radio" name="s1pt" value="20" onchange="calcScene1()"> 20年</label>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">首年折扣率 <span class="discount-badge" id="s1-y1-val">0%</span></label>
+            <input type="range" id="s1-discount-y1" class="range-slider" value="0" min="0" max="30" step="1"
+              oninput="document.getElementById('s1-y1-val').textContent=this.value+'%'; calcScene1()" />
+            <div class="range-labels"><span>0%</span><span>15%</span><span>30%</span></div>
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">次年折扣率 <span class="discount-badge" id="s1-y2-val">0%</span></label>
+            <input type="range" id="s1-discount-y2" class="range-slider" value="0" min="0" max="20" step="1"
+              oninput="document.getElementById('s1-y2-val').textContent=this.value+'%'; calcScene1()" />
+            <div class="range-labels"><span>0%</span><span>10%</span><span>20%</span></div>
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">預繳保費儲蓄率 <span class="discount-badge" id="s1-prepay-val">0%</span></label>
+            <input type="range" id="s1-prepay" class="range-slider" value="0" min="0" max="5" step="0.1"
+              oninput="document.getElementById('s1-prepay-val').textContent=parseFloat(this.value).toFixed(1)+'%'; calcScene1()" />
+            <div class="range-labels"><span>0%</span><span>2.5%</span><span>5%</span></div>
+          </div>
+        </div>
+
+        <!-- 右欄：輸出 -->
+        <div class="output-panel">
+          <h3 class="panel-title">📊 計算結果</h3>
+
+          <!-- 淨保費摘要卡片 -->
+          <div class="result-cards">
+            <div class="result-card accent">
+              <div class="rc-label">實際淨保費總額</div>
+              <div class="rc-value" id="s1-net-total">HK$ --</div>
+              <div class="rc-sub" id="s1-net-breakdown">計算中…</div>
+            </div>
+            <div class="result-card">
+              <div class="rc-label">首年折後保費</div>
+              <div class="rc-value" id="s1-y1-net">HK$ --</div>
+            </div>
+            <div class="result-card">
+              <div class="rc-label">次年折後保費</div>
+              <div class="rc-value" id="s1-y2-net">HK$ --</div>
+            </div>
+            <div class="result-card">
+              <div class="rc-label">其餘年份保費</div>
+              <div class="rc-value" id="s1-remaining-net">HK$ --</div>
+            </div>
+          </div>
+
+          <!-- 權益兌換牆 -->
+          <div class="privileges-section">
+            <h4 class="sub-title">🎁 權益兌換牆</h4>
+            <div class="privileges-wall" id="privileges-wall">
+              <!-- 由 JS 動態渲染 -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 財富消長河流圖 -->
+      <div class="chart-section">
+        <h3 class="panel-title">📈 財富消長河流圖</h3>
+        <p class="chart-hint">各年份本金、保證現金價值、非保證紅利分佈（數據需在 productData 中填入）</p>
+        <div class="chart-wrapper">
+          <canvas id="chart-wealth-river"></canvas>
+        </div>
+        <!-- 年期滑桿 -->
+        <div class="input-group" style="margin-top:1rem;">
+          <label class="field-label">顯示年期：<span id="s1-year-label">30</span> 年</label>
+          <input type="range" id="s1-year-range" class="range-slider" value="30" min="5" max="40" step="1"
+            oninput="document.getElementById('s1-year-label').textContent=this.value; updateWealthChart()" />
+          <div class="range-labels"><span>5年</span><span>20年</span><span>40年</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 場景二：保費融資 ── -->
+    <div id="scene2" class="scene-panel">
+      <div class="panel-grid two-col">
+
+        <!-- 左欄：輸入控制 -->
+        <div class="input-panel">
+          <h3 class="panel-title">⚙️ 融資參數</h3>
+
+          <div class="input-group">
+            <label class="field-label">保單總保費 (HK$)</label>
+            <input type="number" id="s2-total-premium" class="input-field" value="1000000"
+              min="100000" step="100000" oninput="calcScene2()" />
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">貸款銀行</label>
+            <select id="s2-bank" class="select-field" onchange="calcScene2()">
+              <!-- 由 JS 動態渲染 -->
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">貸款成數 (LTV) <span class="discount-badge" id="s2-ltv-val">85%</span></label>
+            <input type="range" id="s2-ltv" class="range-slider" value="85" min="50" max="95" step="5"
+              oninput="document.getElementById('s2-ltv-val').textContent=this.value+'%'; calcScene2()" />
+            <div class="range-labels"><span>50%</span><span>75%</span><span>95%</span></div>
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">當前貸款利率 (年息 %)</label>
+            <input type="number" id="s2-rate" class="input-field" value="4.5"
+              min="0" max="20" step="0.1" oninput="calcScene2()" />
+            <p class="hint-text">如 P - 2.2%，請直接輸入實際利率數值</p>
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">封頂利率 Cap Rate (%)</label>
+            <input type="number" id="s2-cap-rate" class="input-field" value="7"
+              min="0" max="20" step="0.1" oninput="calcScene2()" />
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">預計貸款年期 <span class="discount-badge" id="s2-loan-term-val">5年</span></label>
+            <input type="range" id="s2-loan-term" class="range-slider" value="5" min="1" max="20" step="1"
+              oninput="document.getElementById('s2-loan-term-val').textContent=this.value+'年'; calcScene2()" />
+            <div class="range-labels"><span>1年</span><span>10年</span><span>20年</span></div>
+          </div>
+        </div>
+
+        <!-- 右欄：輸出 -->
+        <div class="output-panel">
+          <h3 class="panel-title">📊 融資分析結果</h3>
+
+          <!-- 結果卡片 -->
+          <div class="result-cards">
+            <div class="result-card accent">
+              <div class="rc-label">客戶實際出資</div>
+              <div class="rc-value" id="s2-client-cash">HK$ --</div>
+              <div class="rc-sub" id="s2-ltv-pct">LTV --</div>
+            </div>
+            <div class="result-card">
+              <div class="rc-label">銀行貸款金額</div>
+              <div class="rc-value" id="s2-loan-amount">HK$ --</div>
+            </div>
+            <div class="result-card success">
+              <div class="rc-label">預期年化回報 (現行利率)</div>
+              <div class="rc-value" id="s2-irr-current">-- %</div>
+            </div>
+            <div class="result-card warning">
+              <div class="rc-label">最壞情況回報 (封頂利率)</div>
+              <div class="rc-value" id="s2-irr-cap">-- %</div>
+            </div>
+          </div>
+
+          <!-- 槓桿條形圖 -->
+          <div class="leverage-bar-section">
+            <h4 class="sub-title">⚖️ 資金槓桿比例</h4>
+            <div class="leverage-bar-track">
+              <div class="leverage-bar-client" id="leverage-client-bar">
+                <span id="leverage-client-label">--</span>
+              </div>
+              <div class="leverage-bar-bank" id="leverage-bank-bar">
+                <span id="leverage-bank-label">--</span>
+              </div>
+            </div>
+            <div class="leverage-legend">
+              <span class="dot dot-client">●</span> 客戶出資
+              <span class="dot dot-bank" style="margin-left:1rem;">●</span> 銀行貸款
+            </div>
+          </div>
+
+          <!-- 安全感指標圓餅圖 -->
+          <div class="chart-mini-wrapper">
+            <h4 class="sub-title">🛡 安全感指標（保證價值比）</h4>
+            <div class="piechart-row">
+              <canvas id="chart-safety-pie" style="max-width:160px; max-height:160px;"></canvas>
+              <div class="pie-legend" id="pie-legend">
+                <div class="pie-item"><span class="dot" style="color:#4CAF50">●</span> 保證現金價值 <strong id="pie-guaranteed">--</strong></div>
+                <div class="pie-item"><span class="dot" style="color:#90CAF9">●</span> 非保證紅利 <strong id="pie-nonguaranteed">--</strong></div>
+              </div>
+            </div>
+            <div class="input-group" style="margin-top:0.5rem;">
+              <label class="field-label">觀察年期：第 <span id="s2-obs-year-label">10</span> 年</label>
+              <input type="range" id="s2-obs-year" class="range-slider" value="10" min="1" max="30" step="1"
+                oninput="document.getElementById('s2-obs-year-label').textContent=this.value; updateSafetyPie()" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 雙極限回報分析圖 -->
+      <div class="chart-section">
+        <h3 class="panel-title">📉 雙極限回報分析曲線</h3>
+        <p class="chart-hint">現行利率 vs 封頂利率下，保費融資淨回報隨年期變化趨勢</p>
+        <div class="chart-wrapper">
+          <canvas id="chart-dual-return"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 跨產品對比區（多選時顯示）── -->
+    <div id="comparison-section" class="comparison-hidden">
+      <div class="section-divider"></div>
+      <h3 class="panel-title">⚖️ 跨產品對比分析</h3>
+      <p class="chart-hint">對比多個產品在 1–30 年間的總資產增長曲線（純儲蓄 vs 保費融資）</p>
+      <div class="chart-wrapper">
+        <canvas id="chart-comparison"></canvas>
+      </div>
+      <div class="comparison-table-wrapper">
+        <table class="comparison-table" id="comparison-table">
+          <thead>
+            <tr>
+              <th>對比維度</th>
+              <!-- 由 JS 動態填入 -->
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 由 JS 動態填入 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       區塊 C：AI 客戶分析報告 (The Close)
+  ════════════════════════════════════════════════ -->
+  <section class="section-card" id="section-close">
+    <div class="section-header">
+      <span class="section-badge">C</span>
+      <h2>客戶投保明白備忘錄</h2>
+      <span class="section-tag">The Close</span>
+    </div>
+
+    <div class="close-toolbar">
+      <button class="btn btn-primary" onclick="generateReport()">
+        📋 生成客戶專屬分析報告
+      </button>
+      <button class="btn btn-secondary" onclick="copyReport()" id="btn-copy" disabled>
+        💾 複製文字
+      </button>
+      <button class="btn btn-secondary" onclick="printReport()" id="btn-print" disabled>
+        🖨 一鍵列印
+      </button>
+    </div>
+
+    <div class="report-output" id="report-output">
+      <div class="report-placeholder">
+        <span class="ph-icon">📄</span>
+        <p>調校好上方參數後，點擊「生成報告」即可輸出客戶投保明白備忘錄</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  <p>⚠️ 本系統僅供持牌保險從業員內部培訓使用，所有數據計算僅供參考，不構成任何投保或財務建議。</p>
+  <p>Insurance Sales Training Tool v1.0 · 所有精算數據請以正式計劃書為準</p>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

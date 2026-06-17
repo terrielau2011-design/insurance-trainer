@@ -1,0 +1,2249 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>保險銷售視覺化培訓系統 v1.0</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+/* ═══════════════════════════════════════════════════════════
+   保險銷售視覺化培訓系統 - style.css
+   v1.0 · 響應式 CSS Grid 佈局
+═══════════════════════════════════════════════════════════ */
+
+/* ── 設計令牌 / Design Tokens ── */
+:root {
+  --primary:        #1a5fb4;
+  --primary-light:  #3584e4;
+  --primary-dark:   #0e3a6f;
+  --accent:         #f5a623;
+  --accent-light:   #ffd580;
+  --success:        #26a269;
+  --success-bg:     #d4edda;
+  --warning:        #e5a50a;
+  --warning-bg:     #fff3cd;
+  --danger:         #c01c28;
+  --danger-bg:      #f8d7da;
+  --surface:        #ffffff;
+  --surface-2:      #f8f9fa;
+  --surface-3:      #eef2f7;
+  --border:         #dee2e6;
+  --text-primary:   #1a1a2e;
+  --text-secondary: #4a5568;
+  --text-muted:     #8a9ab5;
+  --shadow-sm:      0 2px 8px rgba(0,0,0,.06);
+  --shadow-md:      0 4px 20px rgba(0,0,0,.10);
+  --shadow-lg:      0 8px 40px rgba(0,0,0,.14);
+  --radius-sm:      6px;
+  --radius-md:      12px;
+  --radius-lg:      20px;
+  --transition:     .2s ease;
+}
+
+/* ── Reset ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: 'Noto Sans TC', -apple-system, 'PingFang TC', sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  background: linear-gradient(160deg, #f0f4ff 0%, #fafbff 60%, #fff8f0 100%);
+  color: var(--text-primary);
+  min-height: 100vh;
+}
+
+/* ═══ HEADER ═══ */
+.app-header {
+  background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%);
+  color: #fff;
+  padding: 1.25rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-md);
+}
+
+.header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand { display: flex; align-items: center; gap: 0.75rem; }
+.brand-icon { font-size: 2rem; }
+.brand h1 { font-size: 1.2rem; font-weight: 700; line-height: 1.2; }
+.brand p  { font-size: 0.75rem; opacity: .7; }
+
+.version-tag {
+  background: rgba(255,255,255,.2);
+  padding: 1px 7px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+}
+
+.time-display {
+  font-size: 0.8rem;
+  opacity: .8;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ═══ MAIN LAYOUT ═══ */
+.app-main {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ═══ SECTION CARD ═══ */
+.section-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.section-badge {
+  width: 32px;
+  height: 32px;
+  background: var(--primary);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.section-header h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.section-tag {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: var(--surface-3);
+  padding: 2px 10px;
+  border-radius: 20px;
+  font-style: italic;
+}
+
+/* ═══ HOOK SECTION ═══ */
+.hook-grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.product-selector-area { }
+
+.product-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.product-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.9rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  background: var(--surface);
+}
+
+.product-item:hover { border-color: var(--primary-light); background: var(--surface-3); }
+.product-item.primary-selected { border-color: var(--primary); background: #e8f0ff; }
+.product-item.compare-selected { border-color: var(--accent); background: #fff8e6; }
+
+.product-item input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; }
+.product-item .prod-name { font-weight: 600; font-size: 0.9rem; }
+.product-item .prod-type { font-size: 0.72rem; color: var(--text-muted); }
+
+/* 三大亮點 */
+.highlights-area {
+  background: var(--surface-3);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  min-height: 160px;
+}
+
+.highlight-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 140px;
+  color: var(--text-muted);
+  gap: 0.5rem;
+}
+
+.ph-icon { font-size: 2rem; }
+
+.highlights-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.highlight-card {
+  display: flex;
+  gap: 0.75rem;
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 1rem;
+  border-left: 4px solid var(--primary);
+  box-shadow: var(--shadow-sm);
+  animation: slideIn .25s ease;
+}
+
+.highlight-card:nth-child(2) { border-left-color: var(--accent); }
+.highlight-card:nth-child(3) { border-left-color: var(--success); }
+
+.highlight-num {
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--primary);
+  line-height: 1;
+  min-width: 24px;
+}
+
+.highlight-card:nth-child(2) .highlight-num { color: var(--accent); }
+.highlight-card:nth-child(3) .highlight-num { color: var(--success); }
+
+.highlight-content h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 2px; }
+.highlight-content p  { font-size: 0.82rem; color: var(--text-secondary); }
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ═══ SCENE TOGGLE ═══ */
+.scene-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.toggle-btn {
+  padding: 0.45rem 1rem;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: var(--transition);
+}
+
+.toggle-btn:hover  { border-color: var(--primary-light); color: var(--primary); }
+.toggle-btn.active { background: var(--primary); border-color: var(--primary); color: #fff; font-weight: 600; }
+
+/* ═══ SCENE PANELS ═══ */
+.scene-panel { display: none; }
+.scene-panel.active { display: block; }
+
+/* ═══ PANEL GRID ═══ */
+.panel-grid.two-col {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+/* ═══ INPUT PANEL ═══ */
+.input-panel {
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  border: 1px solid var(--border);
+}
+
+.output-panel {
+  padding: 0.5rem 0;
+}
+
+.panel-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
+}
+
+.sub-title {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+/* ═══ FORM CONTROLS ═══ */
+.field-label {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.4rem;
+}
+
+.input-group {
+  margin-bottom: 1.1rem;
+}
+
+.input-field {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--text-primary);
+  transition: var(--transition);
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(26,95,180,.12);
+}
+
+.select-field {
+  width: 100%;
+  padding: 0.6rem 0.8rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: var(--surface);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.range-slider {
+  width: 100%;
+  accent-color: var(--primary);
+  height: 6px;
+  cursor: pointer;
+}
+
+.range-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.discount-badge {
+  display: inline-block;
+  background: var(--primary);
+  color: #fff;
+  font-size: 0.72rem;
+  padding: 1px 8px;
+  border-radius: 12px;
+  margin-left: 6px;
+  font-weight: 600;
+  min-width: 40px;
+  text-align: center;
+}
+
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.35rem 0.75rem;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.82rem;
+  transition: var(--transition);
+}
+
+.radio-group label:has(input:checked) {
+  border-color: var(--primary);
+  background: #e8f0ff;
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.hint-text {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
+/* ═══ RESULT CARDS ═══ */
+.result-cards {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.result-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1rem;
+  transition: var(--transition);
+}
+
+.result-card.accent { border-color: var(--accent); background: #fff9ec; }
+.result-card.success { border-color: var(--success); background: var(--success-bg); }
+.result-card.warning { border-color: var(--warning); background: var(--warning-bg); }
+
+.rc-label { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.25rem; }
+.rc-value { font-size: 1.2rem; font-weight: 800; color: var(--text-primary); font-variant-numeric: tabular-nums; }
+.rc-sub   { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem; }
+
+.result-card.accent .rc-value  { color: var(--accent); }
+.result-card.success .rc-value { color: var(--success); }
+.result-card.warning .rc-value { color: var(--warning); }
+
+/* ═══ PRIVILEGES WALL ═══ */
+.privileges-section { margin-top: 0.5rem; }
+
+.privileges-wall {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+.privilege-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border: 1.5px solid;
+  transition: all var(--transition);
+}
+
+.privilege-chip.unlocked {
+  background: linear-gradient(135deg, #fff8e6, #ffefc0);
+  border-color: var(--accent);
+  color: #7a5a00;
+  box-shadow: 0 2px 8px rgba(245,166,35,.25);
+}
+
+.privilege-chip.locked {
+  background: var(--surface-2);
+  border-color: var(--border);
+  color: var(--text-muted);
+  opacity: .6;
+  filter: grayscale(.8);
+}
+
+/* ═══ LEVERAGE BAR ═══ */
+.leverage-bar-section { margin-bottom: 1.25rem; }
+
+.leverage-bar-track {
+  display: flex;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  margin: 0.5rem 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.leverage-bar-client {
+  background: linear-gradient(90deg, #1a5fb4, #3584e4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+  min-width: 40px;
+}
+
+.leverage-bar-bank {
+  background: linear-gradient(90deg, #90caf9, #64b5f6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-dark);
+  font-weight: 700;
+  font-size: 0.85rem;
+  transition: width .5s cubic-bezier(.4,0,.2,1);
+  flex: 1;
+}
+
+.leverage-legend {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}
+
+.dot { font-size: 1rem; vertical-align: middle; }
+.dot-client { color: var(--primary); }
+.dot-bank   { color: #64b5f6; }
+
+/* ═══ PIE CHART ROW ═══ */
+.piechart-row {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.pie-legend { flex: 1; }
+.pie-item { font-size: 0.82rem; color: var(--text-secondary); margin-bottom: 0.4rem; }
+.pie-item strong { color: var(--text-primary); font-size: 1rem; margin-left: 0.3rem; }
+
+/* ═══ CHART SECTIONS ═══ */
+.chart-section {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px dashed var(--border);
+}
+
+.chart-wrapper {
+  background: var(--surface-2);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  margin-top: 0.5rem;
+  border: 1px solid var(--border);
+  position: relative;
+  min-height: 280px;
+}
+
+.chart-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 0.3rem;
+}
+
+.chart-mini-wrapper { margin-top: 1rem; }
+
+/* ═══ COMPARISON SECTION ═══ */
+.comparison-section { }
+.comparison-hidden { display: none; }
+.section-divider { border-top: 1px dashed var(--border); margin: 1.5rem 0; }
+
+.comparison-table-wrapper {
+  overflow-x: auto;
+  margin-top: 1rem;
+}
+
+.comparison-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.comparison-table th {
+  background: var(--primary);
+  color: #fff;
+  padding: 0.6rem 1rem;
+  text-align: left;
+  font-weight: 600;
+}
+
+.comparison-table td {
+  padding: 0.55rem 1rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.comparison-table tr:nth-child(even) td { background: var(--surface-3); }
+.comparison-table tr:hover td { background: #e8f0ff; }
+
+/* ═══ CLOSE SECTION ═══ */
+.close-toolbar {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.btn {
+  padding: 0.65rem 1.25rem;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: var(--transition);
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.btn-primary:hover { background: var(--primary-dark); box-shadow: 0 4px 12px rgba(26,95,180,.35); }
+
+.btn-secondary {
+  background: var(--surface-3);
+  color: var(--text-secondary);
+  border: 1.5px solid var(--border);
+}
+
+.btn-secondary:hover:not(:disabled) { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn-secondary:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ═══ REPORT OUTPUT ═══ */
+.report-output {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  min-height: 200px;
+  padding: 1.5rem;
+}
+
+.report-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 160px;
+  color: var(--text-muted);
+  gap: 0.5rem;
+}
+
+.report-content { font-size: 0.88rem; line-height: 2; white-space: pre-wrap; color: var(--text-primary); }
+
+.report-section-title {
+  font-weight: 700;
+  color: var(--primary);
+  font-size: 0.95rem;
+  margin: 1rem 0 0.25rem;
+  border-bottom: 1px solid var(--primary-light);
+  padding-bottom: 3px;
+}
+
+.report-row { display: flex; justify-content: space-between; border-bottom: 1px dashed var(--border); padding: 4px 0; }
+.report-row span:first-child { color: var(--text-muted); }
+.report-row span:last-child  { font-weight: 600; }
+
+/* ═══ FOOTER ═══ */
+.app-footer {
+  text-align: center;
+  padding: 1.5rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  line-height: 1.8;
+}
+
+/* ═══ PRINT STYLES ═══ */
+@media print {
+  .app-header, .scene-toggle, .close-toolbar,
+  .input-panel, .section-tag, .app-footer { display: none !important; }
+
+  .app-main { padding: 0; }
+  .section-card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+  .chart-wrapper { min-height: 200px; }
+  body { background: #fff; }
+
+  #section-hook, #section-presentation { page-break-after: always; }
+}
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width: 900px) {
+  .hook-grid,
+  .panel-grid.two-col {
+    grid-template-columns: 1fr;
+  }
+
+  .scene-toggle {
+    margin-left: 0;
+    width: 100%;
+    justify-content: flex-start;
+    order: 99;
+  }
+
+  .section-header { flex-wrap: wrap; }
+  .result-cards { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+  .app-header { padding: 1rem; }
+  .app-main { padding: 1rem 0.75rem 2rem; }
+  .section-card { padding: 1rem; }
+  .result-cards { grid-template-columns: 1fr; }
+  .btn { font-size: 0.82rem; padding: 0.55rem 1rem; }
+}
+  </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     頂部 HEADER
+════════════════════════════════════════════════ -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="brand">
+      <span class="brand-icon">🛡</span>
+      <div>
+        <h1>保險銷售培訓系統</h1>
+        <p>Insurance Sales Visualisation Tool <span class="version-tag">v1.0</span></p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span id="current-time" class="time-display"></span>
+    </div>
+  </div>
+</header>
+
+<main class="app-main">
+
+  <!-- ═══════════════════════════════════════════════
+       區塊 A：產品選擇與三大亮點 (The Hook)
+  ════════════════════════════════════════════════ -->
+  <section class="section-card" id="section-hook">
+    <div class="section-header">
+      <span class="section-badge">A</span>
+      <h2>產品選擇與核心亮點</h2>
+      <span class="section-tag">The Hook</span>
+    </div>
+
+    <div class="hook-grid">
+      <!-- 產品選擇區 -->
+      <div class="product-selector-area">
+        <label class="field-label">選擇產品</label>
+        <div class="product-list" id="product-list">
+          <!-- 由 JS 動態渲染 -->
+        </div>
+        <p class="hint-text">💡 勾選多個產品可啟動跨產品對比模式</p>
+      </div>
+
+      <!-- 三大亮點區 -->
+      <div class="highlights-area" id="highlights-area">
+        <div class="highlight-placeholder">
+          <span class="ph-icon">👈</span>
+          <p>請先選擇一個主力產品以查看核心銷售亮點</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       區塊 B：動態財務決策區 (The Presentation)
+  ════════════════════════════════════════════════ -->
+  <section class="section-card" id="section-presentation">
+    <div class="section-header">
+      <span class="section-badge">B</span>
+      <h2>動態財務決策分析</h2>
+      <span class="section-tag">The Presentation</span>
+      <!-- 場景切換 -->
+      <div class="scene-toggle">
+        <button class="toggle-btn active" id="btn-scene1" onclick="switchScene(1)">
+          📈 場景一：儲蓄險
+        </button>
+        <button class="toggle-btn" id="btn-scene2" onclick="switchScene(2)">
+          🏦 場景二：保費融資
+        </button>
+      </div>
+    </div>
+
+    <!-- ── 場景一：一般分紅儲蓄險 ── -->
+    <div id="scene1" class="scene-panel active">
+      <div class="panel-grid two-col">
+
+        <!-- 左欄：輸入控制 -->
+        <div class="input-panel">
+          <h3 class="panel-title">⚙️ 計算參數</h3>
+
+          <div class="input-group">
+            <label class="field-label">基本年保費 (HK$)</label>
+            <input type="number" id="s1-premium" class="input-field" value="100000"
+              min="1000" step="1000" oninput="calcScene1()" />
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">繳費年期</label>
+            <div class="radio-group" id="s1-pay-term">
+              <label><input type="radio" name="s1pt" value="5" onchange="calcScene1()"> 5年</label>
+              <label><input type="radio" name="s1pt" value="10" checked onchange="calcScene1()"> 10年</label>
+              <label><input type="radio" name="s1pt" value="15" onchange="calcScene1()"> 15年</label>
+              <label><input type="radio" name="s1pt" value="20" onchange="calcScene1()"> 20年</label>
+            </div>
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">首年折扣率 <span class="discount-badge" id="s1-y1-val">0%</span></label>
+            <input type="range" id="s1-discount-y1" class="range-slider" value="0" min="0" max="30" step="1"
+              oninput="document.getElementById('s1-y1-val').textContent=this.value+'%'; calcScene1()" />
+            <div class="range-labels"><span>0%</span><span>15%</span><span>30%</span></div>
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">次年折扣率 <span class="discount-badge" id="s1-y2-val">0%</span></label>
+            <input type="range" id="s1-discount-y2" class="range-slider" value="0" min="0" max="20" step="1"
+              oninput="document.getElementById('s1-y2-val').textContent=this.value+'%'; calcScene1()" />
+            <div class="range-labels"><span>0%</span><span>10%</span><span>20%</span></div>
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">預繳保費儲蓄率 <span class="discount-badge" id="s1-prepay-val">0%</span></label>
+            <input type="range" id="s1-prepay" class="range-slider" value="0" min="0" max="5" step="0.1"
+              oninput="document.getElementById('s1-prepay-val').textContent=parseFloat(this.value).toFixed(1)+'%'; calcScene1()" />
+            <div class="range-labels"><span>0%</span><span>2.5%</span><span>5%</span></div>
+          </div>
+        </div>
+
+        <!-- 右欄：輸出 -->
+        <div class="output-panel">
+          <h3 class="panel-title">📊 計算結果</h3>
+
+          <!-- 淨保費摘要卡片 -->
+          <div class="result-cards">
+            <div class="result-card accent">
+              <div class="rc-label">實際淨保費總額</div>
+              <div class="rc-value" id="s1-net-total">HK$ --</div>
+              <div class="rc-sub" id="s1-net-breakdown">計算中…</div>
+            </div>
+            <div class="result-card">
+              <div class="rc-label">首年折後保費</div>
+              <div class="rc-value" id="s1-y1-net">HK$ --</div>
+            </div>
+            <div class="result-card">
+              <div class="rc-label">次年折後保費</div>
+              <div class="rc-value" id="s1-y2-net">HK$ --</div>
+            </div>
+            <div class="result-card">
+              <div class="rc-label">其餘年份保費</div>
+              <div class="rc-value" id="s1-remaining-net">HK$ --</div>
+            </div>
+          </div>
+
+          <!-- 權益兌換牆 -->
+          <div class="privileges-section">
+            <h4 class="sub-title">🎁 權益兌換牆</h4>
+            <div class="privileges-wall" id="privileges-wall">
+              <!-- 由 JS 動態渲染 -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 財富消長河流圖 -->
+      <div class="chart-section">
+        <h3 class="panel-title">📈 財富消長河流圖</h3>
+        <p class="chart-hint">各年份本金、保證現金價值、非保證紅利分佈（數據需在 productData 中填入）</p>
+        <div class="chart-wrapper">
+          <canvas id="chart-wealth-river"></canvas>
+        </div>
+        <!-- 年期滑桿 -->
+        <div class="input-group" style="margin-top:1rem;">
+          <label class="field-label">顯示年期：<span id="s1-year-label">30</span> 年</label>
+          <input type="range" id="s1-year-range" class="range-slider" value="30" min="5" max="40" step="1"
+            oninput="document.getElementById('s1-year-label').textContent=this.value; updateWealthChart()" />
+          <div class="range-labels"><span>5年</span><span>20年</span><span>40年</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 場景二：保費融資 ── -->
+    <div id="scene2" class="scene-panel">
+      <div class="panel-grid two-col">
+
+        <!-- 左欄：輸入控制 -->
+        <div class="input-panel">
+          <h3 class="panel-title">⚙️ 融資參數</h3>
+
+          <div class="input-group">
+            <label class="field-label">保單總保費 (HK$)</label>
+            <input type="number" id="s2-total-premium" class="input-field" value="1000000"
+              min="100000" step="100000" oninput="calcScene2()" />
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">貸款銀行</label>
+            <select id="s2-bank" class="select-field" onchange="calcScene2()">
+              <!-- 由 JS 動態渲染 -->
+            </select>
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">貸款成數 (LTV) <span class="discount-badge" id="s2-ltv-val">85%</span></label>
+            <input type="range" id="s2-ltv" class="range-slider" value="85" min="50" max="95" step="5"
+              oninput="document.getElementById('s2-ltv-val').textContent=this.value+'%'; calcScene2()" />
+            <div class="range-labels"><span>50%</span><span>75%</span><span>95%</span></div>
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">當前貸款利率 (年息 %)</label>
+            <input type="number" id="s2-rate" class="input-field" value="4.5"
+              min="0" max="20" step="0.1" oninput="calcScene2()" />
+            <p class="hint-text">如 P - 2.2%，請直接輸入實際利率數值</p>
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">封頂利率 Cap Rate (%)</label>
+            <input type="number" id="s2-cap-rate" class="input-field" value="7"
+              min="0" max="20" step="0.1" oninput="calcScene2()" />
+          </div>
+
+          <div class="input-group">
+            <label class="field-label">預計貸款年期 <span class="discount-badge" id="s2-loan-term-val">5年</span></label>
+            <input type="range" id="s2-loan-term" class="range-slider" value="5" min="1" max="20" step="1"
+              oninput="document.getElementById('s2-loan-term-val').textContent=this.value+'年'; calcScene2()" />
+            <div class="range-labels"><span>1年</span><span>10年</span><span>20年</span></div>
+          </div>
+        </div>
+
+        <!-- 右欄：輸出 -->
+        <div class="output-panel">
+          <h3 class="panel-title">📊 融資分析結果</h3>
+
+          <!-- 結果卡片 -->
+          <div class="result-cards">
+            <div class="result-card accent">
+              <div class="rc-label">客戶實際出資</div>
+              <div class="rc-value" id="s2-client-cash">HK$ --</div>
+              <div class="rc-sub" id="s2-ltv-pct">LTV --</div>
+            </div>
+            <div class="result-card">
+              <div class="rc-label">銀行貸款金額</div>
+              <div class="rc-value" id="s2-loan-amount">HK$ --</div>
+            </div>
+            <div class="result-card success">
+              <div class="rc-label">預期年化回報 (現行利率)</div>
+              <div class="rc-value" id="s2-irr-current">-- %</div>
+            </div>
+            <div class="result-card warning">
+              <div class="rc-label">最壞情況回報 (封頂利率)</div>
+              <div class="rc-value" id="s2-irr-cap">-- %</div>
+            </div>
+          </div>
+
+          <!-- 槓桿條形圖 -->
+          <div class="leverage-bar-section">
+            <h4 class="sub-title">⚖️ 資金槓桿比例</h4>
+            <div class="leverage-bar-track">
+              <div class="leverage-bar-client" id="leverage-client-bar">
+                <span id="leverage-client-label">--</span>
+              </div>
+              <div class="leverage-bar-bank" id="leverage-bank-bar">
+                <span id="leverage-bank-label">--</span>
+              </div>
+            </div>
+            <div class="leverage-legend">
+              <span class="dot dot-client">●</span> 客戶出資
+              <span class="dot dot-bank" style="margin-left:1rem;">●</span> 銀行貸款
+            </div>
+          </div>
+
+          <!-- 安全感指標圓餅圖 -->
+          <div class="chart-mini-wrapper">
+            <h4 class="sub-title">🛡 安全感指標（保證價值比）</h4>
+            <div class="piechart-row">
+              <canvas id="chart-safety-pie" style="max-width:160px; max-height:160px;"></canvas>
+              <div class="pie-legend" id="pie-legend">
+                <div class="pie-item"><span class="dot" style="color:#4CAF50">●</span> 保證現金價值 <strong id="pie-guaranteed">--</strong></div>
+                <div class="pie-item"><span class="dot" style="color:#90CAF9">●</span> 非保證紅利 <strong id="pie-nonguaranteed">--</strong></div>
+              </div>
+            </div>
+            <div class="input-group" style="margin-top:0.5rem;">
+              <label class="field-label">觀察年期：第 <span id="s2-obs-year-label">10</span> 年</label>
+              <input type="range" id="s2-obs-year" class="range-slider" value="10" min="1" max="30" step="1"
+                oninput="document.getElementById('s2-obs-year-label').textContent=this.value; updateSafetyPie()" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 雙極限回報分析圖 -->
+      <div class="chart-section">
+        <h3 class="panel-title">📉 雙極限回報分析曲線</h3>
+        <p class="chart-hint">現行利率 vs 封頂利率下，保費融資淨回報隨年期變化趨勢</p>
+        <div class="chart-wrapper">
+          <canvas id="chart-dual-return"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 跨產品對比區（多選時顯示）── -->
+    <div id="comparison-section" class="comparison-hidden">
+      <div class="section-divider"></div>
+      <h3 class="panel-title">⚖️ 跨產品對比分析</h3>
+      <p class="chart-hint">對比多個產品在 1–30 年間的總資產增長曲線（純儲蓄 vs 保費融資）</p>
+      <div class="chart-wrapper">
+        <canvas id="chart-comparison"></canvas>
+      </div>
+      <div class="comparison-table-wrapper">
+        <table class="comparison-table" id="comparison-table">
+          <thead>
+            <tr>
+              <th>對比維度</th>
+              <!-- 由 JS 動態填入 -->
+            </tr>
+          </thead>
+          <tbody>
+            <!-- 由 JS 動態填入 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════════════════════════════════════════════
+       區塊 C：AI 客戶分析報告 (The Close)
+  ════════════════════════════════════════════════ -->
+  <section class="section-card" id="section-close">
+    <div class="section-header">
+      <span class="section-badge">C</span>
+      <h2>客戶投保明白備忘錄</h2>
+      <span class="section-tag">The Close</span>
+    </div>
+
+    <div class="close-toolbar">
+      <button class="btn btn-primary" onclick="generateReport()">
+        📋 生成客戶專屬分析報告
+      </button>
+      <button class="btn btn-secondary" onclick="copyReport()" id="btn-copy" disabled>
+        💾 複製文字
+      </button>
+      <button class="btn btn-secondary" onclick="printReport()" id="btn-print" disabled>
+        🖨 一鍵列印
+      </button>
+    </div>
+
+    <div class="report-output" id="report-output">
+      <div class="report-placeholder">
+        <span class="ph-icon">📄</span>
+        <p>調校好上方參數後，點擊「生成報告」即可輸出客戶投保明白備忘錄</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="app-footer">
+  <p>⚠️ 本系統僅供持牌保險從業員內部培訓使用，所有數據計算僅供參考，不構成任何投保或財務建議。</p>
+  <p>Insurance Sales Training Tool v1.0 · 所有精算數據請以正式計劃書為準</p>
+</footer>
+
+<script>
+/**
+ * ════════════════════════════════════════════════════════════
+ * data.js — 產品靜態 JSON 數據接口
+ * 保險銷售視覺化培訓系統 v1.0
+ *
+ * ⚠️  使用說明：
+ *     所有精算數據、文字亮點、權益門檻，均在此文件填入。
+ *     UI 邏輯全部在 app.js，此文件只管「數據」。
+ * ════════════════════════════════════════════════════════════
+ */
+
+/* ─────────────────────────────────────────────
+   【一】產品清單 productList
+   每個產品物件包含：
+     id         - 唯一識別碼（英文）
+     name       - 產品顯示名稱（中文）
+     type       - 產品類別標籤
+     currency   - 幣種
+     payTerms   - 可選繳費年期陣列
+     highlights - 三大銷售亮點（標題 + 描述）
+     discounts  - 折扣設定（首年最高 / 次年最高）
+     privileges - 權益兌換門檻清單
+     policyData - 各年度精算數據表
+───────────────────────────────────────────── */
+const productList = [
+  {
+    id: 'product_alpha',
+    name: '豐盛人生儲蓄計劃',          // ← 替換為正式產品名
+    type: '分紅儲蓄壽險',
+    currency: 'HKD',
+    payTerms: [5, 10, 15, 20],
+    highlights: [
+      {
+        icon: '💰',
+        title: '高達 XX% 首年折扣',     // ← 填入正式話術
+        desc:  '有效降低入場門檻，首年保費折後更抵買。'
+      },
+      {
+        icon: '📈',
+        title: '長線分紅持續增值',
+        desc:  '非保證分紅歷史實現率達 XX%，長期複利回報可觀。'
+      },
+      {
+        icon: '🎁',
+        title: '多重會員禮遇',
+        desc:  '指定保費門檻自動解鎖尊尚體檢、高球、機場接送等專屬權益。'
+      }
+    ],
+    discounts: {
+      year1Max: 30,   // 首年最高折扣 %
+      year2Max: 20    // 次年最高折扣 %
+    },
+    privileges: [
+      { threshold: 50000,   icon: '🏥', name: '基礎體檢禮遇' },
+      { threshold: 100000,  icon: '✈️', name: '機場接送禮遇' },
+      { threshold: 200000,  icon: '⛳', name: '高球場體驗' },
+      { threshold: 500000,  icon: '👑', name: '尊尚私人醫生' },
+      { threshold: 1000000, icon: '🌟', name: 'VIP 財富管理服務' }
+    ],
+    policyData: [
+      // year, principal, guaranteedCV, nonGuaranteedBonus
+      { year:  1, principal: 100000, guaranteedCV:  62000, nonGuaranteedBonus:  1500 },
+      { year:  2, principal: 200000, guaranteedCV: 128000, nonGuaranteedBonus:  4200 },
+      { year:  3, principal: 300000, guaranteedCV: 198000, nonGuaranteedBonus:  8100 },
+      { year:  4, principal: 400000, guaranteedCV: 271000, nonGuaranteedBonus: 13500 },
+      { year:  5, principal: 500000, guaranteedCV: 348000, nonGuaranteedBonus: 20800 },
+      { year:  6, principal: 500000, guaranteedCV: 378000, nonGuaranteedBonus: 30200 },
+      { year:  7, principal: 500000, guaranteedCV: 409000, nonGuaranteedBonus: 41500 },
+      { year:  8, principal: 500000, guaranteedCV: 442000, nonGuaranteedBonus: 55000 },
+      { year:  9, principal: 500000, guaranteedCV: 477000, nonGuaranteedBonus: 70200 },
+      { year: 10, principal: 500000, guaranteedCV: 513000, nonGuaranteedBonus: 87500 },
+      { year: 11, principal: 500000, guaranteedCV: 540000, nonGuaranteedBonus: 106800 },
+      { year: 12, principal: 500000, guaranteedCV: 568000, nonGuaranteedBonus: 128200 },
+      { year: 13, principal: 500000, guaranteedCV: 597000, nonGuaranteedBonus: 152100 },
+      { year: 14, principal: 500000, guaranteedCV: 628000, nonGuaranteedBonus: 178700 },
+      { year: 15, principal: 500000, guaranteedCV: 660000, nonGuaranteedBonus: 208300 },
+      { year: 16, principal: 500000, guaranteedCV: 693000, nonGuaranteedBonus: 241200 },
+      { year: 17, principal: 500000, guaranteedCV: 728000, nonGuaranteedBonus: 277500 },
+      { year: 18, principal: 500000, guaranteedCV: 764000, nonGuaranteedBonus: 317500 },
+      { year: 19, principal: 500000, guaranteedCV: 802000, nonGuaranteedBonus: 361500 },
+      { year: 20, principal: 500000, guaranteedCV: 842000, nonGuaranteedBonus: 410000 },
+      { year: 21, principal: 500000, guaranteedCV: 884000, nonGuaranteedBonus: 463200 },
+      { year: 22, principal: 500000, guaranteedCV: 928000, nonGuaranteedBonus: 521500 },
+      { year: 23, principal: 500000, guaranteedCV: 974000, nonGuaranteedBonus: 585300 },
+      { year: 24, principal: 500000, guaranteedCV: 1023000, nonGuaranteedBonus: 655200 },
+      { year: 25, principal: 500000, guaranteedCV: 1074000, nonGuaranteedBonus: 731500 },
+      { year: 26, principal: 500000, guaranteedCV: 1128000, nonGuaranteedBonus: 814800 },
+      { year: 27, principal: 500000, guaranteedCV: 1184000, nonGuaranteedBonus: 905700 },
+      { year: 28, principal: 500000, guaranteedCV: 1243000, nonGuaranteedBonus: 1004000 },
+      { year: 29, principal: 500000, guaranteedCV: 1305000, nonGuaranteedBonus: 1110200 },
+      { year: 30, principal: 500000, guaranteedCV: 1370000, nonGuaranteedBonus: 1225000 }
+    ]
+  },
+
+  {
+    id: 'product_beta',
+    name: '富盈傳承儲蓄計劃',           // ← 替換為正式產品名
+    type: '全球分紅壽險',
+    currency: 'USD',
+    payTerms: [5, 10, 20],
+    highlights: [
+      {
+        icon: '🌍',
+        title: '美元保單抗匯率風險',
+        desc:  '以美元計價，對沖港元貶值風險，適合有海外資產配置需求客戶。'
+      },
+      {
+        icon: '📊',
+        title: '長期 IRR 達 XX%',
+        desc:  '於第 XX 年突破保費回本，長期持有複利倍增。'
+      },
+      {
+        icon: '🔒',
+        title: '保證現金價值穩健',
+        desc:  '首 XX 年保證現金價值達投入本金 XX%，安全感十足。'
+      }
+    ],
+    discounts: {
+      year1Max: 25,
+      year2Max: 15
+    },
+    privileges: [
+      { threshold: 30000,  icon: '🏥', name: '基礎體檢禮遇' },
+      { threshold: 60000,  icon: '✈️', name: '機場貴賓室' },
+      { threshold: 150000, icon: '⛳', name: '精英會員資格' },
+      { threshold: 300000, icon: '👑', name: '私人財富顧問' }
+    ],
+    policyData: [
+      // ⚠️ 以 USD 計價，示範數據以 10,000 USD 年保費為 1 單位
+      { year:  1, principal: 10000, guaranteedCV:  6200, nonGuaranteedBonus:   200 },
+      { year:  2, principal: 20000, guaranteedCV: 12900, nonGuaranteedBonus:   600 },
+      { year:  3, principal: 30000, guaranteedCV: 20000, nonGuaranteedBonus:  1300 },
+      { year:  4, principal: 40000, guaranteedCV: 27400, nonGuaranteedBonus:  2400 },
+      { year:  5, principal: 50000, guaranteedCV: 35200, nonGuaranteedBonus:  4000 },
+      { year:  6, principal: 50000, guaranteedCV: 38200, nonGuaranteedBonus:  6100 },
+      { year:  7, principal: 50000, guaranteedCV: 41400, nonGuaranteedBonus:  8700 },
+      { year:  8, principal: 50000, guaranteedCV: 44800, nonGuaranteedBonus: 11800 },
+      { year:  9, principal: 50000, guaranteedCV: 48400, nonGuaranteedBonus: 15500 },
+      { year: 10, principal: 50000, guaranteedCV: 52300, nonGuaranteedBonus: 19700 },
+      { year: 15, principal: 50000, guaranteedCV: 67000, nonGuaranteedBonus: 48000 },
+      { year: 20, principal: 50000, guaranteedCV: 86000, nonGuaranteedBonus: 98000 },
+      { year: 25, principal: 50000, guaranteedCV: 110000, nonGuaranteedBonus: 182000 },
+      { year: 30, principal: 50000, guaranteedCV: 140000, nonGuaranteedBonus: 310000 }
+    ]
+  },
+
+  {
+    id: 'product_gamma',
+    name: '環球增值傳承計劃',            // ← 替換為正式產品名
+    type: '高端增值壽險',
+    currency: 'USD',
+    payTerms: [5, 10],
+    highlights: [
+      {
+        icon: '🚀',
+        title: '極速增值設計',
+        desc:  '短繳期快速儲入，首 5 年保證現金價值達 XX%。'
+      },
+      {
+        icon: '🏡',
+        title: '靈活提款安排',
+        desc:  '不限次數部分提款，資金流動性高，緊急時無需清盤整份保單。'
+      },
+      {
+        icon: '⚖️',
+        title: '保費融資最優選',
+        desc:  '保證現金價值高，作抵押品時融資成數更高，槓桿效益最大化。'
+      }
+    ],
+    discounts: {
+      year1Max: 20,
+      year2Max: 10
+    },
+    privileges: [
+      { threshold: 50000,  icon: '🏥', name: '尊尚體檢' },
+      { threshold: 100000, icon: '✈️', name: '頭等艙禮遇' },
+      { threshold: 300000, icon: '🌟', name: 'UHNW 私行服務' }
+    ],
+    policyData: [
+      // ⚠️ 示範數據，請替換
+      { year:  1, principal: 10000, guaranteedCV:  7500, nonGuaranteedBonus:   100 },
+      { year:  2, principal: 20000, guaranteedCV: 15800, nonGuaranteedBonus:   400 },
+      { year:  3, principal: 30000, guaranteedCV: 24800, nonGuaranteedBonus:  1000 },
+      { year:  4, principal: 40000, guaranteedCV: 34200, nonGuaranteedBonus:  2100 },
+      { year:  5, principal: 50000, guaranteedCV: 44200, nonGuaranteedBonus:  4000 },
+      { year: 10, principal: 50000, guaranteedCV: 65000, nonGuaranteedBonus: 18000 },
+      { year: 15, principal: 50000, guaranteedCV: 85000, nonGuaranteedBonus: 44000 },
+      { year: 20, principal: 50000, guaranteedCV: 109000, nonGuaranteedBonus: 88000 },
+      { year: 25, principal: 50000, guaranteedCV: 139000, nonGuaranteedBonus: 158000 },
+      { year: 30, principal: 50000, guaranteedCV: 178000, nonGuaranteedBonus: 262000 }
+    ]
+  }
+];
+
+
+/* ─────────────────────────────────────────────
+   【二】貸款銀行設定 bankList
+   每個銀行物件包含：
+     id       - 唯一識別碼
+     name     - 銀行顯示名稱
+     maxLTV   - 最高貸款成數 %
+     baseRate - 參考利率說明（僅顯示用）
+     minAmount - 最低貸款金額
+───────────────────────────────────────────── */
+const bankList = [
+  {
+    id: 'bank_a',
+    name: '匯豐銀行 HSBC',         // ← 替換為正式合作銀行
+    maxLTV: 90,
+    baseRate: 'P - 2.5%',
+    minAmount: 500000
+  },
+  {
+    id: 'bank_b',
+    name: '中銀香港 BOCHK',
+    maxLTV: 85,
+    baseRate: 'H + 1.8%',
+    minAmount: 300000
+  },
+  {
+    id: 'bank_c',
+    name: '恒生銀行 Hang Seng',
+    maxLTV: 80,
+    baseRate: 'P - 2.0%',
+    minAmount: 500000
+  },
+  {
+    id: 'bank_d',
+    name: '渣打銀行 SCB',
+    maxLTV: 88,
+    baseRate: 'SOFR + 2.2%',
+    minAmount: 1000000
+  }
+];
+
+
+/* ─────────────────────────────────────────────
+   【三】全域系統設定 appConfig
+───────────────────────────────────────────── */
+const appConfig = {
+  defaultProduct:    'product_alpha',  // 預設選中產品 ID
+  defaultPayTerm:    10,               // 預設繳費年期
+  defaultLTV:        85,               // 預設 LTV %
+  defaultLoanRate:   4.5,             // 預設貸款利率 %
+  defaultCapRate:    7.0,             // 預設封頂利率 %
+  defaultLoanTerm:   5,               // 預設貸款年期
+  currencySymbols: {
+    HKD: 'HK$',
+    USD: 'US$'
+  }
+};
+</script>
+
+<script>
+/**
+ * ════════════════════════════════════════════════════════════
+ * app.js — 核心應用邏輯
+ * 保險銷售視覺化培訓系統 v1.0
+ *
+ * 依賴：
+ *   - Chart.js (CDN)
+ *   - data.js (productList, bankList, appConfig)
+ * ════════════════════════════════════════════════════════════
+ */
+
+'use strict';
+
+/* ══════════════════════════════════════════
+   1. 全局狀態
+══════════════════════════════════════════ */
+const state = {
+  primaryProduct:   null,     // 主力產品 id
+  compareProducts:  [],       // 對比產品 id 陣列
+  activeScene:      1,        // 1 = 儲蓄険, 2 = 保費融資
+  s1Results:        {},       // 場景一計算結果
+  s2Results:        {},       // 場景二計算結果
+};
+
+/* Chart.js 實例 */
+let chartWealthRiver  = null;
+let chartSafetyPie    = null;
+let chartDualReturn   = null;
+let chartComparison   = null;
+
+/* ══════════════════════════════════════════
+   2. 初始化
+══════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  initClock();
+  initProductList();
+  initBankList();
+  initCharts();
+  initPrivilegesWall();
+  calcScene1();
+  calcScene2();
+});
+
+/* 頁頭時鐘 */
+function initClock() {
+  const el = document.getElementById('current-time');
+  if (!el) return;
+  const tick = () => {
+    const now = new Date();
+    el.textContent = now.toLocaleString('zh-HK', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit',
+      hour12: false
+    });
+  };
+  tick();
+  setInterval(tick, 1000);
+}
+
+/* 渲染產品列表 */
+function initProductList() {
+  const container = document.getElementById('product-list');
+  container.innerHTML = '';
+
+  productList.forEach((prod, idx) => {
+    const item = document.createElement('div');
+    item.className = 'product-item';
+    item.id = `prod-item-${prod.id}`;
+    item.innerHTML = `
+      <input type="checkbox" id="chk-${prod.id}" value="${prod.id}"
+        onchange="handleProductSelect(event, '${prod.id}')" />
+      <div>
+        <div class="prod-name">${prod.name}</div>
+        <div class="prod-type">${prod.type} · ${prod.currency}</div>
+      </div>
+    `;
+    container.appendChild(item);
+
+    // 預設選中第一個
+    if (idx === 0) {
+      const chk = item.querySelector('input');
+      chk.checked = true;
+      handleProductSelect({ target: chk }, prod.id);
+    }
+  });
+}
+
+/* 銀行下拉 */
+function initBankList() {
+  const sel = document.getElementById('s2-bank');
+  sel.innerHTML = '';
+  bankList.forEach(bank => {
+    const opt = document.createElement('option');
+    opt.value = bank.id;
+    opt.textContent = `${bank.name}（最高 ${bank.maxLTV}% LTV）`;
+    sel.appendChild(opt);
+  });
+}
+
+/* ══════════════════════════════════════════
+   3. 產品選擇邏輯
+══════════════════════════════════════════ */
+function handleProductSelect(evt, prodId) {
+  const checked = evt.target.checked;
+
+  if (checked) {
+    if (!state.primaryProduct) {
+      state.primaryProduct = prodId;
+    } else if (!state.compareProducts.includes(prodId)) {
+      state.compareProducts.push(prodId);
+    }
+  } else {
+    if (state.primaryProduct === prodId) {
+      state.primaryProduct = state.compareProducts.length > 0
+        ? state.compareProducts.shift()
+        : null;
+    } else {
+      state.compareProducts = state.compareProducts.filter(id => id !== prodId);
+    }
+  }
+
+  updateProductItemStyles();
+  renderHighlights();
+  updateComparisonSection();
+  calcScene1();
+}
+
+function updateProductItemStyles() {
+  productList.forEach(prod => {
+    const item = document.getElementById(`prod-item-${prod.id}`);
+    if (!item) return;
+    item.classList.remove('primary-selected', 'compare-selected');
+    if (prod.id === state.primaryProduct) {
+      item.classList.add('primary-selected');
+    } else if (state.compareProducts.includes(prod.id)) {
+      item.classList.add('compare-selected');
+    }
+  });
+}
+
+/* 渲染三大亮點 */
+function renderHighlights() {
+  const area = document.getElementById('highlights-area');
+  if (!state.primaryProduct) {
+    area.innerHTML = `
+      <div class="highlight-placeholder">
+        <span class="ph-icon">👈</span>
+        <p>請先選擇一個主力產品以查看核心銷售亮點</p>
+      </div>`;
+    return;
+  }
+
+  const prod = getProductById(state.primaryProduct);
+  if (!prod) return;
+
+  const listHTML = prod.highlights.map((h, i) => `
+    <div class="highlight-card">
+      <div class="highlight-num">${i + 1}</div>
+      <div class="highlight-content">
+        <h4>${h.icon} ${h.title}</h4>
+        <p>${h.desc}</p>
+      </div>
+    </div>
+  `).join('');
+
+  area.innerHTML = `<div class="highlights-list">${listHTML}</div>`;
+}
+
+/* ══════════════════════════════════════════
+   4. 場景切換
+══════════════════════════════════════════ */
+function switchScene(num) {
+  state.activeScene = num;
+
+  document.getElementById('scene1').classList.toggle('active', num === 1);
+  document.getElementById('scene2').classList.toggle('active', num === 2);
+  document.getElementById('btn-scene1').classList.toggle('active', num === 1);
+  document.getElementById('btn-scene2').classList.toggle('active', num === 2);
+
+  if (num === 1) calcScene1();
+  else calcScene2();
+}
+
+/* ══════════════════════════════════════════
+   5. 場景一：儲蓄險計算邏輯
+══════════════════════════════════════════ */
+function calcScene1() {
+  const basePremium = parseFloat(document.getElementById('s1-premium').value) || 0;
+  const payTerm     = parseInt(document.querySelector('input[name="s1pt"]:checked')?.value || '10');
+  const discY1Pct   = parseFloat(document.getElementById('s1-discount-y1').value) / 100;
+  const discY2Pct   = parseFloat(document.getElementById('s1-discount-y2').value) / 100;
+  const prepayRate  = parseFloat(document.getElementById('s1-prepay').value) / 100;
+
+  /* ── 折後保費計算 ── */
+  const premY1  = basePremium * (1 - discY1Pct);
+  const premY2  = basePremium * (1 - discY2Pct);
+  const premRest = basePremium; // 其餘年份無折扣
+
+  /* 預繳儲蓄率：一次繳清全部年份，可額外享受 prepayRate 利息折讓 */
+  /* 簡化公式：淨出資 = Σ(各年保費) × (1 - prepayRate × 剩餘年數平均) */
+  const remainingYears = Math.max(0, payTerm - 2);
+  const totalBeforePrepay = premY1 + premY2 + premRest * remainingYears;
+  const prepayDiscount = totalBeforePrepay * prepayRate * (payTerm / 2) / 12; // 按月折算，保守估算
+  const netTotal = Math.max(0, totalBeforePrepay - prepayDiscount);
+
+  /* 存儲場景一結果 */
+  state.s1Results = {
+    basePremium, payTerm, discY1Pct, discY2Pct, prepayRate,
+    premY1, premY2, premRest, totalBeforePrepay, prepayDiscount, netTotal
+  };
+
+  /* ── 更新 UI ── */
+  const prod = getProductById(state.primaryProduct);
+  const sym  = prod ? appConfig.currencySymbols[prod.currency] : 'HK$';
+
+  document.getElementById('s1-net-total').textContent = `${sym} ${fmt(netTotal)}`;
+  document.getElementById('s1-net-breakdown').textContent =
+    `原始總額 ${sym} ${fmt(totalBeforePrepay)}，預繳折讓 ${sym} ${fmt(prepayDiscount)}`;
+  document.getElementById('s1-y1-net').textContent = `${sym} ${fmt(premY1)}`;
+  document.getElementById('s1-y2-net').textContent = `${sym} ${fmt(premY2)}`;
+  document.getElementById('s1-remaining-net').textContent =
+    remainingYears > 0 ? `${sym} ${fmt(premRest)} × ${remainingYears} 年` : '—';
+
+  /* 更新權益牆 */
+  updatePrivilegesWall(basePremium);
+
+  /* 更新財富圖 */
+  updateWealthChart();
+}
+
+/* ══════════════════════════════════════════
+   6. 場景二：保費融資計算邏輯
+══════════════════════════════════════════ */
+function calcScene2() {
+  const totalPremium  = parseFloat(document.getElementById('s2-total-premium').value) || 0;
+  const bankId        = document.getElementById('s2-bank').value;
+  const ltvPct        = parseFloat(document.getElementById('s2-ltv').value) / 100;
+  const annualRate    = parseFloat(document.getElementById('s2-rate').value) / 100;
+  const capRate       = parseFloat(document.getElementById('s2-cap-rate').value) / 100;
+  const loanTermYears = parseInt(document.getElementById('s2-loan-term').value);
+
+  /* ── 基礎融資計算 ── */
+  const loanAmount   = totalPremium * ltvPct;
+  const clientCash   = totalPremium - loanAmount;
+  const clientPct    = (1 - ltvPct) * 100;
+  const bankPct      = ltvPct * 100;
+
+  /* ── 利息總成本計算（按到期還款，簡單利息）── */
+  const totalInterestCurrent = loanAmount * annualRate * loanTermYears;
+  const totalInterestCap     = loanAmount * capRate    * loanTermYears;
+
+  /* ── 從 policyData 獲取對應年期的保單價值 ── */
+  const prod = getProductById(state.primaryProduct);
+  let policyValueAtEnd = 0;
+  let guaranteedCVAtEnd = 0;
+  let nonGuaranteedAtEnd = 0;
+
+  if (prod && prod.policyData.length > 0) {
+    const ratio = totalPremium / getBasePremiumUnit(prod);
+    const dataAtEnd = getPolicyDataAtYear(prod, loanTermYears);
+    if (dataAtEnd) {
+      policyValueAtEnd  = (dataAtEnd.guaranteedCV + dataAtEnd.nonGuaranteedBonus) * ratio;
+      guaranteedCVAtEnd = dataAtEnd.guaranteedCV * ratio;
+      nonGuaranteedAtEnd = dataAtEnd.nonGuaranteedBonus * ratio;
+    }
+  }
+
+  /* ── IRR / 年化回報估算 ── */
+  // 淨回報 = 保單總值 - 本金 - 利息
+  const netReturnCurrent = policyValueAtEnd - totalPremium - totalInterestCurrent;
+  const netReturnCap     = policyValueAtEnd - totalPremium - totalInterestCap;
+
+  // 簡單年化回報率（對客戶出資）
+  const simpleIRRCurrent = clientCash > 0
+    ? ((netReturnCurrent / clientCash) / loanTermYears) * 100 : 0;
+  const simpleIRRCap     = clientCash > 0
+    ? ((netReturnCap / clientCash) / loanTermYears) * 100 : 0;
+
+  /* 存儲場景二結果 */
+  state.s2Results = {
+    totalPremium, bankId, ltvPct, annualRate, capRate, loanTermYears,
+    loanAmount, clientCash, clientPct, bankPct,
+    totalInterestCurrent, totalInterestCap,
+    policyValueAtEnd, guaranteedCVAtEnd, nonGuaranteedAtEnd,
+    simpleIRRCurrent, simpleIRRCap,
+    netReturnCurrent, netReturnCap
+  };
+
+  /* ── 更新 UI ── */
+  const sym = prod ? appConfig.currencySymbols[prod.currency] : 'HK$';
+
+  document.getElementById('s2-client-cash').textContent  = `${sym} ${fmt(clientCash)}`;
+  document.getElementById('s2-ltv-pct').textContent       = `客戶出資比例 ${clientPct.toFixed(1)}%`;
+  document.getElementById('s2-loan-amount').textContent  = `${sym} ${fmt(loanAmount)}`;
+  document.getElementById('s2-irr-current').textContent  = `${simpleIRRCurrent.toFixed(2)}%`;
+  document.getElementById('s2-irr-cap').textContent      = `${simpleIRRCap.toFixed(2)}%`;
+
+  /* 槓桿條形圖 */
+  const clientBar = document.getElementById('leverage-client-bar');
+  const bankBar   = document.getElementById('leverage-bank-bar');
+  clientBar.style.width = `${clientPct}%`;
+  bankBar.style.width   = `${bankPct}%`;
+  document.getElementById('leverage-client-label').textContent = `客戶 ${clientPct.toFixed(0)}%`;
+  document.getElementById('leverage-bank-label').textContent   = `銀行 ${bankPct.toFixed(0)}%`;
+
+  /* 圓餅圖 */
+  updateSafetyPie();
+
+  /* 雙極限回報圖 */
+  updateDualReturnChart();
+}
+
+/* ══════════════════════════════════════════
+   7. 初始化圖表
+══════════════════════════════════════════ */
+function initCharts() {
+  const chartDefaults = {
+    responsive: true,
+    maintainAspectRatio: true,
+    plugins: {
+      legend: {
+        labels: { font: { family: "'Noto Sans TC', sans-serif", size: 12 } }
+      }
+    }
+  };
+
+  /* ── 7a. 財富消長河流圖（堆疊柱狀圖）── */
+  chartWealthRiver = new Chart(
+    document.getElementById('chart-wealth-river'),
+    {
+      type: 'bar',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: '投入本金',
+            data: [],
+            backgroundColor: 'rgba(26,95,180,0.6)',
+            borderColor: 'rgba(26,95,180,1)',
+            borderWidth: 1
+          },
+          {
+            label: '保證現金價值（超出本金部分）',
+            data: [],
+            backgroundColor: 'rgba(38,162,105,0.6)',
+            borderColor: 'rgba(38,162,105,1)',
+            borderWidth: 1
+          },
+          {
+            label: '非保證紅利',
+            data: [],
+            backgroundColor: 'rgba(245,166,35,0.6)',
+            borderColor: 'rgba(245,166,35,1)',
+            borderWidth: 1
+          }
+        ]
+      },
+      options: {
+        ...chartDefaults,
+        scales: {
+          x: {
+            stacked: true,
+            title: { display: true, text: '保單年度', font: { size: 11 } }
+          },
+          y: {
+            stacked: true,
+            title: { display: true, text: '價值（原幣）', font: { size: 11 } },
+            ticks: {
+              callback: v => fmtShort(v)
+            }
+          }
+        },
+        plugins: {
+          ...chartDefaults.plugins,
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.raw)}`
+            }
+          }
+        }
+      }
+    }
+  );
+
+  /* ── 7b. 安全感指標圓餅圖 ── */
+  chartSafetyPie = new Chart(
+    document.getElementById('chart-safety-pie'),
+    {
+      type: 'doughnut',
+      data: {
+        labels: ['保證現金價值', '非保證紅利'],
+        datasets: [{
+          data: [50, 50],
+          backgroundColor: ['rgba(38,162,105,0.75)', 'rgba(144,202,249,0.75)'],
+          borderColor:      ['#26a269', '#64b5f6'],
+          borderWidth: 2
+        }]
+      },
+      options: {
+        ...chartDefaults,
+        cutout: '60%',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ` ${ctx.label}: ${ctx.parsed.toFixed(1)}%`
+            }
+          }
+        }
+      }
+    }
+  );
+
+  /* ── 7c. 雙極限回報分析折線圖 ── */
+  chartDualReturn = new Chart(
+    document.getElementById('chart-dual-return'),
+    {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          {
+            label: '預期回報（現行利率）',
+            data: [],
+            borderColor: '#26a269',
+            backgroundColor: 'rgba(38,162,105,0.1)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2.5
+          },
+          {
+            label: '最壞情況（封頂利率）',
+            data: [],
+            borderColor: '#e5a50a',
+            backgroundColor: 'rgba(229,165,10,0.07)',
+            fill: true,
+            tension: 0.4,
+            borderWidth: 2.5,
+            borderDash: [6, 3]
+          },
+          {
+            label: '保本線',
+            data: [],
+            borderColor: '#c01c28',
+            borderDash: [4, 4],
+            borderWidth: 1.5,
+            pointRadius: 0,
+            fill: false
+          }
+        ]
+      },
+      options: {
+        ...chartDefaults,
+        scales: {
+          x: { title: { display: true, text: '保單年度' } },
+          y: {
+            title: { display: true, text: '淨回報（對客戶出資）%' },
+            ticks: { callback: v => v.toFixed(1) + '%' }
+          }
+        }
+      }
+    }
+  );
+
+  /* ── 7d. 跨產品對比折線圖 ── */
+  chartComparison = new Chart(
+    document.getElementById('chart-comparison'),
+    {
+      type: 'line',
+      data: { labels: [], datasets: [] },
+      options: {
+        ...chartDefaults,
+        scales: {
+          x: { title: { display: true, text: '保單年度' } },
+          y: {
+            title: { display: true, text: '總資產增長（× 原投入）' },
+            ticks: { callback: v => v.toFixed(2) + 'x' }
+          }
+        }
+      }
+    }
+  );
+
+  /* 初始渲染 */
+  updateWealthChart();
+  updateSafetyPie();
+  updateDualReturnChart();
+}
+
+/* ══════════════════════════════════════════
+   8. 圖表更新函數
+══════════════════════════════════════════ */
+
+/* 8a. 財富消長河流圖 */
+function updateWealthChart() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod || !chartWealthRiver) return;
+
+  const maxYear   = parseInt(document.getElementById('s1-year-range').value);
+  const basePrem  = parseFloat(document.getElementById('s1-premium').value) || 100000;
+  const ratio     = basePrem / getBasePremiumUnit(prod);
+
+  /* 篩選年度數據，確保連貫 */
+  const dataPoints = getInterpolatedData(prod, maxYear, ratio);
+
+  chartWealthRiver.data.labels = dataPoints.map(d => `第${d.year}年`);
+
+  /* 堆疊：三層分別為 本金 / (保證CV - 本金) / 非保證 */
+  chartWealthRiver.data.datasets[0].data = dataPoints.map(d =>
+    Math.min(d.principal, d.guaranteedCV) // 本金（最多到保證CV）
+  );
+  chartWealthRiver.data.datasets[1].data = dataPoints.map(d =>
+    Math.max(0, d.guaranteedCV - d.principal) // 保證增值部分
+  );
+  chartWealthRiver.data.datasets[2].data = dataPoints.map(d =>
+    d.nonGuaranteedBonus
+  );
+
+  chartWealthRiver.update();
+}
+
+/* 8b. 安全感指標圓餅圖 */
+function updateSafetyPie() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod || !chartSafetyPie) return;
+
+  const obsYear   = parseInt(document.getElementById('s2-obs-year').value);
+  const totalPrem = parseFloat(document.getElementById('s2-total-premium').value) || 1000000;
+  const ratio     = totalPrem / getBasePremiumUnit(prod);
+  const data      = getPolicyDataAtYear(prod, obsYear);
+
+  if (!data) return;
+
+  const gcv  = data.guaranteedCV * ratio;
+  const ngb  = data.nonGuaranteedBonus * ratio;
+  const total = gcv + ngb;
+  const gcvPct = total > 0 ? (gcv / total) * 100 : 50;
+  const ngbPct = total > 0 ? (ngb / total) * 100 : 50;
+
+  chartSafetyPie.data.datasets[0].data = [gcvPct, ngbPct];
+  chartSafetyPie.update();
+
+  document.getElementById('pie-guaranteed').textContent    = `${gcvPct.toFixed(1)}%`;
+  document.getElementById('pie-nonguaranteed').textContent = `${ngbPct.toFixed(1)}%`;
+}
+
+/* 8c. 雙極限回報折線圖 */
+function updateDualReturnChart() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod || !chartDualReturn) return;
+
+  const totalPrem  = parseFloat(document.getElementById('s2-total-premium').value) || 1000000;
+  const ltvPct     = parseFloat(document.getElementById('s2-ltv').value) / 100;
+  const annualRate = parseFloat(document.getElementById('s2-rate').value) / 100;
+  const capRate    = parseFloat(document.getElementById('s2-cap-rate').value) / 100;
+  const ratio      = totalPrem / getBasePremiumUnit(prod);
+  const clientCash = totalPrem * (1 - ltvPct);
+  const loanAmount = totalPrem * ltvPct;
+
+  const maxYear = Math.max(...prod.policyData.map(d => d.year));
+  const years   = Array.from({ length: maxYear }, (_, i) => i + 1);
+
+  const retCurrent = [];
+  const retCap     = [];
+  const breakEven  = [];
+
+  years.forEach(yr => {
+    const data = getPolicyDataAtYear(prod, yr);
+    if (!data) {
+      retCurrent.push(null);
+      retCap.push(null);
+      breakEven.push(0);
+      return;
+    }
+
+    const policyVal    = (data.guaranteedCV + data.nonGuaranteedBonus) * ratio;
+    const interestCurr = loanAmount * annualRate * yr;
+    const interestCap  = loanAmount * capRate    * yr;
+    const netCurr = policyVal - totalPrem - interestCurr;
+    const netCap  = policyVal - totalPrem - interestCap;
+
+    retCurrent.push(clientCash > 0 ? (netCurr / clientCash) * 100 : 0);
+    retCap.push(clientCash > 0     ? (netCap  / clientCash) * 100 : 0);
+    breakEven.push(0);
+  });
+
+  chartDualReturn.data.labels = years.map(y => `第${y}年`);
+  chartDualReturn.data.datasets[0].data = retCurrent;
+  chartDualReturn.data.datasets[1].data = retCap;
+  chartDualReturn.data.datasets[2].data = breakEven;
+  chartDualReturn.update();
+}
+
+/* 8d. 跨產品對比圖 */
+function updateComparisonChart() {
+  if (!chartComparison) return;
+
+  const allProducts = [state.primaryProduct, ...state.compareProducts].filter(Boolean);
+  const colors = ['#1a5fb4', '#f5a623', '#26a269', '#c01c28'];
+  const datasets = [];
+
+  allProducts.forEach((prodId, idx) => {
+    const prod = getProductById(prodId);
+    if (!prod) return;
+
+    const basePrem = getBasePremiumUnit(prod);
+    const maxYear  = Math.max(...prod.policyData.map(d => d.year));
+    const years    = [];
+    const values   = [];
+
+    for (let yr = 1; yr <= maxYear; yr++) {
+      const data = getPolicyDataAtYear(prod, yr);
+      if (data) {
+        years.push(yr);
+        const total = data.guaranteedCV + data.nonGuaranteedBonus;
+        values.push(basePrem > 0 ? total / basePrem : 0);
+      }
+    }
+
+    datasets.push({
+      label: `${prod.name}（純儲蓄）`,
+      data: values,
+      borderColor: colors[idx % colors.length],
+      backgroundColor: 'transparent',
+      tension: 0.4,
+      borderWidth: 2.5
+    });
+  });
+
+  const maxYear = Math.max(...productList.map(p => Math.max(...p.policyData.map(d => d.year))));
+  chartComparison.data.labels = Array.from({ length: maxYear }, (_, i) => `第${i+1}年`);
+  chartComparison.data.datasets = datasets;
+  chartComparison.update();
+
+  /* 更新對比表 */
+  updateComparisonTable(allProducts);
+}
+
+/* ══════════════════════════════════════════
+   9. 權益兌換牆
+══════════════════════════════════════════ */
+function initPrivilegesWall() {
+  updatePrivilegesWall(0);
+}
+
+function updatePrivilegesWall(currentPremium) {
+  const prod = getProductById(state.primaryProduct);
+  const wall = document.getElementById('privileges-wall');
+
+  if (!prod || !wall) {
+    wall.innerHTML = '<span style="font-size:.8rem;color:var(--text-muted)">請先選擇產品</span>';
+    return;
+  }
+
+  wall.innerHTML = prod.privileges.map(priv => {
+    const unlocked = currentPremium >= priv.threshold;
+    return `
+      <div class="privilege-chip ${unlocked ? 'unlocked' : 'locked'}"
+           title="解鎖門檻：${appConfig.currencySymbols[prod.currency] || 'HK$'} ${fmt(priv.threshold)}">
+        ${priv.icon}
+        <span>${priv.name}</span>
+        ${unlocked ? '<span style="font-size:.7rem;margin-left:3px">✓</span>' : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+/* ══════════════════════════════════════════
+   10. 跨產品對比區切換
+══════════════════════════════════════════ */
+function updateComparisonSection() {
+  const section = document.getElementById('comparison-section');
+  const totalSelected = [state.primaryProduct, ...state.compareProducts].filter(Boolean).length;
+
+  if (totalSelected >= 2) {
+    section.classList.remove('comparison-hidden');
+    section.classList.add('chart-section');
+    updateComparisonChart();
+  } else {
+    section.classList.add('comparison-hidden');
+    section.classList.remove('chart-section');
+  }
+}
+
+/* 跨產品對比表 */
+function updateComparisonTable(productIds) {
+  const table = document.getElementById('comparison-table');
+  const thead = table.querySelector('thead tr');
+  const tbody = table.querySelector('tbody');
+
+  const rows = [
+    { key: 'type',         label: '產品類別' },
+    { key: 'currency',     label: '計價幣種' },
+    { key: 'payTerms',     label: '繳費年期' },
+    { key: 'cv10',         label: '第10年保證CV（×保費）' },
+    { key: 'cv20',         label: '第20年保證CV（×保費）' },
+    { key: 'total30',      label: '第30年總價值（×保費）' },
+  ];
+
+  /* 表頭 */
+  thead.innerHTML = '<th>對比維度</th>';
+  productIds.forEach(id => {
+    const prod = getProductById(id);
+    if (prod) {
+      const th = document.createElement('th');
+      th.textContent = prod.name;
+      thead.appendChild(th);
+    }
+  });
+
+  /* 表體 */
+  tbody.innerHTML = '';
+  rows.forEach(row => {
+    const tr = document.createElement('tr');
+    const tdLabel = document.createElement('td');
+    tdLabel.textContent = row.label;
+    tdLabel.style.fontWeight = '600';
+    tr.appendChild(tdLabel);
+
+    productIds.forEach(id => {
+      const prod = getProductById(id);
+      const td   = document.createElement('td');
+      if (!prod) { tr.appendChild(td); return; }
+
+      const base = getBasePremiumUnit(prod);
+      switch (row.key) {
+        case 'type':     td.textContent = prod.type; break;
+        case 'currency': td.textContent = prod.currency; break;
+        case 'payTerms': td.textContent = prod.payTerms.join(' / ') + ' 年'; break;
+        case 'cv10': {
+          const d = getPolicyDataAtYear(prod, 10);
+          td.textContent = d ? `${(d.guaranteedCV / base).toFixed(2)}x` : '—';
+          break;
+        }
+        case 'cv20': {
+          const d = getPolicyDataAtYear(prod, 20);
+          td.textContent = d ? `${(d.guaranteedCV / base).toFixed(2)}x` : '—';
+          break;
+        }
+        case 'total30': {
+          const d = getPolicyDataAtYear(prod, 30);
+          td.textContent = d ? `${((d.guaranteedCV + d.nonGuaranteedBonus) / base).toFixed(2)}x` : '—';
+          break;
+        }
+      }
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+}
+
+/* ══════════════════════════════════════════
+   11. 報告生成
+══════════════════════════════════════════ */
+function generateReport() {
+  const s1 = state.s1Results;
+  const s2 = state.s2Results;
+  const prod = getProductById(state.primaryProduct);
+  const sym  = prod ? appConfig.currencySymbols[prod.currency] : 'HK$';
+
+  const now = new Date().toLocaleString('zh-HK');
+
+  /* 場景一數據 */
+  const hasS1 = s1 && s1.basePremium > 0;
+  /* 場景二數據 */
+  const hasS2 = s2 && s2.totalPremium > 0;
+
+  const reportContainer = document.getElementById('report-output');
+
+  reportContainer.innerHTML = `
+    <div class="report-content">
+      <div class="report-section-title">📋 客戶投保明白備忘錄</div>
+      <div class="report-row"><span>產品名稱</span><span>${prod ? prod.name : '—'}</span></div>
+      <div class="report-row"><span>產品類別</span><span>${prod ? prod.type : '—'}</span></div>
+      <div class="report-row"><span>計價幣種</span><span>${prod ? prod.currency : '—'}</span></div>
+      <div class="report-row"><span>生成時間</span><span>${now}</span></div>
+
+      ${hasS1 ? `
+      <div class="report-section-title">💰 儲蓄方案分析</div>
+      <div class="report-row"><span>基本年保費</span><span>${sym} ${fmt(s1.basePremium)}</span></div>
+      <div class="report-row"><span>繳費年期</span><span>${s1.payTerm} 年</span></div>
+      <div class="report-row"><span>首年折扣</span><span>${(s1.discY1Pct * 100).toFixed(0)}%，折後 ${sym} ${fmt(s1.premY1)}</span></div>
+      <div class="report-row"><span>次年折扣</span><span>${(s1.discY2Pct * 100).toFixed(0)}%，折後 ${sym} ${fmt(s1.premY2)}</span></div>
+      <div class="report-row"><span>預繳儲蓄率</span><span>${(s1.prepayRate * 100).toFixed(1)}%</span></div>
+      <div class="report-row"><span>📌 實際淨出資總額</span><span style="color:var(--accent);font-size:1.05rem">${sym} ${fmt(s1.netTotal)}</span></div>
+      ` : ''}
+
+      ${hasS2 ? `
+      <div class="report-section-title">🏦 保費融資方案分析</div>
+      <div class="report-row"><span>保單總保費</span><span>${sym} ${fmt(s2.totalPremium)}</span></div>
+      <div class="report-row"><span>貸款成數 (LTV)</span><span>${(s2.ltvPct * 100).toFixed(0)}%</span></div>
+      <div class="report-row"><span>客戶實際出資</span><span>${sym} ${fmt(s2.clientCash)}（${s2.clientPct.toFixed(1)}%）</span></div>
+      <div class="report-row"><span>銀行貸款金額</span><span>${sym} ${fmt(s2.loanAmount)}（${s2.bankPct.toFixed(1)}%）</span></div>
+      <div class="report-row"><span>當前貸款利率</span><span>${(s2.annualRate * 100).toFixed(2)}%</span></div>
+      <div class="report-row"><span>封頂利率 (Cap Rate)</span><span>${(s2.capRate * 100).toFixed(2)}%</span></div>
+      <div class="report-row"><span>預計貸款年期</span><span>${s2.loanTermYears} 年</span></div>
+      <div class="report-row"><span>✅ 預期年化回報（現行利率）</span><span style="color:var(--success)">${s2.simpleIRRCurrent.toFixed(2)}%</span></div>
+      <div class="report-row"><span>⚠️ 最壞情況回報（封頂利率）</span><span style="color:var(--warning)">${s2.simpleIRRCap.toFixed(2)}%</span></div>
+      ` : ''}
+
+      <div class="report-section-title">⚠️ 重要聲明</div>
+      <div style="font-size:.8rem;color:var(--text-muted);line-height:1.8">
+        本備忘錄由銷售培訓工具自動生成，僅供參考，不構成任何投保或財務建議。
+        非保證紅利並不保證，實際結果視乎保險公司的派息決定。
+        所有數字以正式計劃書為準。客戶如有疑問，請向持牌保險顧問查詢。
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btn-copy').disabled  = false;
+  document.getElementById('btn-print').disabled = false;
+}
+
+/* 複製報告文字 */
+function copyReport() {
+  const el = document.getElementById('report-output');
+  const text = el.innerText || el.textContent || '';
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(() => {
+      showToast('✅ 已複製到剪貼板！可直接貼入 WhatsApp');
+    });
+  } else {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+    showToast('✅ 已複製！');
+  }
+}
+
+/* 列印報告 */
+function printReport() {
+  window.print();
+}
+
+/* 簡易 Toast 通知 */
+function showToast(msg) {
+  const existing = document.getElementById('toast-notification');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'toast-notification';
+  toast.style.cssText = `
+    position:fixed; bottom:2rem; left:50%; transform:translateX(-50%);
+    background:#1a5fb4; color:#fff; padding:.75rem 1.5rem;
+    border-radius:8px; font-size:.88rem; z-index:9999;
+    box-shadow:0 4px 20px rgba(0,0,0,.25); animation: fadeInUp .2s ease;
+  `;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 3000);
+}
+
+/* ══════════════════════════════════════════
+   12. 工具函數
+══════════════════════════════════════════ */
+
+/* 按 ID 查找產品 */
+function getProductById(id) {
+  return productList.find(p => p.id === id) || null;
+}
+
+/* 獲取產品的基準保費單位（policyData 中第一年 principal）*/
+function getBasePremiumUnit(prod) {
+  if (!prod || !prod.policyData || prod.policyData.length === 0) return 1;
+  return prod.policyData[prod.policyData.length <= 2
+    ? 0
+    : prod.policyData.findIndex(d => d.year === 1)
+  ]?.principal || prod.policyData[0].principal || 1;
+}
+
+/* 線性插值獲取任意年度的精算數據 */
+function getPolicyDataAtYear(prod, targetYear) {
+  if (!prod || !prod.policyData || prod.policyData.length === 0) return null;
+
+  const sorted = [...prod.policyData].sort((a, b) => a.year - b.year);
+
+  /* 精確命中 */
+  const exact = sorted.find(d => d.year === targetYear);
+  if (exact) return exact;
+
+  /* 邊界處理 */
+  if (targetYear < sorted[0].year) return sorted[0];
+  if (targetYear > sorted[sorted.length - 1].year) return sorted[sorted.length - 1];
+
+  /* 線性插值 */
+  const before = sorted.filter(d => d.year < targetYear).pop();
+  const after  = sorted.find(d => d.year > targetYear);
+
+  if (!before || !after) return null;
+
+  const t = (targetYear - before.year) / (after.year - before.year);
+  return {
+    year: targetYear,
+    principal:            lerp(before.principal,            after.principal,            t),
+    guaranteedCV:         lerp(before.guaranteedCV,         after.guaranteedCV,         t),
+    nonGuaranteedBonus:   lerp(before.nonGuaranteedBonus,   after.nonGuaranteedBonus,   t)
+  };
+}
+
+/* 線性插值 */
+function lerp(a, b, t) { return a + (b - a) * t; }
+
+/* 生成連貫年度插值數據陣列（最多每5年一點，max 個年份，套用 ratio） */
+function getInterpolatedData(prod, maxYear, ratio = 1) {
+  const step = maxYear <= 15 ? 1 : maxYear <= 25 ? 2 : 3;
+  const years = [];
+  for (let y = step; y <= maxYear; y += step) years.push(y);
+
+  return years.map(yr => {
+    const d = getPolicyDataAtYear(prod, yr);
+    return d ? {
+      year: yr,
+      principal:          d.principal          * ratio,
+      guaranteedCV:       d.guaranteedCV        * ratio,
+      nonGuaranteedBonus: d.nonGuaranteedBonus  * ratio
+    } : { year: yr, principal: 0, guaranteedCV: 0, nonGuaranteedBonus: 0 };
+  });
+}
+
+/* 數字格式化（千分位） */
+function fmt(num) {
+  if (num === null || num === undefined || isNaN(num)) return '—';
+  return Math.round(num).toLocaleString('zh-HK');
+}
+
+/* 簡短數字格式（萬/億） */
+function fmtShort(num) {
+  if (Math.abs(num) >= 1e8) return (num / 1e8).toFixed(1) + '億';
+  if (Math.abs(num) >= 1e4) return (num / 1e4).toFixed(1) + '萬';
+  return Math.round(num).toString();
+}
+</script>
+</body>
+</html>
