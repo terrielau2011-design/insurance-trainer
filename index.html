@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>保險銷售視覺化培訓系統 v2.0</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
@@ -225,6 +226,40 @@
           </div>
         </div>
       </div>
+
+      <!-- v2.0 跨資產機會成本對比表 -->
+      <div class="chart-section">
+        <h3 class="panel-title">⚖️ 跨資產機會成本對比</h3>
+        <p class="chart-hint">本方案 vs 美債 vs 定存 vs 物業收租 — 數據隨選定週年動態跳動</p>
+        <div class="input-group" style="margin-bottom:0.75rem;">
+          <label class="field-label">對比週年：第 <span id="opp-year-label">10</span> 年</label>
+          <div class="dual-input-row">
+            <input type="number" id="opp-year" class="input-field" value="10"
+              min="1" max="30" step="1" oninput="document.getElementById('opp-year-label').textContent=this.value; updateOpportunityTable()" />
+            <div class="quick-buttons">
+              <button class="quick-btn" onclick="setOppYear(5)">5年</button>
+              <button class="quick-btn" onclick="setOppYear(10)">10年</button>
+              <button class="quick-btn" onclick="setOppYear(15)">15年</button>
+              <button class="quick-btn" onclick="setOppYear(20)">20年</button>
+            </div>
+          </div>
+        </div>
+        <div class="comparison-table-wrapper">
+          <table class="comparison-table opp-table" id="opp-table">
+            <thead>
+              <tr>
+                <th>投資工具</th>
+                <th>預期年化收益 / 特性</th>
+                <th>資產流動性</th>
+                <th>潛在風險 / 缺點</th>
+              </tr>
+            </thead>
+            <tbody id="opp-table-body">
+              <!-- 由 JS 動態渲染 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
 
     <!-- ── 場景二：保費融資（v2.0 完整精算）── -->
@@ -441,7 +476,7 @@
   </section>
 
   <!-- ═══════════════════════════════════════════════
-       區塊 C：AI 客戶分析報告 (The Close)
+       區塊 C：AI 客戶分析報告 (The Close) — v2.0 完整版
   ════════════════════════════════════════════════ -->
   <section class="section-card" id="section-close">
     <div class="section-header">
@@ -450,23 +485,68 @@
       <span class="section-tag">The Close</span>
     </div>
 
+    <!-- v2.0 顧問核心觀點標籤 -->
+    <div class="advisor-tags-section">
+      <h4 class="sub-title">🏷 顧問核心觀點標籤（多選，影響報告引言）</h4>
+      <div class="advisor-tags" id="advisor-tags">
+        <label class="tag-chip"><input type="checkbox" value="財富傳承" onchange="updateAdvisorTags()"> 🏛 財富傳承</label>
+        <label class="tag-chip"><input type="checkbox" value="資產配置與投資" onchange="updateAdvisorTags()"> 📊 資產配置與投資</label>
+        <label class="tag-chip"><input type="checkbox" value="儲蓄退休規劃" onchange="updateAdvisorTags()"> 🏖 儲蓄退休規劃</label>
+        <label class="tag-chip"><input type="checkbox" value="子女教育基金" onchange="updateAdvisorTags()"> 🎓 子女教育基金</label>
+        <label class="tag-chip"><input type="checkbox" value="高額人壽保障" onchange="updateAdvisorTags()"> 🛡 高額人壽保障</label>
+      </div>
+    </div>
+
+    <!-- v2.0 保費融資分析開關 -->
+    <div class="finance-toggle-section">
+      <h4 class="sub-title">🏦 保費融資分析</h4>
+      <div class="toggle-switch-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="finance-toggle" checked onchange="onFinanceToggle()">
+          <span class="toggle-slider"></span>
+        </label>
+        <span id="finance-toggle-label" class="toggle-label">已啟用 — 報告將包含融資壓力測試頁面（共三頁）</span>
+      </div>
+    </div>
+
+    <!-- 報告操作工具欄 -->
     <div class="close-toolbar">
       <button class="btn btn-primary" onclick="generateReport()">
         📋 生成客戶專屬分析報告
       </button>
-      <button class="btn btn-secondary" onclick="copyReport()" id="btn-copy" disabled>
-        💾 複製文字
+      <button class="btn btn-secondary" onclick="copyWhatsApp()" id="btn-whatsapp" disabled>
+        💬 一鍵複製 WhatsApp 摘要
+      </button>
+      <button class="btn btn-secondary" onclick="downloadPDF()" id="btn-pdf" disabled>
+        📄 下載 PDF 報告
       </button>
       <button class="btn btn-secondary" onclick="printReport()" id="btn-print" disabled>
         🖨 一鍵列印
       </button>
     </div>
 
+    <!-- 報告輸出區（PDF 抓取目標） -->
     <div class="report-output" id="report-output">
       <div class="report-placeholder">
         <span class="ph-icon">📄</span>
         <p>調校好上方參數後，點擊「生成報告」即可輸出客戶投保明白備忘錄</p>
       </div>
+    </div>
+  </section>
+
+  <!-- v2.0 官方計劃書離線存檔庫 -->
+  <section class="section-card" id="section-brochures">
+    <div class="section-header">
+      <span class="section-badge">📚</span>
+      <h2>官方計劃書存檔庫</h2>
+      <span class="section-tag">Brochures</span>
+      <button class="btn btn-secondary" style="margin-left:auto; padding:0.4rem 0.8rem; font-size:0.8rem;"
+              onclick="loadBrochuresList()" id="btn-load-brochures">
+        🔄 載入計劃書
+      </button>
+    </div>
+    <div id="brochures-list" class="brochures-grid">
+      <p class="hint-text">點擊「載入計劃書」從 GitHub 倉庫同步官方 PDF 說明書至本地，支援離線查閱。</p>
     </div>
   </section>
 

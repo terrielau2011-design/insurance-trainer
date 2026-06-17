@@ -21,6 +21,8 @@ const state = {
   activeScene:      1,        // 1 = 儲蓄険, 2 = 保費融資
   s1Results:        {},       // 場景一計算結果
   s2Results:        {},       // 場景二計算結果
+  advisorTags:      [],       // v2.0 顧問標籤
+  financeEnabled:   true,     // v2.0 融資開關
 };
 
 /* Chart.js 實例 */
@@ -57,6 +59,7 @@ function onDataReady() {
   initPrivilegesWall();
   calcScene1();
   calcScene2();
+  updateOpportunityTable();  /* v2.0 Phase 4 */
 }
 
 /* v2.0: 同步後刷新所有 UI */
@@ -286,6 +289,7 @@ function calcScene1() {
 
   updatePrivilegesWall(basePremium * payTerm);
   updateWealthChart();
+  updateOpportunityTable();  /* v2.0: 保費變動時連動更新機會成本表 */
 }
 
 /* v2.0 快捷按鈕函數 */
@@ -879,75 +883,279 @@ function updateComparisonTable(productIds) {
 }
 
 /* ══════════════════════════════════════════
-   11. 報告生成
+   11. v2.0 報告生成（三頁 PDF 架構 + 顧問標籤 + 融資開關）
 ══════════════════════════════════════════ */
+
+/* 顧問標籤更新 */
+function updateAdvisorTags() {
+  const checkboxes = document.querySelectorAll('#advisor-tags input:checked');
+  state.advisorTags = Array.from(checkboxes).map(cb => cb.value);
+}
+
+/* 融資開關切換 */
+function onFinanceToggle() {
+  const toggle = document.getElementById('finance-toggle');
+  const label = document.getElementById('finance-toggle-label');
+  state.financeEnabled = toggle.checked;
+
+  if (state.financeEnabled) {
+    label.textContent = '已啟用 — 報告將包含融資壓力測試頁面（共三頁）';
+    label.style.color = 'var(--success)';
+  } else {
+    label.textContent = '已關閉 — 報告僅含資產配置摘要 + 機會成本對比（共兩頁）';
+    label.style.color = 'var(--text-muted)';
+  }
+}
+
+/* 跨資產機會成本表快捷按鈕 */
+function setOppYear(v) {
+  document.getElementById('opp-year').value = v;
+  document.getElementById('opp-year-label').textContent = v;
+  updateOpportunityTable();
+}
+
+/* 更新跨資產機會成本對比表 */
+function updateOpportunityTable() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod) return;
+
+  const obsYear = parseInt(document.getElementById('opp-year').value) || 10;
+  const basePrem = parseFloat(document.getElementById('s1-premium').value) || 100000;
+  const ratio = basePrem / getBasePremiumUnit(prod);
+  const sym = appConfig.currencySymbols[prod.currency] || 'HK$';
+
+  const data = getPolicyDataAtYear(prod, obsYear);
+  if (!data) return;
+
+  const policyTotal = (data.guaranteedCV + data.nonGuaranteedBonus) * ratio;
+  const totalPaid = (data.premiumPaid ?? data.principal ?? 0) * ratio;
+
+  /* 本方案年度化單利 */
+  const insuranceReturn = totalPaid > 0
+    ? ((policyTotal - totalPaid) / totalPaid / obsYear * 100)
+    : 0;
+
+  /* 外部資產基準利率 */
+  const bondRate = 4.0;
+  const depositRate = 3.5;
+  const propertyRateLow = 2.5;
+  const propertyRateHigh = 3.0;
+
+  const rows = [
+    {
+      tool: '🏠 本儲蓄保險方案',
+      return: `<span class="return-positive">${insuranceReturn.toFixed(2)}% 單利</span> / IRR 動態`,
+      liquidity: '中（隨年期遞增）',
+      risk: '早期退保有損失，中期後鎖定長線高回報',
+      highlight: true
+    },
+    {
+      tool: '🇺🇸 美國長期國債',
+      return: `<span class="return-neutral">${bondRate.toFixed(1)}%（現行美債息口）</span>`,
+      liquidity: '高',
+      risk: '鎖定年期長，中途賣出須承擔債券價格波動風險',
+      highlight: false
+    },
+    {
+      tool: '🏦 銀行定期存款',
+      return: `<span class="return-neutral">${depositRate.toFixed(1)}%（現行定存利率）</span>`,
+      liquidity: '高（到期即放）',
+      risk: '利率下行風險，續期時無法長線鎖定高息',
+      highlight: false
+    },
+    {
+      tool: '🏠 物業房屋收租',
+      return: `<span class="return-neutral">${propertyRateLow}% - ${propertyRateHigh}%（淨租金回報率）</span>`,
+      liquidity: '極低',
+      risk: '須扣除管理費、印花稅、維修成本，具空置期與樓價下跌風險',
+      highlight: false
+    }
+  ];
+
+  const tbody = document.getElementById('opp-table-body');
+  tbody.innerHTML = rows.map(r => `
+    <tr class="${r.highlight ? 'opp-highlight' : ''}">
+      <td>${r.tool}</td>
+      <td>${r.return}</td>
+      <td>${r.liquidity}</td>
+      <td>${r.risk}</td>
+    </tr>
+  `).join('');
+}
+
+/* 生成顧問引言 */
+function generateAdvisorIntro() {
+  const tags = state.advisorTags;
+  const prod = getProductById(state.primaryProduct);
+  const prodName = prod ? prod.name : '本方案';
+
+  if (tags.length === 0) {
+    return `本報告為客戶專屬資產配置分析，基於 ${prodName} 的保證與非保證利益，提供客觀數據供客戶參考。`;
+  }
+
+  const intros = {
+    '財富傳承': `針對客戶的財富傳承需求，本方案透過長線複利增值與靈活受保人轉換機制，實現跨代財富有序傳承。`,
+    '資產配置與投資': `從資產配置角度，本方案作為防守型資產，與股票、債券等進攻型資產互補，降低整體組合波動。`,
+    '儲蓄退休規劃': `為客戶的退休生活提供穩健的被動收入來源，透過保證現金價值鎖定長線回報。`,
+    '子女教育基金': `以時間換空間，為子女未來教育支出提前儲備，享受複利效應最大化。`,
+    '高額人壽保障': `結合高額人壽保障與儲蓄增值，一張保單同時滿足保障與理財雙重需求。`
+  };
+
+  return tags.map(t => intros[t] || '').join(' ');
+}
+
+/* 生成完整報告 HTML（供 PDF 抓取） */
 function generateReport() {
   const s1 = state.s1Results;
   const s2 = state.s2Results;
   const prod = getProductById(state.primaryProduct);
   const sym  = prod ? appConfig.currencySymbols[prod.currency] : 'HK$';
-
   const now = new Date().toLocaleString('zh-HK');
+  const intro = generateAdvisorIntro();
 
-  /* 場景一數據 */
-  const hasS1 = s1 && s1.basePremium > 0;
-  /* 場景二數據 */
-  const hasS2 = s2 && s2.totalPremium > 0;
+  const container = document.getElementById('report-output');
 
-  const reportContainer = document.getElementById('report-output');
-
-  reportContainer.innerHTML = `
-    <div class="report-content">
-      <div class="report-section-title">📋 客戶投保明白備忘錄</div>
+  /* ── 第一頁：客戶專屬資產配置摘要 ── */
+  let page1 = `
+    <div class="pdf-page" id="pdf-page-1">
+      <div class="pdf-page-title">📋 客戶專屬資產配置摘要</div>
       <div class="report-row"><span>產品名稱</span><span>${prod ? prod.name : '—'}</span></div>
-      <div class="report-row"><span>產品類別</span><span>${prod ? prod.type : '—'}</span></div>
+      <div class="report-row"><span>產品類別</span><span>${prod ? prod.category : '—'}</span></div>
       <div class="report-row"><span>計價幣種</span><span>${prod ? prod.currency : '—'}</span></div>
-      <div class="report-row"><span>生成時間</span><span>${now}</span></div>
+      <div class="report-row"><span>顧問標籤</span><span>${state.advisorTags.length > 0 ? state.advisorTags.join('、') : '未指定'}</span></div>
+      <div class="report-row"><span>生成日期</span><span>${now}</span></div>
 
-      ${hasS1 ? `
+      <div class="pdf-intro">${intro}</div>
+
       <div class="report-section-title">💰 儲蓄方案分析</div>
       <div class="report-row"><span>基本年保費</span><span>${sym} ${fmt(s1.basePremium)}</span></div>
       <div class="report-row"><span>繳費年期</span><span>${s1.payTerm} 年</span></div>
       <div class="report-row"><span>首年折扣</span><span>${(s1.discY1Pct * 100).toFixed(0)}%，折後 ${sym} ${fmt(s1.premY1)}</span></div>
       <div class="report-row"><span>次年折扣</span><span>${(s1.discY2Pct * 100).toFixed(0)}%，折後 ${sym} ${fmt(s1.premY2)}</span></div>
       <div class="report-row"><span>預繳儲蓄率</span><span>${(s1.prepayRate * 100).toFixed(1)}%</span></div>
-      <div class="report-row"><span>📌 實際淨出資總額</span><span style="color:var(--accent);font-size:1.05rem">${sym} ${fmt(s1.netTotal)}</span></div>
-      ` : ''}
-
-      ${hasS2 ? `
-      <div class="report-section-title">🏦 保費融資方案分析</div>
-      <div class="report-row"><span>保單總保費</span><span>${sym} ${fmt(s2.totalPremium)}</span></div>
-      <div class="report-row"><span>貸款成數 (LTV)</span><span>${(s2.ltvPct * 100).toFixed(0)}%</span></div>
-      <div class="report-row"><span>客戶實際出資</span><span>${sym} ${fmt(s2.clientCash)}（${s2.clientPct.toFixed(1)}%）</span></div>
-      <div class="report-row"><span>銀行貸款金額</span><span>${sym} ${fmt(s2.loanAmount)}（${s2.bankPct.toFixed(1)}%）</span></div>
-      <div class="report-row"><span>當前貸款利率</span><span>${(s2.annualRate * 100).toFixed(2)}%</span></div>
-      <div class="report-row"><span>封頂利率 (Cap Rate)</span><span>${(s2.capRate * 100).toFixed(2)}%</span></div>
-      <div class="report-row"><span>預計貸款年期</span><span>${s2.loanTermYears} 年</span></div>
-      <div class="report-row"><span>✅ 預期年化回報（現行利率）</span><span style="color:var(--success)">${s2.simpleIRRCurrent.toFixed(2)}%</span></div>
-      <div class="report-row"><span>⚠️ 最壞情況回報（封頂利率）</span><span style="color:var(--warning)">${s2.simpleIRRCap.toFixed(2)}%</span></div>
-      ` : ''}
-
-      <div class="report-section-title">⚠️ 重要聲明</div>
-      <div style="font-size:.8rem;color:var(--text-muted);line-height:1.8">
-        本備忘錄由銷售培訓工具自動生成，僅供參考，不構成任何投保或財務建議。
-        非保證紅利並不保證，實際結果視乎保險公司的派息決定。
-        所有數字以正式計劃書為準。客戶如有疑問，請向持牌保險顧問查詢。
-      </div>
+      <div class="report-row"><span>📌 實際淨出資總額</span><span style="color:var(--accent);font-weight:700">${sym} ${fmt(s1.netTotal)}</span></div>
     </div>
   `;
 
-  document.getElementById('btn-copy').disabled  = false;
+  /* ── 第二頁：跨資產機會成本對比 ── */
+  const oppYear = parseInt(document.getElementById('opp-year').value) || 10;
+  let page2 = `
+    <div class="pdf-page" id="pdf-page-2">
+      <div class="pdf-page-title">⚖️ 跨資產機會成本對比（第 ${oppYear} 週年）</div>
+      <table class="comparison-table opp-table" style="width:100%; font-size:0.82rem;">
+        <thead>
+          <tr>
+            <th>投資工具</th>
+            <th>預期年化收益</th>
+            <th>流動性</th>
+            <th>潛在風險</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${document.getElementById('opp-table-body').innerHTML}
+        </tbody>
+      </table>
+      <p style="margin-top:1rem;font-size:0.78rem;color:var(--text-muted);">
+        ⚠️ 以上對比基於第 ${oppYear} 週年數據。美債/定存利率為撰寫時參考值，實際以市場為準。
+        物業回報已扣除基本開支但未計稅務。所有數據僅供參考。
+      </p>
+    </div>
+  `;
+
+  /* ── 第三頁：保費融資壓力測試（僅融資開關開啟時）── */
+  let page3 = '';
+  if (state.financeEnabled && s2 && s2.totalPremium > 0) {
+    page3 = `
+      <div class="pdf-page" id="pdf-page-3">
+        <div class="pdf-page-title">🏦 保費融資雙極限壓力測試備忘</div>
+
+        <div class="report-section-title">客戶總出資成本明細</div>
+        <div class="report-row"><span>① 實際貸款金額</span><span>${sym} ${fmt(s2.loanAmount)}</span></div>
+        <div class="report-row"><span>② 貸款手續費（${(s2.loanFeeRate * 100).toFixed(1)}%）</span><span>${sym} ${fmt(s2.loanFee)}</span></div>
+        <div class="report-row"><span>③ 實際本金</span><span>${sym} ${fmt(s2.actualPrincipal)}</span></div>
+        <div class="report-row"><span>④ 客戶總出資成本（③+②）</span><span style="color:var(--accent);font-weight:700">${sym} ${fmt(s2.clientTotalCost)}</span></div>
+
+        <div class="report-section-title">雙極限回報結算（第 ${s2.loanTermYears} 年退出）</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin:0.75rem 0;">
+          <div class="result-card success" style="text-align:center;">
+            <div class="rc-label">✅ 正常環境</div>
+            <div class="rc-value">${s2.roiCurrent.toFixed(1)}%</div>
+            <div class="rc-sub">年單利 <strong style="color:var(--success)">${s2.annualCurrent.toFixed(2)}%</strong></div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.25rem;">利率 ${(s2.annualRate * 100).toFixed(3)}%</div>
+          </div>
+          <div class="result-card warning" style="text-align:center;">
+            <div class="rc-label">⚠️ 最壞環境</div>
+            <div class="rc-value">${s2.roiCap.toFixed(1)}%</div>
+            <div class="rc-sub">年單利 <strong style="color:var(--warning)">${s2.annualCap.toFixed(2)}%</strong></div>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.25rem;">封頂利率 ${(s2.capRate * 100).toFixed(1)}%</div>
+          </div>
+        </div>
+
+        <div class="pdf-signature">
+          <div>
+            <p>客戶簽名確認：</p>
+            <div class="pdf-signature-line"></div>
+          </div>
+          <div style="text-align:right;">
+            <p>顧問簽署：</p>
+            <div class="pdf-signature-line"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  /* 聲明頁 */
+  let disclaimer = `
+    <div style="font-size:0.75rem;color:var(--text-muted);line-height:1.8;margin-top:1rem;padding:0.75rem;background:var(--surface-3);border-radius:var(--radius-sm);">
+      ⚠️ 重要聲明：本備忘錄由銷售培訓工具自動生成，僅供參考，不構成任何投保或財務建議。
+      非保證紅利並不保證，實際結果視乎保險公司的派息決定。所有數字以正式計劃書為準。
+    </div>
+  `;
+
+  container.innerHTML = page1 + page2 + page3 + disclaimer;
+
+  /* 啟用操作按鈕 */
+  document.getElementById('btn-whatsapp').disabled = false;
+  document.getElementById('btn-pdf').disabled = false;
   document.getElementById('btn-print').disabled = false;
+
+  showToast('✅ 報告已生成！');
 }
 
-/* 複製報告文字 */
-function copyReport() {
-  const el = document.getElementById('report-output');
-  const text = el.innerText || el.textContent || '';
+/* WhatsApp 精簡摘要一鍵複製 */
+function copyWhatsApp() {
+  const s1 = state.s1Results;
+  const s2 = state.s2Results;
+  const prod = getProductById(state.primaryProduct);
+  const sym = prod ? appConfig.currencySymbols[prod.currency] : 'HK$';
+  const prodName = prod ? prod.name : '保險方案';
+
+  let text = `🛡 *${prodName} — 客戶投保分析摘要*\n\n`;
+
+  text += `💰 *儲蓄方案*\n`;
+  text += `• 年保費：${sym}${fmt(s1.basePremium)}｜繳費 ${s1.payTerm} 年\n`;
+  text += `• 首年折扣 ${(s1.discY1Pct * 100).toFixed(0)}%｜次年 ${(s1.discY2Pct * 100).toFixed(0)}%\n`;
+  text += `• 淨出資總額：${sym}${fmt(s1.netTotal)}\n\n`;
+
+  if (state.financeEnabled && s2 && s2.totalPremium > 0) {
+    text += `🏦 *保費融資*\n`;
+    text += `• 總保費：${sym}${fmt(s2.totalPremium)}｜LTV ${(s2.ltvPct * 100).toFixed(0)}%\n`;
+    text += `• 客戶總出資：${sym}${fmt(s2.clientTotalCost)}\n`;
+    text += `• 第 ${s2.loanTermYears} 年退出：\n`;
+    text += `  ✅ 正常：${s2.roiCurrent.toFixed(1)}%（年單利 ${s2.annualCurrent.toFixed(2)}%）\n`;
+    text += `  ⚠️ 封頂：${s2.roiCap.toFixed(1)}%（年單利 ${s2.annualCap.toFixed(2)}%）\n\n`;
+  }
+
+  if (state.advisorTags.length > 0) {
+    text += `🏷 *顧問觀點*：${state.advisorTags.join('、')}\n\n`;
+  }
+
+  text += `⚠️ 以上數據僅供參考，以正式計劃書為準。`;
 
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text).then(() => {
-      showToast('✅ 已複製到剪貼板！可直接貼入 WhatsApp');
+      showToast('💬 WhatsApp 摘要已複製！可直接貼入對話');
     });
   } else {
     const ta = document.createElement('textarea');
@@ -956,13 +1164,128 @@ function copyReport() {
     ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
-    showToast('✅ 已複製！');
+    showToast('💬 已複製！');
   }
+}
+
+/* PDF 下載（html2pdf.js） */
+function downloadPDF() {
+  const reportEl = document.getElementById('report-output');
+  const prod = getProductById(state.primaryProduct);
+  const prodName = prod ? prod.name : 'Insurance';
+
+  showToast('📄 正在生成 PDF，請稍候...');
+
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: `${prodName}_客戶投保明白備忘錄_${new Date().toISOString().slice(0,10)}.pdf`,
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: 2, useCORS: true, letterRendering: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'legacy'], before: '.pdf-page' }
+  };
+
+  html2pdf().set(opt).from(reportEl).save().then(() => {
+    showToast('✅ PDF 已下載！');
+  }).catch(err => {
+    console.error('PDF generation failed:', err);
+    showToast('❌ PDF 生成失敗，請重試');
+  });
 }
 
 /* 列印報告 */
 function printReport() {
   window.print();
+}
+
+/* v2.0 計劃書存檔庫載入 */
+async function loadBrochuresList() {
+  const container = document.getElementById('brochures-list');
+  const btn = document.getElementById('btn-load-brochures');
+
+  /* 先檢查 localStorage 快取索引 */
+  const cachedIndex = localStorage.getItem('it_brochures_index');
+
+  if (cachedIndex) {
+    try {
+      const files = JSON.parse(cachedIndex);
+      if (files.length > 0) {
+        renderBrochures(files);
+        return;
+      }
+    } catch {}
+  }
+
+  /* 嘗試從 GitHub API 載入 */
+  const token = typeof getToken === 'function' ? getToken() : '';
+  container.innerHTML = '<p class="hint-text">🔄 從 GitHub 載入中...</p>';
+  btn.disabled = true;
+
+  try {
+    const apiUrl = `https://api.github.com/repos/terrielau2011-design/insurance-trainer/contents/brochures`;
+    const headers = { 'Accept': 'application/vnd.github.v3+json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const resp = await fetch(apiUrl, { headers });
+
+    if (!resp.ok) {
+      container.innerHTML = '<p class="hint-text">📂 brochures/ 資料夾暫無 PDF 說明書。培訓員可上傳 PDF 至 GitHub 倉庫的 brochures/ 資料夾。</p>';
+      btn.disabled = false;
+      return;
+    }
+
+    const files = await resp.json();
+    const pdfFiles = files.filter(f => f.name.endsWith('.pdf'));
+
+    if (pdfFiles.length === 0) {
+      container.innerHTML = '<p class="hint-text">📂 brochures/ 資料夾暫無 PDF 說明書。</p>';
+    } else {
+      const fileList = pdfFiles.map(f => ({
+        name: f.name,
+        url: f.download_url,
+        size: f.size
+      }));
+      localStorage.setItem('it_brochures_index', JSON.stringify(fileList));
+      renderBrochures(fileList);
+    }
+  } catch (err) {
+    container.innerHTML = '<p class="hint-text">⚠ 載入失敗，請確認網路連線或先同步數據。</p>';
+  }
+
+  btn.disabled = false;
+}
+
+function renderBrochures(files) {
+  const container = document.getElementById('brochures-list');
+  container.innerHTML = files.map(f => {
+    const sizeKB = f.size ? (f.size / 1024).toFixed(0) + ' KB' : '';
+    return `
+      <div class="brochure-card" onclick="openBrochure('${f.url}', '${f.name}')">
+        <span class="brochure-icon">📄</span>
+        <span class="brochure-name">${f.name}</span>
+        ${sizeKB ? `<span class="brochure-size">${sizeKB}</span>` : ''}
+        <span style="font-size:0.72rem;color:var(--primary);">點擊查閱 →</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function openBrochure(url, name) {
+  /* 嘗試從 Cache API 讀取，否則直接打開 URL */
+  if ('caches' in window) {
+    caches.match(url).then(cached => {
+      if (cached) {
+        cached.blob().then(blob => {
+          const blobUrl = URL.createObjectURL(blob);
+          window.open(blobUrl, '_blank');
+        });
+      } else {
+        window.open(url, '_blank');
+      }
+    });
+  } else {
+    window.open(url, '_blank');
+  }
 }
 
 /* 簡易 Toast 通知 */
