@@ -564,7 +564,7 @@ function initCharts() {
     }
   );
 
-  /* ── 7c. v2.0 10年期雙極限 NAV 分析圖 ── */
+ /* ── 7c. v2.0 10年期雙極限 NAV 分析圖 (已升級交互) ── */
   chartDualReturn = new Chart(
     document.getElementById('chart-dual-return'),
     {
@@ -573,50 +573,68 @@ function initCharts() {
         labels: [],
         datasets: [
           {
-            label: '藍線：正常環境 NAV（現行利率）',
+            label: '正常環境 (NAV)',
             data: [],
             borderColor: '#1a5fb4',
-            backgroundColor: 'rgba(26,95,180,0.1)',
+            backgroundColor: 'rgba(26,95,180,0.05)',
             fill: true,
             tension: 0.4,
             borderWidth: 2.5,
-            pointRadius: 4,
-            pointBackgroundColor: '#1a5fb4'
+            pointRadius: 2
           },
           {
-            label: '紅線：最壞環境 NAV（封頂利率）',
+            label: '封頂環境 (NAV)',
             data: [],
             borderColor: '#c01c28',
-            backgroundColor: 'rgba(192,28,40,0.07)',
+            backgroundColor: 'rgba(192,28,40,0.05)',
             fill: true,
             tension: 0.4,
             borderWidth: 2.5,
             borderDash: [6, 3],
-            pointRadius: 4,
-            pointBackgroundColor: '#c01c28'
+            pointRadius: 2
           },
           {
             label: '⭐ 黃金退出點',
             data: [],
             borderColor: '#f5a623',
             backgroundColor: '#f5a623',
-            pointRadius: 10,
-            pointHoverRadius: 14,
+            pointRadius: 8,
             pointStyle: 'star',
-            showLine: false,
-            fill: false
+            showLine: false
           }
         ]
       },
       options: {
         ...chartDefaults,
-        scales: {
-          x: { title: { display: true, text: '保單年度（10年期）' } },
-          y: {
-            title: { display: true, text: '保單淨資產價值 NAV' },
-            ticks: { callback: v => fmtShort(v) }
+        responsive: true,
+        maintainAspectRatio: false,
+        // 啟用平滑過渡動畫
+        animation: { duration: 600, easing: 'easeInOutQuad' },
+        interaction: {
+          mode: 'index', // 懸停時同步顯示兩條線的數據
+          intersect: false // 體驗更順滑，不需精準點擊
+        },
+        plugins: {
+          ...chartDefaults.plugins,
+          tooltip: {
+            enabled: true,
+            backgroundColor: 'rgba(0,0,0,0.8)',
+            padding: 12,
+            callbacks: {
+              label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.raw)}`
+            }
           }
         },
+        scales: {
+          x: { title: { display: true, text: '保單年度' } },
+          y: { 
+            title: { display: true, text: '保單淨資產價值 NAV' }, 
+            ticks: { callback: v => fmtShort(v) } 
+          }
+        }
+      }
+    }
+  );
         plugins: {
           ...chartDefaults.plugins,
           tooltip: {
