@@ -564,7 +564,7 @@ function initCharts() {
     }
   );
 
- /* ── 7c. v2.0 10年期雙極限 NAV 分析圖 (已升級交互) ── */
+ /* ── 7c. v2.0 10年期雙極限 NAV 分析圖 (修正版) ── */
   chartDualReturn = new Chart(
     document.getElementById('chart-dual-return'),
     {
@@ -605,23 +605,23 @@ function initCharts() {
         ]
       },
       options: {
-        ...chartDefaults,
         responsive: true,
         maintainAspectRatio: false,
-        // 啟用平滑過渡動畫
         animation: { duration: 600, easing: 'easeInOutQuad' },
         interaction: {
-          mode: 'index', // 懸停時同步顯示兩條線的數據
-          intersect: false // 體驗更順滑，不需精準點擊
+          mode: 'index',
+          intersect: false
         },
         plugins: {
-          ...chartDefaults.plugins,
+          legend: {
+            labels: { font: { family: "'Noto Sans TC', sans-serif", size: 12 } }
+          },
           tooltip: {
             enabled: true,
             backgroundColor: 'rgba(0,0,0,0.8)',
             padding: 12,
             callbacks: {
-              label: ctx => ` ${ctx.dataset.label}: ${fmt(ctx.raw)}`
+              label: function(ctx) { return ' ' + ctx.dataset.label + ': ' + fmt(ctx.raw); }
             }
           }
         },
@@ -629,13 +629,12 @@ function initCharts() {
           x: { title: { display: true, text: '保單年度' } },
           y: { 
             title: { display: true, text: '保單淨資產價值 NAV' }, 
-            ticks: { callback: v => fmtShort(v) } 
+            ticks: { callback: function(v) { return fmtShort(v); } }
           }
         }
       }
     }
-  );
-        plugins: {
+  );        plugins: {
           ...chartDefaults.plugins,
           tooltip: {
             callbacks: {
