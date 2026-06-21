@@ -367,19 +367,26 @@ function initCharts() {
 function updateWealthChart() {
   const prod = getProductById(state.primaryProduct);
   if (!prod || !echartsInstances.wealth) return;
-  const base = parseFloat(document.getElementById('s1-premium').value) || prod.annualPremium;
-  const ratio = base / getBasePremiumUnit(prod);
+  const userPremium = parseFloat(document.getElementById('s1-premium').value) || prod.annualPremium;
   const target = parseFloat(document.getElementById('s1-target-amount').value) || 0;
-  const years = prod.policyData.map(d => `第${d.year}年`);
-  const guaranteed = prod.policyData.map(d => Math.round(d.guaranteedCV * ratio));
-  const bonus = prod.policyData.map(d => Math.round(d.nonGuaranteedBonus * ratio));
-  const total = guaranteed.map((g,i) => g + bonus[i]);
-  const targetLine = prod.policyData.map(() => target);
+  const dataPoints = prod.unitData || prod.policyData || [];
+  const years = dataPoints.map(d => `第${d.year}年`);
 
-  /* 計算預計達成年份（任務四：兩種模式都計算） */
+  /* v3.2：用 unitData 縮放 */
+  const guaranteed = dataPoints.map(d => {
+    if (d.unitGuaranteed !== undefined) return Math.round(d.unitGuaranteed * userPremium);
+    return Math.round((d.guaranteedCV || 0) * (userPremium / getBasePremiumUnit(prod)));
+  });
+  const bonus = dataPoints.map(d => {
+    if (d.unitBonus !== undefined) return Math.round(d.unitBonus * userPremium);
+    return Math.round((d.nonGuaranteedBonus || 0) * (userPremium / getBasePremiumUnit(prod)));
+  });
+  const total = guaranteed.map((g,i) => g + bonus[i]);
+  const targetLine = dataPoints.map(() => target);
+
   let targetYear = null;
   for (let i = 0; i < total.length; i++) {
-    if (total[i] >= target) { targetYear = prod.policyData[i].year; break; }
+    if (total[i] >= target) { targetYear = dataPoints[i].year; break; }
   }
   const hintEl = document.getElementById('s1-target-year-hint');
   if (hintEl) hintEl.textContent = targetYear ? `✅ 預計第 ${targetYear} 年達成目標` : '⚠️ 目前參數下未能在展示期內達成目標';
@@ -510,21 +517,38 @@ function updateComparisonChart() {
   const ids = [state.primaryProduct, ...state.compareProducts].filter(Boolean);
   if (ids.length < 2) return;
   const years = [1,5,10,15,20,25,30];
-  const series = ids.map((pid, idx) => {
+  const series = [];
+  const markLines = []; /* 回本年份豎線 */
+
+  ids.forEach((pid, idx) => {
     const prod = getProductById(pid);
     if (!prod) return null;
-    const base = getBasePremiumUnit(prod);
+    const base = prod.standardPremium || prod.annualPremium || 1;
     const isPrimary = pid === state.primaryProduct;
-    return {
+    series.push({
       name: prod.name, type: 'line', smooth: true,
       data: years.map(y => {
         const d = getPolicyDataAtYear(prod, y);
-        return d ? +(((d.guaranteedCV + d.nonGuaranteedBonus) / base) * 100).toFixed(1) : null;
+        if (!d) return null;
+        const ug = d.unitGuaranteed !== undefined ? d.unitGuaranteed : (d.guaranteedCV / base);
+        const ub = d.unitBonus !== undefined ? d.unitBonus : (d.nonGuaranteedBonus / base);
+        return +((ug + ub) * 100).toFixed(1);
       }),
       itemStyle: { color: isPrimary ? '#1a5fb4' : '#b0bec5' },
-      lineStyle: { width: isPrimary ? 3 : 1.5, opacity: isPrimary ? 1 : 0.6 }
-    };
-  }).filter(Boolean);
+      lineStyle: { width: isPrimary ? 3 : 1.5, opacity: isPrimary ? 1 : 0.6 },
+      markLine: isPrimary ? {
+        symbol: 'none',
+        data: (() => {
+          const be = calcBreakEvenYear(prod, base);
+          const lines = [];
+          if (be?.breakEvenYear) lines.push({ xAxis: `第${be.breakEvenYear}年`, label: { formatter: `回本\n${be.ratio}倍`, color: '#26a269', fontSize: 9 }, lineStyle: { color: '#26a269', type: 'dashed' } });
+          if (be?.guaranteedBreakEven) lines.push({ xAxis: `第${be.guaranteedBreakEven}年`, label: { formatter: '保證\n回本', color: '#1a5fb4', fontSize: 9 }, lineStyle: { color: '#1a5fb4', type: 'dotted' } });
+          return lines;
+        })()
+      } : undefined
+    });
+  });
+
   echartsInstances.comparison.setOption({
     tooltip: { trigger: 'axis' },
     legend: { top: 0, textStyle: { fontSize: 10 } },
@@ -772,15 +796,35 @@ function showToast(msg) {
   t.textContent = msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
 }
 
-/* ═══ 工具函數 ═══ */
+/* ═══ 工具函數（v3.2：unitData 縮放算法 + 回本期計算）═══ */
 function getProductById(id) { return productList.find(p => p.id === id) || null; }
+
 function getBasePremiumUnit(prod) {
-  if (!prod || !prod.policyData || !prod.policyData.length) return 1;
-  const y1 = prod.policyData.find(d => d.year === 1) || prod.policyData[0];
-  return y1?.premiumPaid || y1?.principal || prod.annualPremium || 1;
+  return prod?.standardPremium || prod?.annualPremium || 1;
 }
+
+/* v3.2：用單位利益數據獲取任意年度價值 */
 function getPolicyDataAtYear(prod, yr) {
-  if (!prod || !prod.policyData || !prod.policyData.length) return null;
+  if (!prod) return null;
+
+  /* 優先使用 unitData */
+  if (prod.unitData && prod.unitData.length > 0) {
+    const sorted = [...prod.unitData].sort((a, b) => a.year - b.year);
+    const exact = sorted.find(d => d.year === yr);
+    if (exact) return { year: yr, unitGuaranteed: exact.unitGuaranteed, unitBonus: exact.unitBonus, guaranteedCV: exact.unitGuaranteed * (prod.standardPremium||1), nonGuaranteedBonus: exact.unitBonus * (prod.standardPremium||1) };
+    if (yr < sorted[0].year) return { year: yr, unitGuaranteed: sorted[0].unitGuaranteed, unitBonus: sorted[0].unitBonus, guaranteedCV: sorted[0].unitGuaranteed * (prod.standardPremium||1), nonGuaranteedBonus: sorted[0].unitBonus * (prod.standardPremium||1) };
+    if (yr > sorted[sorted.length-1].year) return { year: yr, unitGuaranteed: sorted[sorted.length-1].unitGuaranteed, unitBonus: sorted[sorted.length-1].unitBonus, guaranteedCV: sorted[sorted.length-1].unitGuaranteed * (prod.standardPremium||1), nonGuaranteedBonus: sorted[sorted.length-1].unitBonus * (prod.standardPremium||1) };
+    const before = sorted.filter(d => d.year < yr).pop();
+    const after = sorted.find(d => d.year > yr);
+    if (!before || !after) return null;
+    const t = (yr - before.year) / (after.year - before.year);
+    const ug = lerp(before.unitGuaranteed, after.unitGuaranteed, t);
+    const ub = lerp(before.unitBonus, after.unitBonus, t);
+    return { year: yr, unitGuaranteed: ug, unitBonus: ub, guaranteedCV: ug * (prod.standardPremium||1), nonGuaranteedBonus: ub * (prod.standardPremium||1) };
+  }
+
+  /* 向後兼容舊 policyData */
+  if (!prod.policyData || prod.policyData.length === 0) return null;
   const s = [...prod.policyData].sort((a,b)=>a.year-b.year);
   const ex = s.find(d => d.year === yr); if (ex) return ex;
   if (yr < s[0].year) return s[0];
@@ -791,6 +835,27 @@ function getPolicyDataAtYear(prod, yr) {
   const t = (yr - before.year) / (after.year - before.year);
   return { year: yr, premiumPaid: lerp(before.premiumPaid||before.principal||0, after.premiumPaid||after.principal||0, t), guaranteedCV: lerp(before.guaranteedCV, after.guaranteedCV, t), nonGuaranteedBonus: lerp(before.nonGuaranteedBonus, after.nonGuaranteedBonus, t) };
 }
+
+/* v3.2：計算回本年份 */
+function calcBreakEvenYear(prod, userPremium) {
+  if (!prod || !prod.unitData) return null;
+  const discPct = ((prod.discounts?.firstYear?.defaultPercent)||0)/100;
+  const paidTotal = userPremium * (1 - discPct) * (prod.payTerms?.[0] || 1);
+  const sorted = [...prod.unitData].sort((a,b) => a.year - b.year);
+  let breakEvenYear = null, guaranteedBreakEven = null, ratio = null;
+  for (const d of sorted) {
+    const totalValue = (d.unitGuaranteed + d.unitBonus) * userPremium;
+    if (totalValue >= paidTotal && !breakEvenYear) {
+      breakEvenYear = d.year;
+      ratio = (paidTotal / totalValue).toFixed(2);
+    }
+    if (d.unitGuaranteed * userPremium >= paidTotal && !guaranteedBreakEven) {
+      guaranteedBreakEven = d.year;
+    }
+  }
+  return { breakEvenYear, guaranteedBreakEven, ratio };
+}
+
 function lerp(a,b,t) { return a + (b-a)*t; }
 function fmt(n) { return (n===null||n===undefined||isNaN(n)) ? '—' : Math.round(n).toLocaleString('zh-HK'); }
 function fmtShort(n) { if (Math.abs(n)>=1e8) return (n/1e8).toFixed(1)+'億'; if (Math.abs(n)>=1e4) return (n/1e4).toFixed(1)+'萬'; return Math.round(n).toString(); }

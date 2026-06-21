@@ -1,5 +1,5 @@
 {
-  "version": "3.1.0",
+  "version": "3.2.0",
   "lastUpdated": "2025-06-21",
   "config": {
     "currencySymbols": {
@@ -201,7 +201,120 @@
         "expectedBonus": 248784
       },
       "mainTag": "家族傳承 · 保費融資杠杆",
-      "subTag": "高淨值家族世代傳承 · 長期復利增值 · 3.9%封頂融資利率"
+      "subTag": "高淨值家族世代傳承 · 長期復利增值 · 3.9%封頂融資利率",
+      "standardPremium": 200000,
+      "unitData": [
+        {
+          "year": 1,
+          "unitGuaranteed": 0.335,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 2,
+          "unitGuaranteed": 1.3165,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 3,
+          "unitGuaranteed": 2.3,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 4,
+          "unitGuaranteed": 3.2845,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 5,
+          "unitGuaranteed": 4.2675,
+          "unitBonus": 0.215
+        },
+        {
+          "year": 6,
+          "unitGuaranteed": 4.28,
+          "unitBonus": 0.4793
+        },
+        {
+          "year": 7,
+          "unitGuaranteed": 4.64,
+          "unitBonus": 0.8963
+        },
+        {
+          "year": 8,
+          "unitGuaranteed": 4.65,
+          "unitBonus": 1.398
+        },
+        {
+          "year": 9,
+          "unitGuaranteed": 4.69,
+          "unitBonus": 2.0732
+        },
+        {
+          "year": 10,
+          "unitGuaranteed": 4.775,
+          "unitBonus": 2.3011
+        },
+        {
+          "year": 11,
+          "unitGuaranteed": 5.0025,
+          "unitBonus": 2.4137
+        },
+        {
+          "year": 12,
+          "unitGuaranteed": 5.004,
+          "unitBonus": 2.7814
+        },
+        {
+          "year": 13,
+          "unitGuaranteed": 5.005,
+          "unitBonus": 3.1573
+        },
+        {
+          "year": 14,
+          "unitGuaranteed": 5.0072,
+          "unitBonus": 3.5505
+        },
+        {
+          "year": 15,
+          "unitGuaranteed": 5.0085,
+          "unitBonus": 3.9608
+        },
+        {
+          "year": 16,
+          "unitGuaranteed": 5.0098,
+          "unitBonus": 4.402
+        },
+        {
+          "year": 17,
+          "unitGuaranteed": 5.0113,
+          "unitBonus": 4.8669
+        },
+        {
+          "year": 18,
+          "unitGuaranteed": 5.0128,
+          "unitBonus": 5.3571
+        },
+        {
+          "year": 19,
+          "unitGuaranteed": 5.0145,
+          "unitBonus": 5.8735
+        },
+        {
+          "year": 20,
+          "unitGuaranteed": 5.0162,
+          "unitBonus": 6.418
+        },
+        {
+          "year": 25,
+          "unitGuaranteed": 5.0242,
+          "unitBonus": 9.5485
+        },
+        {
+          "year": 30,
+          "unitGuaranteed": 5.0366,
+          "unitBonus": 13.6244
+        }
+      ]
     },
     {
       "id": "c540",
@@ -350,7 +463,60 @@
         }
       ],
       "mainTag": "子女教育金 · 退休年金",
-      "subTag": "5年起靈活提領 · 提領後收益下滑極小 · 65歲轉年金"
+      "subTag": "5年起靈活提領 · 提領後收益下滑極小 · 65歲轉年金",
+      "standardPremium": 16000,
+      "unitData": [
+        {
+          "year": 1,
+          "unitGuaranteed": 0.0,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 2,
+          "unitGuaranteed": 0.0,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 3,
+          "unitGuaranteed": 0.0125,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 4,
+          "unitGuaranteed": 0.07,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 5,
+          "unitGuaranteed": 0.17,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 10,
+          "unitGuaranteed": 3.175,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 15,
+          "unitGuaranteed": 3.675,
+          "unitBonus": 4.5906
+        },
+        {
+          "year": 20,
+          "unitGuaranteed": 5.0136,
+          "unitBonus": 7.3931
+        },
+        {
+          "year": 25,
+          "unitGuaranteed": 5.0311,
+          "unitBonus": 14.5538
+        },
+        {
+          "year": 30,
+          "unitGuaranteed": 5.0421,
+          "unitBonus": 23.0423
+        }
+      ]
     },
     {
       "id": "c537",
@@ -499,7 +665,60 @@
         }
       ],
       "mainTag": "子女教育金 · 退休年金",
-      "subTag": "5年起靈活提領 · 提領後收益下滑極小 · 65歲轉年金"
+      "subTag": "5年起靈活提領 · 提領後收益下滑極小 · 65歲轉年金",
+      "standardPremium": 100000,
+      "unitData": [
+        {
+          "year": 1,
+          "unitGuaranteed": 0.2792,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 2,
+          "unitGuaranteed": 0.3032,
+          "unitBonus": 0.02
+        },
+        {
+          "year": 3,
+          "unitGuaranteed": 0.3192,
+          "unitBonus": 0.0404
+        },
+        {
+          "year": 4,
+          "unitGuaranteed": 0.3532,
+          "unitBonus": 0.0612
+        },
+        {
+          "year": 5,
+          "unitGuaranteed": 0.3848,
+          "unitBonus": 0.0771
+        },
+        {
+          "year": 10,
+          "unitGuaranteed": 0.663,
+          "unitBonus": 0.1377
+        },
+        {
+          "year": 15,
+          "unitGuaranteed": 1.002,
+          "unitBonus": 0.1957
+        },
+        {
+          "year": 20,
+          "unitGuaranteed": 1.006,
+          "unitBonus": 0.2259
+        },
+        {
+          "year": 25,
+          "unitGuaranteed": 1.0164,
+          "unitBonus": 0.2569
+        },
+        {
+          "year": 30,
+          "unitGuaranteed": 1.0304,
+          "unitBonus": 0.2886
+        }
+      ]
     },
     {
       "id": "c535",
@@ -647,7 +866,60 @@
         }
       ],
       "mainTag": "大額傳承 · 整付增值",
-      "subTag": "一次性繳費 · 保單分拆 · 鎖定終期紅利"
+      "subTag": "一次性繳費 · 保單分拆 · 鎖定終期紅利",
+      "standardPremium": 100000,
+      "unitData": [
+        {
+          "year": 1,
+          "unitGuaranteed": 0.818,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 2,
+          "unitGuaranteed": 0.82,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 3,
+          "unitGuaranteed": 0.821,
+          "unitBonus": 0.0917
+        },
+        {
+          "year": 4,
+          "unitGuaranteed": 0.822,
+          "unitBonus": 0.178
+        },
+        {
+          "year": 5,
+          "unitGuaranteed": 0.823,
+          "unitBonus": 0.2345
+        },
+        {
+          "year": 10,
+          "unitGuaranteed": 0.833,
+          "unitBonus": 0.7034
+        },
+        {
+          "year": 15,
+          "unitGuaranteed": 0.975,
+          "unitBonus": 1.1409
+        },
+        {
+          "year": 20,
+          "unitGuaranteed": 1.004,
+          "unitBonus": 1.887
+        },
+        {
+          "year": 25,
+          "unitGuaranteed": 1.018,
+          "unitBonus": 2.8868
+        },
+        {
+          "year": 30,
+          "unitGuaranteed": 1.027,
+          "unitBonus": 4.3694
+        }
+      ]
     },
     {
       "id": "zhixuan",
@@ -786,7 +1058,70 @@
         }
       ],
       "mainTag": "中短期穩健儲蓄 · 保本增值",
-      "subTag": "前5年保證高收益 · 2年回本 · 5-25年中期規劃"
+      "subTag": "前5年保證高收益 · 2年回本 · 5-25年中期規劃",
+      "standardPremium": 1578900,
+      "unitData": [
+        {
+          "year": 1,
+          "unitGuaranteed": 0.87,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 2,
+          "unitGuaranteed": 0.9471,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 3,
+          "unitGuaranteed": 1.015,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 4,
+          "unitGuaranteed": 1.0881,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 5,
+          "unitGuaranteed": 1.1522,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 6,
+          "unitGuaranteed": 1.1792,
+          "unitBonus": 0.056
+        },
+        {
+          "year": 7,
+          "unitGuaranteed": 1.2072,
+          "unitBonus": 0.087
+        },
+        {
+          "year": 8,
+          "unitGuaranteed": 1.2354,
+          "unitBonus": 0.12
+        },
+        {
+          "year": 9,
+          "unitGuaranteed": 1.2639,
+          "unitBonus": 0.156
+        },
+        {
+          "year": 10,
+          "unitGuaranteed": 1.2931,
+          "unitBonus": 0.196
+        },
+        {
+          "year": 15,
+          "unitGuaranteed": 1.3835,
+          "unitBonus": 0.525
+        },
+        {
+          "year": 20,
+          "unitGuaranteed": 1.4727,
+          "unitBonus": 1.04
+        }
+      ]
     },
     {
       "id": "aarrb1u",
@@ -913,7 +1248,60 @@
         }
       ],
       "mainTag": "教育金 · 退休現金流",
-      "subTag": "2年短繳費 · 靈活提取 · 升學養老支出匹配"
+      "subTag": "2年短繳費 · 靈活提取 · 升學養老支出匹配",
+      "standardPremium": 16000,
+      "unitData": [
+        {
+          "year": 1,
+          "unitGuaranteed": 0.0,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 2,
+          "unitGuaranteed": 0.0,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 3,
+          "unitGuaranteed": 0.2,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 4,
+          "unitGuaranteed": 1.0,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 5,
+          "unitGuaranteed": 2.5,
+          "unitBonus": 0.25
+        },
+        {
+          "year": 10,
+          "unitGuaranteed": 9.5,
+          "unitBonus": 0.6134
+        },
+        {
+          "year": 15,
+          "unitGuaranteed": 10.0,
+          "unitBonus": 0.8814
+        },
+        {
+          "year": 20,
+          "unitGuaranteed": 10.1562,
+          "unitBonus": 1.1562
+        },
+        {
+          "year": 25,
+          "unitGuaranteed": 10.3947,
+          "unitBonus": 1.438
+        },
+        {
+          "year": 30,
+          "unitGuaranteed": 10.6461,
+          "unitBonus": 1.7267
+        }
+      ]
     },
     {
       "id": "aaxvt1u",
@@ -1040,7 +1428,80 @@
         }
       ],
       "mainTag": "跨代傳承 · 財富永續",
-      "subTag": "如意傳承金 · 保單繼承獎勵 · 富過三代架構"
+      "subTag": "如意傳承金 · 保單繼承獎勵 · 富過三代架構",
+      "standardPremium": 333330,
+      "unitData": [
+        {
+          "year": 1,
+          "unitGuaranteed": 0.68,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 2,
+          "unitGuaranteed": 1.6528,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 3,
+          "unitGuaranteed": 2.6598,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 4,
+          "unitGuaranteed": 2.6766,
+          "unitBonus": 0.0
+        },
+        {
+          "year": 5,
+          "unitGuaranteed": 2.685,
+          "unitBonus": 0.489
+        },
+        {
+          "year": 6,
+          "unitGuaranteed": 2.7121,
+          "unitBonus": 0.705
+        },
+        {
+          "year": 7,
+          "unitGuaranteed": 2.8075,
+          "unitBonus": 0.849
+        },
+        {
+          "year": 8,
+          "unitGuaranteed": 2.8561,
+          "unitBonus": 1.0065
+        },
+        {
+          "year": 9,
+          "unitGuaranteed": 2.8937,
+          "unitBonus": 1.1668
+        },
+        {
+          "year": 10,
+          "unitGuaranteed": 2.9332,
+          "unitBonus": 1.3352
+        },
+        {
+          "year": 15,
+          "unitGuaranteed": 3.075,
+          "unitBonus": 2.3955
+        },
+        {
+          "year": 20,
+          "unitGuaranteed": 3.156,
+          "unitBonus": 3.7092
+        },
+        {
+          "year": 25,
+          "unitGuaranteed": 3.203,
+          "unitBonus": 5.4007
+        },
+        {
+          "year": 30,
+          "unitGuaranteed": 3.2526,
+          "unitBonus": 7.6206
+        }
+      ]
     }
   ]
 }
