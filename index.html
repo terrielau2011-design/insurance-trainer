@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>保險銷售視覺化培訓系統 v3.2.1</title>
+  <!-- 快取清除：每次載入加隨機參數 -->
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -15,9 +16,33 @@
   <meta name="apple-mobile-web-app-title" content="保險培訓" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="style.css?v=321" />
 </head>
 <body>
+
+<!-- v3.2.1 版本浮層：確認是否運行最新版 -->
+<div id="version-badge" style="position:fixed;bottom:10px;right:10px;background:#1a5fb4;color:#fff;padding:3px 10px;border-radius:12px;font-size:0.7rem;z-index:9998;opacity:0.8;">v3.2.1</div>
+
+<!-- 強制刷新舊快取檢測 -->
+<script>
+  (function() {
+    var CURRENT_VERSION = '3.2.1';
+    var stored = localStorage.getItem('app_version');
+    if (stored && stored !== CURRENT_VERSION) {
+      // 版本不同，清除所有快取並刷新
+      if ('caches' in window) {
+        caches.keys().then(function(names) { names.forEach(function(n) { caches.delete(n); }); });
+      }
+      localStorage.setItem('app_version', CURRENT_VERSION);
+      if (navigator.serviceWorker) {
+        navigator.serviceWorker.getRegistrations().then(function(regs) { regs.forEach(function(r) { r.unregister(); }); });
+      }
+      location.reload(true);
+    } else {
+      localStorage.setItem('app_version', CURRENT_VERSION);
+    }
+  })();
+</script>
 
 <header class="app-header">
   <div class="header-inner">
@@ -360,9 +385,9 @@
   </div>
 </div>
 
-<script src="sync.js"></script>
-<script src="data.js"></script>
-<script src="app.js"></script>
+<script src="sync.js?v=321"></script>
+<script src="data.js?v=321"></script>
+<script src="app.js?v=321"></script>
 <script>
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
