@@ -3,13 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>保險銷售視覺化培訓系統 v2.0</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <title>保險銷售視覺化培訓系統 v3.0</title>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
-  <!-- PWA 基礎 -->
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#1a5fb4" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -17,390 +15,238 @@
   <meta name="apple-mobile-web-app-title" content="保險培訓" />
   <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
   <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
-
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════
-     頂部 HEADER
-════════════════════════════════════════════════ -->
 <header class="app-header">
   <div class="header-inner">
     <div class="brand">
       <span class="brand-icon">🛡</span>
       <div>
         <h1>保險銷售培訓系統</h1>
-        <p>Insurance Sales Visualisation Tool <span class="version-tag">v2.0</span></p>
+        <p>Insurance Sales Tool <span class="version-tag">v3.0</span></p>
       </div>
     </div>
     <div class="header-meta">
       <span id="current-time" class="time-display"></span>
-      <!-- v2.0 數據同步面板 -->
       <div class="sync-panel">
         <span class="sync-status" id="sync-status">v<span id="sync-version">--</span></span>
-        <button class="btn-sync" id="btn-sync" onclick="syncData()" title="檢查並同步最新數據">🔄</button>
-        <button class="btn-token" id="btn-token" onclick="openTokenModal()" title="設定 GitHub Token">⚙️</button>
+        <button class="btn-sync" id="btn-sync" onclick="syncData()" title="同步">🔄</button>
+        <button class="btn-token" id="btn-token" onclick="openTokenModal()" title="Token">⚙️</button>
       </div>
     </div>
   </div>
 </header>
 
+<!-- ⚠️ 強制合規免責欄 -->
+<div class="disclaimer-bar">
+  ⚠️ 終期紅利、融資預計回報屬非保證演示數據，視保險公司分紅表現、市場息口波動而定；保單早期退保會產生本金虧損，融資產品存在利率上行、匯兌風險。
+</div>
+
 <main class="app-main">
 
-  <!-- ═══════════════════════════════════════════════
-       區塊 A：產品選擇與三大亮點 (The Hook)
-  ════════════════════════════════════════════════ -->
+  <!-- ═══ 區塊 A：客戶需求畫像 + 產品選擇 ═══ -->
   <section class="section-card" id="section-hook">
     <div class="section-header">
       <span class="section-badge">A</span>
-      <h2>產品選擇與核心亮點</h2>
+      <h2>客戶需求畫像與產品匹配</h2>
       <span class="section-tag">The Hook</span>
     </div>
 
-    <div class="hook-grid">
-      <!-- 產品選擇區 + 貨幣切換 -->
-      <div class="product-selector-area">
-        <label class="field-label">選擇產品</label>
-        <div class="product-list" id="product-list">
-          <!-- 由 JS 動態渲染 -->
-        </div>
+    <!-- 需求標籤 -->
+    <div class="need-tags-section">
+      <h4 class="sub-title">🏷 客戶需求標籤（多選，自動匹配產品）</h4>
+      <div class="need-tags" id="need-tags"></div>
+    </div>
 
-        <!-- v2.1 貨幣切換下拉選單 -->
+    <div class="hook-grid">
+      <!-- 產品選擇區 -->
+      <div class="product-selector-area">
+        <label class="field-label">選擇產品（勾選≥2個啟動對比）</label>
+        <div class="product-list" id="product-list"></div>
         <div class="input-group" style="margin-top:0.75rem;">
           <label class="field-label">顯示貨幣</label>
-          <select id="currency-selector" class="select-field" onchange="onCurrencyChange()">
-            <!-- 由 JS 根據產品 supportedCurrencies 動態渲染 -->
-          </select>
+          <select id="currency-selector" class="select-field" onchange="onCurrencyChange()"></select>
         </div>
-
-        <p class="hint-text">💡 勾選多個產品可啟動跨產品對比模式</p>
       </div>
 
-      <!-- 三大亮點區 -->
+      <!-- 亮點區 -->
       <div class="highlights-area" id="highlights-area">
         <div class="highlight-placeholder">
           <span class="ph-icon">👈</span>
-          <p>請先選擇一個主力產品以查看核心銷售亮點</p>
+          <p>請先選擇產品以查看核心銷售亮點</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════════
-       區塊 B：動態財務決策區 (The Presentation)
-  ════════════════════════════════════════════════ -->
+  <!-- ═══ 區塊 B：動態財務決策分析 ═══ -->
   <section class="section-card" id="section-presentation">
     <div class="section-header">
       <span class="section-badge">B</span>
       <h2>動態財務決策分析</h2>
       <span class="section-tag">The Presentation</span>
-      <!-- 場景切換 -->
       <div class="scene-toggle">
-        <button class="toggle-btn active" id="btn-scene1" onclick="switchScene(1)">
-          📈 場景一：儲蓄險
-        </button>
-        <button class="toggle-btn" id="btn-scene2" onclick="switchScene(2)">
-          🏦 場景二：保費融資
-        </button>
+        <button class="toggle-btn active" id="btn-scene1" onclick="switchScene(1)">📈 儲蓄險</button>
+        <button class="toggle-btn" id="btn-scene2" onclick="switchScene(2)">🏦 保費融資</button>
       </div>
     </div>
 
-    <!-- ── 場景一：一般分紅儲蓄險（v2.0 雙軌制輸入）── -->
+    <!-- 場景一：儲蓄險 -->
     <div id="scene1" class="scene-panel active">
       <div class="panel-grid two-col">
-
-        <!-- 左欄：輸入控制（v2.0：數值輸入框 + 快捷按鈕） -->
         <div class="input-panel">
           <h3 class="panel-title">⚙️ 計算參數</h3>
-
           <div class="input-group">
-            <label class="field-label">每年保費 — 折扣前 <span class="currency-hint" id="s1-currency-hint">(HK$)</span></label>
+            <label class="field-label">每年保費 <span class="currency-hint" id="s1-currency-hint"></span></label>
             <div class="dual-input-row">
-              <input type="number" id="s1-premium" class="input-field" value="100000"
-                min="1000" step="1000" oninput="calcScene1()" />
-              <div class="quick-buttons">
-                <button class="quick-btn" onclick="setS1Premium(50000)">5萬</button>
-                <button class="quick-btn" onclick="setS1Premium(100000)">10萬</button>
-                <button class="quick-btn" onclick="setS1Premium(200000)">20萬</button>
-                <button class="quick-btn" onclick="setS1Premium(500000)">50萬</button>
-              </div>
+              <input type="number" id="s1-premium" class="input-field" value="200000" min="1000" step="1000" oninput="calcScene1()" />
+              <div class="quick-buttons" id="s1-quick-premium"></div>
             </div>
           </div>
-
           <div class="input-group">
             <label class="field-label">繳費年期 <span class="currency-hint" id="s1-payterm-hint"></span></label>
-            <div class="radio-group" id="s1-pay-term">
-              <!-- 由 JS 根據產品 payTerms 動態渲染 -->
-            </div>
+            <div class="radio-group" id="s1-pay-term"></div>
           </div>
-
           <div class="input-group">
             <label class="field-label">首年折扣率 (%)</label>
             <div class="dual-input-row">
-              <input type="number" id="s1-discount-y1" class="input-field" value="0"
-                min="0" max="30" step="0.5" oninput="calcScene1()" />
+              <input type="number" id="s1-discount-y1" class="input-field" value="0" min="0" max="30" step="0.5" oninput="calcScene1()" />
               <div class="quick-buttons">
-                <button class="quick-btn" onclick="setS1DiscountY1(0)">0%</button>
-                <button class="quick-btn" onclick="setS1DiscountY1(10)">10%</button>
-                <button class="quick-btn" onclick="setS1DiscountY1(20)">20%</button>
-                <button class="quick-btn" onclick="setS1DiscountY1(25)">25%</button>
+                <button class="quick-btn" onclick="setVal('s1-discount-y1',0);calcScene1()">0%</button>
+                <button class="quick-btn" onclick="setVal('s1-discount-y1',10);calcScene1()">10%</button>
+                <button class="quick-btn" onclick="setVal('s1-discount-y1',25);calcScene1()">25%</button>
               </div>
             </div>
           </div>
-
-          <div class="input-group">
-            <label class="field-label">次年（續期）折扣率 (%)</label>
-            <div class="dual-input-row">
-              <input type="number" id="s1-discount-y2" class="input-field" value="0"
-                min="0" max="20" step="0.5" oninput="calcScene1()" />
-              <div class="quick-buttons">
-                <button class="quick-btn" onclick="setS1DiscountY2(0)">0%</button>
-                <button class="quick-btn" onclick="setS1DiscountY2(3)">3%</button>
-                <button class="quick-btn" onclick="setS1DiscountY2(5)">5%</button>
-                <button class="quick-btn" onclick="setS1DiscountY2(10)">10%</button>
-              </div>
-            </div>
-          </div>
-
           <div class="input-group">
             <label class="field-label">預繳保費儲蓄率 (%)</label>
             <div class="dual-input-row">
-              <input type="number" id="s1-prepay" class="input-field" value="0"
-                min="0" max="5" step="0.1" oninput="calcScene1()" />
+              <input type="number" id="s1-prepay" class="input-field" value="0" min="0" max="5" step="0.1" oninput="calcScene1()" />
               <div class="quick-buttons">
-                <button class="quick-btn" onclick="setS1Prepay(0)">0%</button>
-                <button class="quick-btn" onclick="setS1Prepay(3.5)">3.5%</button>
-                <button class="quick-btn" onclick="setS1Prepay(4.0)">4.0%</button>
-                <button class="quick-btn" onclick="setS1Prepay(4.5)">4.5%</button>
+                <button class="quick-btn" onclick="setVal('s1-prepay',0);calcScene1()">0%</button>
+                <button class="quick-btn" onclick="setVal('s1-prepay',3.5);calcScene1()">3.5%</button>
+                <button class="quick-btn" onclick="setVal('s1-prepay',4);calcScene1()">4.0%</button>
               </div>
             </div>
           </div>
         </div>
-
-        <!-- 右欄：輸出 -->
         <div class="output-panel">
           <h3 class="panel-title">📊 計算結果</h3>
-
-          <!-- 淨保費摘要卡片 -->
           <div class="result-cards">
             <div class="result-card accent">
               <div class="rc-label">實際淨保費總額</div>
-              <div class="rc-value" id="s1-net-total">HK$ --</div>
+              <div class="rc-value" id="s1-net-total">--</div>
               <div class="rc-sub" id="s1-net-breakdown">計算中…</div>
             </div>
             <div class="result-card">
               <div class="rc-label">首年折後保費</div>
-              <div class="rc-value" id="s1-y1-net">HK$ --</div>
-            </div>
-            <div class="result-card">
-              <div class="rc-label">次年折後保費</div>
-              <div class="rc-value" id="s1-y2-net">HK$ --</div>
-            </div>
-            <div class="result-card">
-              <div class="rc-label">其餘年份保費</div>
-              <div class="rc-value" id="s1-remaining-net">HK$ --</div>
+              <div class="rc-value" id="s1-y1-net">--</div>
             </div>
           </div>
-
-          <!-- 權益兌換牆 -->
+          <!-- 繳費構成餅圖 -->
+          <div class="chart-mini-wrapper">
+            <h4 class="sub-title">🥧 繳費構成分解</h4>
+            <div id="chart-premium-pie" style="width:100%;height:220px;"></div>
+          </div>
           <div class="privileges-section">
             <h4 class="sub-title">🎁 增值權益點亮牆</h4>
-            <div class="privileges-wall" id="privileges-wall">
-              <!-- 由 JS 動態渲染 -->
-            </div>
+            <div class="privileges-wall" id="privileges-wall"></div>
           </div>
         </div>
       </div>
-
-      <!-- 財富消長河流圖 -->
+      <!-- 財富消長河流圖 + 目標線 -->
       <div class="chart-section">
         <h3 class="panel-title">📈 財富消長河流圖</h3>
-        <p class="chart-hint">各年份本金、保證現金價值、非保證紅利分佈</p>
-        <div class="chart-wrapper">
-          <canvas id="chart-wealth-river"></canvas>
-        </div>
-        <!-- 年期選擇（v2.0 改為輸入框） -->
-        <div class="input-group" style="margin-top:1rem;">
-          <label class="field-label">顯示年期：<span id="s1-year-label">30</span> 年</label>
+        <div class="input-group" style="margin-bottom:0.5rem;">
+          <label class="field-label">目標儲蓄金額 <span class="currency-hint" id="s1-target-hint"></span></label>
           <div class="dual-input-row">
-            <input type="number" id="s1-year-range" class="input-field" value="30"
-              min="5" max="40" step="1" oninput="document.getElementById('s1-year-label').textContent=this.value; updateWealthChart()" />
+            <input type="number" id="s1-target-amount" class="input-field" value="2000000" min="0" step="100000" oninput="updateWealthChart()" />
             <div class="quick-buttons">
-              <button class="quick-btn" onclick="setS1YearRange(10)">10年</button>
-              <button class="quick-btn" onclick="setS1YearRange(20)">20年</button>
-              <button class="quick-btn" onclick="setS1YearRange(30)">30年</button>
-              <button class="quick-btn" onclick="setS1YearRange(40)">40年</button>
+              <button class="quick-btn" onclick="setVal('s1-target-amount',1000000);updateWealthChart()">100萬</button>
+              <button class="quick-btn" onclick="setVal('s1-target-amount',2000000);updateWealthChart()">200萬</button>
+              <button class="quick-btn" onclick="setVal('s1-target-amount',5000000);updateWealthChart()">500萬</button>
             </div>
           </div>
+          <p class="hint-text" id="s1-target-year-hint"></p>
         </div>
+        <div id="chart-wealth-river" style="width:100%;height:350px;"></div>
       </div>
-
-      <!-- v2.0 跨資產機會成本對比表 -->
+      <!-- 跨資產機會成本柱狀圖 -->
       <div class="chart-section">
         <h3 class="panel-title">⚖️ 跨資產機會成本對比</h3>
-        <p class="chart-hint">本方案 vs 美債 vs 定存 vs 物業收租 — 數據隨選定週年動態跳動</p>
-        <div class="input-group" style="margin-bottom:0.75rem;">
-          <label class="field-label">對比週年：第 <span id="opp-year-label">10</span> 年</label>
+        <div class="input-group" style="margin-bottom:0.5rem;">
+          <label class="field-label">客戶寄望年度收益率 (%)</label>
           <div class="dual-input-row">
-            <input type="number" id="opp-year" class="input-field" value="10"
-              min="1" max="30" step="1" oninput="document.getElementById('opp-year-label').textContent=this.value; updateOpportunityTable()" />
+            <input type="number" id="opp-custom-rate" class="input-field" value="5" min="0" max="20" step="0.5" oninput="updateOppChart()" />
             <div class="quick-buttons">
-              <button class="quick-btn" onclick="setOppYear(5)">5年</button>
-              <button class="quick-btn" onclick="setOppYear(10)">10年</button>
-              <button class="quick-btn" onclick="setOppYear(15)">15年</button>
-              <button class="quick-btn" onclick="setOppYear(20)">20年</button>
+              <button class="quick-btn" onclick="setVal('opp-custom-rate',3.5);updateOppChart()">3.5%</button>
+              <button class="quick-btn" onclick="setVal('opp-custom-rate',5);updateOppChart()">5%</button>
+              <button class="quick-btn" onclick="setVal('opp-custom-rate',8);updateOppChart()">8%</button>
             </div>
           </div>
         </div>
+        <div id="chart-opp-cost" style="width:100%;height:300px;"></div>
         <div class="comparison-table-wrapper">
           <table class="comparison-table opp-table" id="opp-table">
-            <thead>
-              <tr>
-                <th>投資工具</th>
-                <th>預期年化收益 / 特性</th>
-                <th>資產流動性</th>
-                <th>潛在風險 / 缺點</th>
-              </tr>
-            </thead>
-            <tbody id="opp-table-body">
-              <!-- 由 JS 動態渲染 -->
-            </tbody>
+            <thead><tr><th>投資工具</th><th>預期年化收益</th><th>流動性</th><th>潛在風險</th></tr></thead>
+            <tbody id="opp-table-body"></tbody>
           </table>
         </div>
       </div>
     </div>
 
-    <!-- ── 場景二：保費融資（v2.0 完整精算）── -->
+    <!-- 場景二：保費融資 -->
     <div id="scene2" class="scene-panel">
       <div class="panel-grid two-col">
-
-        <!-- 左欄：融資參數輸入（v2.0 全輸入框） -->
         <div class="input-panel">
           <h3 class="panel-title">⚙️ 融資參數</h3>
-
           <div class="input-group">
-            <label class="field-label">保單總保費 <span class="currency-hint" id="s2-currency-hint">(HK$)</span></label>
-            <div class="dual-input-row">
-              <input type="number" id="s2-total-premium" class="input-field" value="600000"
-                min="100000" step="50000" oninput="calcScene2()" />
-              <div class="quick-buttons">
-                <button class="quick-btn" onclick="setS2Premium(300000)">30萬</button>
-                <button class="quick-btn" onclick="setS2Premium(600000)">60萬</button>
-                <button class="quick-btn" onclick="setS2Premium(1000000)">100萬</button>
-                <button class="quick-btn" onclick="setS2Premium(3000000)">300萬</button>
-              </div>
-            </div>
+            <label class="field-label">保單總保費 <span class="currency-hint" id="s2-currency-hint"></span></label>
+            <input type="number" id="s2-total-premium" class="input-field" value="1000000" min="100000" step="50000" oninput="calcScene2()" />
           </div>
-
           <div class="input-group">
             <label class="field-label">貸款銀行</label>
-            <select id="s2-bank" class="select-field" onchange="calcScene2()">
-              <!-- 由 JS 動態渲染 -->
-            </select>
+            <select id="s2-bank" class="select-field" onchange="calcScene2()"></select>
           </div>
-
           <div class="input-group">
-            <label class="field-label">貸款成數 (LTV %) — 基於首日現金價值</label>
+            <label class="field-label">貸款成數 LTV (%)</label>
             <div class="dual-input-row">
-              <input type="number" id="s2-ltv" class="input-field" value="95"
-                min="50" max="95" step="5" oninput="calcScene2()" />
+              <input type="number" id="s2-ltv" class="input-field" value="95" min="50" max="95" step="5" oninput="calcScene2()" />
               <div class="quick-buttons">
-                <button class="quick-btn" onclick="setS2LTV(80)">80%</button>
-                <button class="quick-btn" onclick="setS2LTV(85)">85%</button>
-                <button class="quick-btn" onclick="setS2LTV(90)">90%</button>
-                <button class="quick-btn" onclick="setS2LTV(95)">95%</button>
+                <button class="quick-btn" onclick="setVal('s2-ltv',80);calcScene2()">80%</button>
+                <button class="quick-btn" onclick="setVal('s2-ltv',90);calcScene2()">90%</button>
+                <button class="quick-btn" onclick="setVal('s2-ltv',95);calcScene2()">95%</button>
               </div>
             </div>
             <p class="hint-text">首日現金價值：<strong id="s2-first-day-cv">--</strong></p>
           </div>
-
           <div class="input-group">
-            <label class="field-label">當前貸款利率 (年息 %)</label>
-            <div class="dual-input-row">
-              <input type="number" id="s2-rate" class="input-field" value="3.275"
-                min="0" max="20" step="0.025" oninput="calcScene2()" />
-              <div class="quick-buttons">
-                <button class="quick-btn" onclick="setS2Rate(3.0)">3.0%</button>
-                <button class="quick-btn" onclick="setS2Rate(3.275)">3.275%</button>
-                <button class="quick-btn" onclick="setS2Rate(3.5)">3.5%</button>
-                <button class="quick-btn" onclick="setS2Rate(4.0)">4.0%</button>
-              </div>
-            </div>
+            <label class="field-label">當前貸款利率 (%)</label>
+            <input type="number" id="s2-rate" class="input-field" value="3.275" min="0" max="20" step="0.025" oninput="calcScene2()" />
           </div>
-
           <div class="input-group">
             <label class="field-label">封頂利率 Cap Rate (%)</label>
-            <div class="dual-input-row">
-              <input type="number" id="s2-cap-rate" class="input-field" value="3.9"
-                min="0" max="20" step="0.1" oninput="calcScene2()" />
-              <div class="quick-buttons">
-                <button class="quick-btn" onclick="setS2CapRate(3.5)">3.5%</button>
-                <button class="quick-btn" onclick="setS2CapRate(3.9)">3.9%</button>
-                <button class="quick-btn" onclick="setS2CapRate(4.5)">4.5%</button>
-                <button class="quick-btn" onclick="setS2CapRate(5.0)">5.0%</button>
-              </div>
-            </div>
+            <input type="number" id="s2-cap-rate" class="input-field" value="3.9" min="0" max="20" step="0.1" oninput="calcScene2()" />
           </div>
-
           <div class="input-group">
             <label class="field-label">貸款手續費率 (%)</label>
-            <div class="dual-input-row">
-              <input type="number" id="s2-loan-fee" class="input-field" value="2"
-                min="0" max="5" step="0.5" oninput="calcScene2()" />
-              <div class="quick-buttons">
-                <button class="quick-btn" onclick="setS2LoanFee(0)">0%</button>
-                <button class="quick-btn" onclick="setS2LoanFee(1)">1%</button>
-                <button class="quick-btn" onclick="setS2LoanFee(2)">2%</button>
-                <button class="quick-btn" onclick="setS2LoanFee(3)">3%</button>
-              </div>
-            </div>
+            <input type="number" id="s2-loan-fee" class="input-field" value="2" min="0" max="5" step="0.5" oninput="calcScene2()" />
           </div>
-
           <div class="input-group">
-            <label class="field-label">預計貸款年期（退出年份，上限 10 年）</label>
-            <div class="dual-input-row">
-              <input type="number" id="s2-loan-term" class="input-field" value="9"
-                min="1" max="10" step="1" oninput="calcScene2()" />
-              <div class="quick-buttons">
-                <button class="quick-btn" onclick="setS2LoanTerm(5)">5年</button>
-                <button class="quick-btn" onclick="setS2LoanTerm(7)">7年</button>
-                <button class="quick-btn" onclick="setS2LoanTerm(9)">9年</button>
-                <button class="quick-btn" onclick="setS2LoanTerm(10)">10年</button>
-              </div>
-            </div>
+            <label class="field-label">預計貸款年期（上限10年）</label>
+            <input type="number" id="s2-loan-term" class="input-field" value="9" min="1" max="10" step="1" oninput="calcScene2()" />
           </div>
         </div>
-
-        <!-- 右欄：融資精算結果 -->
         <div class="output-panel">
           <h3 class="panel-title">📊 融資精算結果</h3>
-
-          <!-- 公式鏈步驟卡片 -->
           <div class="formula-chain">
-            <div class="formula-step">
-              <span class="step-num">①</span>
-              <span class="step-label">實際貸款金額</span>
-              <span class="step-value" id="s2-loan-amount">--</span>
-            </div>
-            <div class="formula-step">
-              <span class="step-num">②</span>
-              <span class="step-label">貸款手續費 (×手續費率)</span>
-              <span class="step-value" id="s2-loan-fee-amount">--</span>
-            </div>
-            <div class="formula-step">
-              <span class="step-num">③</span>
-              <span class="step-label">實際本金 (實付−貸款)</span>
-              <span class="step-value" id="s2-actual-principal">--</span>
-            </div>
-            <div class="formula-step highlight">
-              <span class="step-num">④</span>
-              <span class="step-label">客戶總出資成本 (③+②)</span>
-              <span class="step-value" id="s2-client-total-cost">--</span>
-            </div>
+            <div class="formula-step"><span class="step-num">①</span><span class="step-label">實際貸款金額</span><span class="step-value" id="s2-loan-amount">--</span></div>
+            <div class="formula-step"><span class="step-num">②</span><span class="step-label">貸款手續費</span><span class="step-value" id="s2-loan-fee-amount">--</span></div>
+            <div class="formula-step"><span class="step-num">③</span><span class="step-label">實際本金</span><span class="step-value" id="s2-actual-principal">--</span></div>
+            <div class="formula-step highlight"><span class="step-num">④</span><span class="step-label">客戶總出資成本</span><span class="step-value" id="s2-client-total-cost">--</span></div>
           </div>
-
-          <!-- 雙極限回報結果卡片 -->
           <div class="result-cards">
             <div class="result-card success">
               <div class="rc-label">✅ 正常環境總回報率</div>
@@ -413,176 +259,104 @@
               <div class="rc-sub">年單利 <strong id="s2-annual-cap">-- %</strong></div>
             </div>
           </div>
-
-          <!-- 槓桿條形圖 -->
           <div class="leverage-bar-section">
             <h4 class="sub-title">⚖️ 資金槓桿比例</h4>
             <div class="leverage-bar-track">
-              <div class="leverage-bar-client" id="leverage-client-bar">
-                <span id="leverage-client-label">--</span>
-              </div>
-              <div class="leverage-bar-bank" id="leverage-bank-bar">
-                <span id="leverage-bank-label">--</span>
-              </div>
-            </div>
-            <div class="leverage-legend">
-              <span class="dot dot-client">●</span> 客戶出資
-              <span class="dot dot-bank" style="margin-left:1rem;">●</span> 銀行貸款
-            </div>
-          </div>
-
-          <!-- 安全感指標圓餅圖 -->
-          <div class="chart-mini-wrapper">
-            <h4 class="sub-title">🛡 安全感指標（保證價值比）</h4>
-            <div class="piechart-row">
-              <canvas id="chart-safety-pie" style="max-width:160px; max-height:160px;"></canvas>
-              <div class="pie-legend" id="pie-legend">
-                <div class="pie-item"><span class="dot" style="color:#4CAF50">●</span> 保證現金價值 <strong id="pie-guaranteed">--</strong></div>
-                <div class="pie-item"><span class="dot" style="color:#90CAF9">●</span> 非保證紅利 <strong id="pie-nonguaranteed">--</strong></div>
-              </div>
-            </div>
-            <div class="input-group" style="margin-top:0.5rem;">
-              <label class="field-label">觀察年期：第 <span id="s2-obs-year-label">9</span> 年</label>
-              <input type="number" id="s2-obs-year" class="input-field" value="9"
-                min="1" max="30" step="1" oninput="document.getElementById('s2-obs-year-label').textContent=this.value; updateSafetyPie()" />
+              <div class="leverage-bar-client" id="leverage-client-bar"><span id="leverage-client-label">--</span></div>
+              <div class="leverage-bar-bank" id="leverage-bank-bar"><span id="leverage-bank-label">--</span></div>
             </div>
           </div>
         </div>
       </div>
-
-      <!-- 10年期雙極限 NAV 分析圖 -->
       <div class="chart-section">
-        <h3 class="panel-title">📉 10 年期雙極限 NAV 分析</h3>
-        <p class="chart-hint">藍線 = 正常利率環境 NAV｜紅線 = 封頂利率最壞環境 NAV｜⭐ = 預計退出年份</p>
-        <div class="chart-wrapper">
-          <canvas id="chart-dual-return"></canvas>
-        </div>
+        <h3 class="panel-title">📉 10年期雙極限 NAV 分析</h3>
+        <p class="chart-hint">藍線=正常環境 NAV｜紅線=封頂利率最壞環境｜⭐=預計退出年份</p>
+        <div id="chart-dual-return" style="width:100%;height:350px;"></div>
       </div>
     </div>
 
-    <!-- ── 跨產品對比區（多選時顯示）── -->
+    <!-- 跨產品對比 -->
     <div id="comparison-section" class="comparison-hidden">
       <div class="section-divider"></div>
       <h3 class="panel-title">⚖️ 跨產品對比分析</h3>
-      <p class="chart-hint">對比多個產品在 1–30 年間的總資產增長曲線（純儲蓄 vs 保費融資）</p>
-      <div class="chart-wrapper">
-        <canvas id="chart-comparison"></canvas>
-      </div>
+      <div id="chart-comparison" style="width:100%;height:350px;"></div>
       <div class="comparison-table-wrapper">
         <table class="comparison-table" id="comparison-table">
-          <thead>
-            <tr>
-              <th>對比維度</th>
-              <!-- 由 JS 動態填入 -->
-            </tr>
-          </thead>
-          <tbody>
-            <!-- 由 JS 動態填入 -->
-          </tbody>
+          <thead><tr><th>對比維度</th></tr></thead>
+          <tbody></tbody>
         </table>
       </div>
     </div>
   </section>
 
-  <!-- ═══════════════════════════════════════════════
-       區塊 C：AI 客戶分析報告 (The Close) — v2.0 完整版
-  ════════════════════════════════════════════════ -->
+  <!-- ═══ 區塊 C：報告 ═══ -->
   <section class="section-card" id="section-close">
     <div class="section-header">
       <span class="section-badge">C</span>
       <h2>客戶投保明白備忘錄</h2>
       <span class="section-tag">The Close</span>
     </div>
-
-    <!-- v2.0 顧問核心觀點標籤 -->
     <div class="advisor-tags-section">
-      <h4 class="sub-title">🏷 顧問核心觀點標籤（多選，影響報告引言）</h4>
+      <h4 class="sub-title">🏷 顧問核心觀點標籤</h4>
       <div class="advisor-tags" id="advisor-tags">
         <label class="tag-chip"><input type="checkbox" value="財富傳承" onchange="updateAdvisorTags()"> 🏛 財富傳承</label>
-        <label class="tag-chip"><input type="checkbox" value="資產配置與投資" onchange="updateAdvisorTags()"> 📊 資產配置與投資</label>
-        <label class="tag-chip"><input type="checkbox" value="儲蓄退休規劃" onchange="updateAdvisorTags()"> 🏖 儲蓄退休規劃</label>
-        <label class="tag-chip"><input type="checkbox" value="子女教育基金" onchange="updateAdvisorTags()"> 🎓 子女教育基金</label>
-        <label class="tag-chip"><input type="checkbox" value="高額人壽保障" onchange="updateAdvisorTags()"> 🛡 高額人壽保障</label>
+        <label class="tag-chip"><input type="checkbox" value="資產配置與投資" onchange="updateAdvisorTags()"> 📊 資產配置</label>
+        <label class="tag-chip"><input type="checkbox" value="儲蓄退休規劃" onchange="updateAdvisorTags()"> 🏖 儲蓄退休</label>
+        <label class="tag-chip"><input type="checkbox" value="子女教育基金" onchange="updateAdvisorTags()"> 🎓 子女教育</label>
+        <label class="tag-chip"><input type="checkbox" value="高額人壽保障" onchange="updateAdvisorTags()"> 🛡 高額人壽</label>
       </div>
     </div>
-
-    <!-- v2.0 保費融資分析開關 -->
     <div class="finance-toggle-section">
       <h4 class="sub-title">🏦 保費融資分析</h4>
       <div class="toggle-switch-row">
-        <label class="toggle-switch">
-          <input type="checkbox" id="finance-toggle" checked onchange="onFinanceToggle()">
-          <span class="toggle-slider"></span>
-        </label>
-        <span id="finance-toggle-label" class="toggle-label">已啟用 — 報告將包含融資壓力測試頁面（共三頁）</span>
+        <label class="toggle-switch"><input type="checkbox" id="finance-toggle" checked onchange="onFinanceToggle()"><span class="toggle-slider"></span></label>
+        <span id="finance-toggle-label" class="toggle-label">已啟用 — 報告含融資壓力測試頁（共三頁）</span>
       </div>
     </div>
-
-    <!-- 報告操作工具欄 -->
     <div class="close-toolbar">
-      <button class="btn btn-primary" onclick="generateReport()">
-        📋 生成客戶專屬分析報告
-      </button>
-      <button class="btn btn-secondary" onclick="copyWhatsApp()" id="btn-whatsapp" disabled>
-        💬 一鍵複製 WhatsApp 摘要
-      </button>
-      <button class="btn btn-secondary" onclick="downloadPDF()" id="btn-pdf" disabled>
-        📄 下載 PDF 報告
-      </button>
-      <button class="btn btn-secondary" onclick="printReport()" id="btn-print" disabled>
-        🖨 一鍵列印
-      </button>
+      <select id="report-version" class="select-field" style="width:auto;">
+        <option value="client">客戶簡報版</option>
+        <option value="professional">專業顧問版</option>
+      </select>
+      <button class="btn btn-primary" onclick="generateReport()">📋 生成報告</button>
+      <button class="btn btn-secondary" onclick="copyWhatsApp()" id="btn-whatsapp" disabled>💬 WhatsApp</button>
+      <button class="btn btn-secondary" onclick="downloadPDF()" id="btn-pdf" disabled>📄 PDF</button>
     </div>
-
-    <!-- 報告輸出區（PDF 抓取目標） -->
     <div class="report-output" id="report-output">
-      <div class="report-placeholder">
-        <span class="ph-icon">📄</span>
-        <p>調校好上方參數後，點擊「生成報告」即可輸出客戶投保明白備忘錄</p>
-      </div>
+      <div class="report-placeholder"><span class="ph-icon">📄</span><p>調校好參數後，點擊「生成報告」</p></div>
     </div>
   </section>
 
-  <!-- v2.1 官方計劃書離線存檔庫（連動當前產品） -->
+  <!-- 文件庫 -->
   <section class="section-card" id="section-brochures">
     <div class="section-header">
       <span class="section-badge">📚</span>
-      <h2>官方計劃書存檔庫</h2>
+      <h2>官方計劃書文件庫</h2>
       <span class="section-tag">Brochures</span>
     </div>
-    <p class="chart-hint" id="brochures-hint">選擇產品後，這裡會顯示對應的官方 PDF 說明書。點擊下方按鈕從 GitHub 同步。</p>
+    <p class="chart-hint" id="brochures-hint">選擇產品後顯示對應官方 PDF 說明書。</p>
     <div id="brochures-list" class="brochures-grid">
-      <p class="hint-text">📄 當前產品的官方計劃書將在此顯示。點擊「載入計劃書」從 GitHub 倉庫同步。</p>
+      <p class="hint-text">📄 點擊下方按鈕從 GitHub 同步計劃書。</p>
     </div>
-    <button class="btn btn-secondary" style="margin-top:0.75rem; padding:0.4rem 0.8rem; font-size:0.8rem;"
-            onclick="loadBrochuresList()" id="btn-load-brochures">
-      🔄 載入全部計劃書
-    </button>
+    <button class="btn btn-secondary" style="margin-top:0.75rem;" onclick="loadBrochuresList()" id="btn-load-brochures">🔄 載入全部計劃書</button>
   </section>
 
 </main>
 
 <footer class="app-footer">
   <p>⚠️ 本系統僅供持牌保險從業員內部培訓使用，所有數據計算僅供參考，不構成任何投保或財務建議。</p>
-  <p>Insurance Sales Training Tool v2.0 · 所有精算數據請以正式計劃書為準</p>
+  <p>Insurance Sales Training Tool v3.0 · 所有精算數據請以正式計劃書為準</p>
 </footer>
 
-<!-- v2.0 Token 輸入 Modal -->
 <div class="modal-overlay" id="token-modal" style="display:none;">
   <div class="modal-card">
     <h3>🔑 設定 GitHub Access Token</h3>
-    <p class="modal-desc">
-      輸入您的 GitHub Personal Access Token 以同步最新產品數據。<br>
-      建議使用 Fine-grained PAT，僅授予 <code>contents:read</code> 權限。
-    </p>
-    <input type="password" id="token-input" class="input-field"
-           placeholder="github_pat_xxxx... 或 ghp_xxxx..." />
+    <p class="modal-desc">輸入 Token 以同步最新產品數據。</p>
+    <input type="password" id="token-input" class="input-field" placeholder="ghp_xxxx..." />
     <div class="modal-actions">
       <button class="btn btn-secondary" onclick="closeTokenModal()">取消</button>
       <button class="btn btn-primary" onclick="saveTokenAndSync()">儲存並同步</button>
     </div>
-    <p class="hint-text">⚠ Token 僅儲存於本機 localStorage，不會上傳任何伺服器。</p>
-    <p class="hint-text">📋 <a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener">按此建立 Token</a> · 請勾選 <code>repo</code> 權限</p>
   </div>
 </div>
 
@@ -590,12 +364,9 @@
 <script src="data.js"></script>
 <script src="app.js"></script>
 <script>
-  /* Service Worker 註冊 */
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js')
-        .then(reg => console.log('✅ SW registered:', reg.scope))
-        .catch(err => console.warn('⚠ SW failed:', err));
+      navigator.serviceWorker.register('./service-worker.js').then(reg => console.log('SW:', reg.scope)).catch(err => console.warn('SW:', err));
     });
   }
 </script>

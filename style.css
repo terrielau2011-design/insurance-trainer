@@ -882,6 +882,35 @@ body {
   line-height: 1.8;
 }
 
+/* ═══ v3.0 合規免責欄 ═══ */
+.disclaimer-bar {
+  background: #fff3cd;
+  border-bottom: 2px solid #ffc107;
+  padding: 0.5rem 1rem;
+  font-size: 0.72rem;
+  color: #856404;
+  text-align: center;
+  line-height: 1.5;
+  position: sticky;
+  top: 60px;
+  z-index: 90;
+}
+
+/* ═══ v3.0 需求標籤 ═══ */
+.need-tags-section { margin-bottom: 1rem; padding: 1rem; background: var(--surface-2); border-radius: var(--radius-md); border: 1px solid var(--border); }
+.need-tags { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+.need-tags .tag-chip { padding: 0.4rem 0.85rem; border: 1.5px solid var(--border); border-radius: 20px; cursor: pointer; font-size: 0.82rem; color: var(--text-secondary); transition: var(--transition); user-select: none; }
+.need-tags .tag-chip input { display: none; }
+.need-tags .tag-chip:has(input:checked) { background: linear-gradient(135deg, #1a5fb4, #3584e4); color: #fff; border-color: var(--primary); font-weight: 600; }
+
+/* 產品匹配高亮 */
+.product-item.need-match { border-color: var(--success); background: #e8f5e9; }
+.product-item.need-partial { opacity: 0.5; }
+.match-badge { font-size: 0.7rem; color: var(--accent); margin-left: auto; }
+
+/* 亮點需求標籤 */
+.need-badge { font-size: 0.65rem; background: var(--surface-3); padding: 1px 6px; border-radius: 10px; color: var(--text-muted); font-weight: 400; margin-left: 6px; }
+
 /* ═══ v2.0 Phase 4: 顧問標籤 ═══ */
 .advisor-tags-section,
 .finance-toggle-section {
