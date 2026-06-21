@@ -22,7 +22,7 @@
       "payTermLabels": { "5": "5年繳" },
       "annualPremium": 200000,
       "isFinanceable": true,
-      "firstDayCVRatio": 0.95,
+      "firstDayCVRatio": 0.7869,
       "brochureFile": "C521_豐饒傳承III.pdf",
       "needTags": ["家族傳承", "財富增值", "保費融資"],
       "highlights": [

@@ -84,6 +84,22 @@ function updateProductMatching() {
     } else {
       item.classList.remove('need-match');
       item.classList.add('need-partial');
+      /* 任務二：保費融資標籤特殊提示 */
+      if (state.needTags.includes('保費融資')) {
+        const tip = item.querySelector('.finance-tip');
+        if (!tip) {
+          const t = document.createElement('div');
+          t.className = 'finance-tip';
+          t.style.cssText = 'font-size:.65rem;color:var(--text-muted);width:100%;';
+          t.textContent = '僅豐饒傳承III支持保費融資';
+          item.appendChild(t);
+        }
+      }
+    }
+    /* 移除已有的 finance-tip（若該產品匹配了） */
+    if (matchCount > 0) {
+      const tip = item.querySelector('.finance-tip');
+      if (tip) tip.remove();
     }
   });
 }
@@ -240,11 +256,12 @@ function calcScene1() {
   updatePrivilegesWall(base * payTerm);
   updateWealthChart();
   updatePremiumPie();
+  updateOppChart();
 }
 
 function setVal(id, v) { document.getElementById(id).value = v; }
 
-/* ═══ 場景二計算（8步NAV公式）═══ */
+/* ═══ 場景二計算（修正：使用實付總保費，非原始總保費）═══ */
 function calcScene2() {
   const prod = getProductById(state.primaryProduct);
   if (!prod || !prod.isFinanceable) return;
@@ -255,27 +272,42 @@ function calcScene2() {
   const feeRate = (parseFloat(document.getElementById('s2-loan-fee').value)||2)/100;
   const term = Math.min(10, parseInt(document.getElementById('s2-loan-term').value)||9);
   const sym = (appConfig.currencySymbols||{})[state.displayCurrency||prod.currency] || '';
-  const fdCV = totalPrem * (prod.firstDayCVRatio||0.95);
-  const loan = fdCV * ltv;
+
+  /* 任務一修正：首日現價用固定比例，實際貸款取整 */
+  const fdCV = totalPrem * (prod.firstDayCVRatio||0.7869);
+  const loan = Math.round(fdCV * ltv);  /* 取整，如 448,000 */
   const fee = loan * feeRate;
-  const paid = totalPrem * (1 - ((prod.discounts?.firstYear?.defaultPercent)||12.5)/100);
-  const principal = paid - loan;
+
+  /* 任務一修正：實付總保費 = 原始總保費 × (1 - 首年折扣率) */
+  const discPct = ((prod.discounts?.firstYear?.defaultPercent)||12.5)/100;
+  const paidTotal = totalPrem * (1 - discPct);  /* 524,769.51 */
+
+  /* ① 實際本金 = 實付總保費 - 實際貸款金額 */
+  const principal = paidTotal - loan;
+
+  /* ④ 客戶總出資成本 = 實際本金 + 手續費 */
   const cost = principal + fee;
-  let policyVal = 0;
+
+  /* 退出金額 = 保單保證價值 + 紅利（按實付保費比例換算）*/
   const ratio = totalPrem / getBasePremiumUnit(prod);
   const dEnd = getPolicyDataAtYear(prod, term);
+  let policyVal = 0;
   if (dEnd) policyVal = (dEnd.guaranteedCV + dEnd.nonGuaranteedBonus) * ratio;
+
+  /* ⑤ 淨收益 = 退出金額 - 貸款 - 手續費 - 總利息 */
   const intCurr = loan * rate * term;
   const intCap = loan * cap * term;
-  const navCurr = policyVal - loan - intCurr - fee;
-  const navCap = policyVal - loan - intCap - fee;
-  const profitCurr = navCurr - cost;
-  const profitCap = navCap - cost;
-  const roiCurr = cost > 0 ? (profitCurr/cost)*100 : 0;
-  const roiCap = cost > 0 ? (profitCap/cost)*100 : 0;
-  const annCurr = term > 0 ? roiCurr/term : 0;
-  const annCap = term > 0 ? roiCap/term : 0;
-  state.s2Results = { totalPrem, ltv, rate, cap, feeRate, term, fdCV, loan, fee, paid, principal, cost, policyVal, intCurr, intCap, navCurr, navCap, profitCurr, profitCap, roiCurr, roiCap, annCurr, annCap };
+  const netCurr = policyVal - loan - fee - intCurr;
+  const netCap = policyVal - loan - fee - intCap;
+
+  /* ⑥ 年化單利 = 淨收益 / 客戶總出資成本 / 年期 */
+  const roiCurr = cost > 0 ? (netCurr / cost) * 100 : 0;
+  const roiCap = cost > 0 ? (netCap / cost) * 100 : 0;
+  const annCurr = term > 0 ? roiCurr / term : 0;
+  const annCap = term > 0 ? roiCap / term : 0;
+
+  state.s2Results = { totalPrem, ltv, rate, cap, feeRate, term, fdCV, loan, fee, paidTotal, principal, cost, policyVal, intCurr, intCap, netCurr, netCap, roiCurr, roiCap, annCurr, annCap };
+
   document.getElementById('s2-first-day-cv').textContent = `${sym} ${fmt(fdCV)}`;
   document.getElementById('s2-loan-amount').textContent = `${sym} ${fmt(loan)}`;
   document.getElementById('s2-loan-fee-amount').textContent = `${sym} ${fmt(fee)}`;
@@ -316,7 +348,7 @@ function updateWealthChart() {
   const total = guaranteed.map((g,i) => g + bonus[i]);
   const targetLine = prod.policyData.map(() => target);
 
-  // 計算預計達成年份
+  /* 計算預計達成年份（任務四：兩種模式都計算） */
   let targetYear = null;
   for (let i = 0; i < total.length; i++) {
     if (total[i] >= target) { targetYear = prod.policyData[i].year; break; }
@@ -338,13 +370,28 @@ function updateWealthChart() {
   }, true);
 }
 
+/* 任務三：繳費構成餅圖（融資模式下隱藏） */
 function updatePremiumPie() {
   if (!echartsInstances.premiumPie) return;
   const s1 = state.s1Results;
   if (!s1 || !s1.base) return;
+
+  /* 融資模式下隱藏餅圖 */
+  const pieContainer = document.getElementById('chart-premium-pie');
+  if (!pieContainer) return;
+  const pieWrapper = pieContainer.closest('.chart-mini-wrapper');
+  if (state.activeScene === 2 || (state.financeEnabled && getProductById(state.primaryProduct)?.isFinanceable && state.activeScene === 2)) {
+    if (pieWrapper) pieWrapper.style.display = 'none';
+    return;
+  }
+  if (pieWrapper) pieWrapper.style.display = '';
+
+  /* 儲蓄險模式：4項分解 */
   const clientPay = s1.premY1 + (s1.base * Math.max(0, s1.payTerm - 1));
   const prepayDisc = s1.prepayDisc;
   const firstDisc = s1.base * s1.discY1;
+  const renewalDisc = s1.base * 0; /* 續期折扣（如有，僅第二年，目前預設0） */
+
   echartsInstances.premiumPie.setOption({
     tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
     series: [{
@@ -352,9 +399,10 @@ function updatePremiumPie() {
       label: { formatter: '{b}\n{d}%', fontSize: 11 },
       data: [
         { name: '客戶實際出資', value: Math.round(clientPay), itemStyle: { color: '#1a5fb4' } },
-        { name: '預繳保費利息折讓', value: Math.round(prepayDisc), itemStyle: { color: '#26a269' } },
-        { name: '首年保費折扣', value: Math.round(firstDisc), itemStyle: { color: '#f5a623' } }
-      ]
+        { name: '預繳保費利息', value: Math.round(prepayDisc), itemStyle: { color: '#26a269' } },
+        { name: '首年保費折扣', value: Math.round(firstDisc), itemStyle: { color: '#f5a623' } },
+        { name: '續期保費折扣', value: Math.round(renewalDisc), itemStyle: { color: '#999' } }
+      ].filter(d => d.value > 0) /* 只顯示大於0的項 */
     }]
   }, true);
 }
@@ -463,11 +511,47 @@ function updateComparisonChart() {
 }
 
 /* ═══ 對比表 ═══ */
+/* 任務七：多產品對比模式 */
 function updateComparisonSection() {
   const sec = document.getElementById('comparison-section');
   const total = [state.primaryProduct, ...state.compareProducts].filter(Boolean).length;
-  if (total >= 2) { sec.classList.remove('comparison-hidden'); updateComparisonChart(); }
-  else sec.classList.add('comparison-hidden');
+
+  if (total >= 2) {
+    /* 多產品對比模式 */
+    sec.classList.remove('comparison-hidden');
+    updateComparisonChart();
+
+    /* 顯示提示 */
+    let banner = document.getElementById('multi-product-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'multi-product-banner';
+      banner.style.cssText = 'background:#e8f0ff;padding:.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:.85rem;color:var(--primary);font-weight:600;';
+      sec.insertBefore(banner, sec.firstChild);
+    }
+    banner.textContent = `已選 ${total} 個產品，正在進行對比分析`;
+
+    /* 隱藏融資參數和精算結果 */
+    const scene2 = document.getElementById('scene2');
+    if (scene2) scene2.style.opacity = '0.4';
+    const financeNote = document.getElementById('finance-multi-note');
+    if (!financeNote && scene2) {
+      const n = document.createElement('p');
+      n.id = 'finance-multi-note';
+      n.style.cssText = 'color:var(--text-muted);font-size:.8rem;padding:.5rem;';
+      n.textContent = '⚠ 多產品對比模式下，融資分析僅適用於單一產品';
+      scene2.querySelector('.panel-grid')?.prepend(n);
+    }
+  } else {
+    /* 單產品模式 */
+    sec.classList.add('comparison-hidden');
+    const banner = document.getElementById('multi-product-banner');
+    if (banner) banner.remove();
+    const scene2 = document.getElementById('scene2');
+    if (scene2) scene2.style.opacity = '1';
+    const fn = document.getElementById('finance-multi-note');
+    if (fn) fn.remove();
+  }
 }
 
 function updateComparisonTable(ids) {
