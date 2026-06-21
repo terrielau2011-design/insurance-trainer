@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>保險產品對比與財務演算工具 V2</title>
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -134,8 +134,8 @@
       <span id="report-status" class="report-status"></span>
     </div>
 
-    <!-- 【V2修復新增】報告預覽區：用 visibility:hidden 代替 display:none，html2pdf 可完整捕獲 -->
-    <div id="report-preview" style="visibility:hidden;position:absolute;left:-9999px;top:0;width:794px;"></div>
+    <!-- 【V2修复新增】报告预览区：用 visibility:hidden 代替 display:none，html2pdf 可完整捕获 -->
+    <div id="reportWrap" style="visibility:hidden;position:absolute;left:-9999px;top:0;"></div>
   </section>
 
 </main>

@@ -102,7 +102,6 @@ body { font-family: 'Noto Sans TC', sans-serif; font-size: 14px; background: lin
 .section-tag { font-size: .7rem; color: var(--text-muted); background: var(--surface-3); padding: 2px 10px; border-radius: 20px; }
 
 /* PDF 報告內容樣式 */
-/* 【V2修復新增】修復5：表格自動分頁，長收益表不截斷 */
 .report-page { background: #fff; padding: 2rem; margin-bottom: 1rem; border: 1px solid var(--border); border-radius: 8px; page-break-after: always; page-break-inside: avoid; }
 .report-page:last-child { page-break-after: auto; }
 .report-table { width: 100%; border-collapse: collapse; font-size: .8rem; margin: .5rem 0; page-break-inside: avoid; }
@@ -114,7 +113,6 @@ body { font-family: 'Noto Sans TC', sans-serif; font-size: 14px; background: lin
 .report-row .guaranteed { color: var(--danger); font-weight: 700; }
 .report-section-title { font-weight: 700; color: var(--primary); font-size: .95rem; margin: 1rem 0 .5rem; border-bottom: 1px solid var(--primary-light); padding-bottom: 3px; }
 .report-disclaimer { font-size: .75rem; color: var(--text-muted); line-height: 1.8; margin-top: 1rem; padding: .75rem; background: var(--surface-3); border-radius: 6px; }
-.report-table { width: 100%; border-collapse: collapse; font-size: .8rem; margin: .5rem 0; }
 .report-table th { background: var(--primary); color: #fff; padding: .4rem .6rem; text-align: left; font-size: .75rem; }
 .report-table td { padding: .4rem .6rem; border-bottom: 1px solid var(--border); }
 .report-signature { margin-top: 2rem; padding-top: 1rem; border-top: 1px dashed var(--border); display: flex; justify-content: space-between; font-size: .8rem; color: var(--text-muted); }
