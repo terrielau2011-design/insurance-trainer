@@ -437,11 +437,18 @@ function updateReportButton() {
   btn.disabled = !state.chartProductId;
 }
 
-/* 生成報告 */
+/* 【V2修復新增】生成報告 — 修復 display:none 導致 PDF 空白 */
 function generateReport() {
-  if (!state.chartProductId) return;
+  /* 修復3：空值防護 — 未選產品彈窗提示 */
+  if (!state.chartProductId) {
+    alert('請先選擇一個產品再生成報告');
+    return;
+  }
   const prod = productData.find(p => p.id === state.chartProductId);
-  if (!prod) return;
+  if (!prod) {
+    alert('產品數據載入異常，請重新選擇');
+    return;
+  }
 
   const version = document.getElementById('report-version').value;
   const statusEl = document.getElementById('report-status');
@@ -452,48 +459,63 @@ function generateReport() {
   const reportHTML = version === 'client' ? buildClientReport(prod) : buildProfessionalReport(prod);
   const preview = document.getElementById('report-preview');
   preview.innerHTML = reportHTML;
-  preview.style.display = '';
 
-  /* 用 html2pdf 生成 PDF */
+  /* 修復1：不用 display:none，改用 visibility:hidden + 絕對定位移出視窗 */
+  /* 這樣 html2pdf 能完整捕獲 DOM 內容 */
+  preview.style.position = 'absolute';
+  preview.style.left = '-9999px';
+  preview.style.top = '0';
+  preview.style.visibility = 'visible';
+  preview.style.display = 'block';
+  preview.style.width = '794px'; /* A4 寬度近似 */
+
   const filename = `${prod.name}_${version === 'client' ? '客戶簡報' : '專業顧問'}_${new Date().toISOString().slice(0,10)}.pdf`;
   const opt = {
     margin: [10, 10, 10, 10],
     filename: filename,
     image: { type: 'jpeg', quality: 0.95 },
-    html2canvas: { scale: 2, useCORS: true },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
     jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
     pagebreak: { mode: ['css', 'legacy'], before: '.report-page' }
   };
 
-  html2pdf().set(opt).from(preview).save().then(() => {
-    statusEl.className = 'report-status success';
-    statusEl.textContent = '✅ 報告已生成！';
-    preview.style.display = 'none';
-    showReportModal(filename);
-    setTimeout(() => { statusEl.textContent = ''; statusEl.className = 'report-status'; }, 5000);
-  }).catch(err => {
-    statusEl.className = 'report-status';
-    statusEl.textContent = '❌ 生成失敗：' + err.message;
-    preview.style.display = 'none';
-  });
+  /* 修復2：異步渲染延遲 800ms，等待表格/高亮/融資數據全部渲染完畢 */
+  setTimeout(() => {
+    html2pdf().set(opt).from(preview).save().then(() => {
+      statusEl.className = 'report-status success';
+      statusEl.textContent = '✅ 報告已生成！';
+      /* 恢復隱藏狀態 */
+      preview.style.visibility = 'hidden';
+      preview.innerHTML = '';
+      showReportModal(filename);
+      setTimeout(() => { statusEl.textContent = ''; statusEl.className = 'report-status'; }, 5000);
+    }).catch(err => {
+      statusEl.className = 'report-status';
+      statusEl.textContent = '❌ 生成失敗：' + err.message;
+      preview.style.visibility = 'hidden';
+      preview.innerHTML = '';
+    });
+  }, 800);
 }
 
-/* 客戶簡報版（通俗表述，保證金額高亮，非融資產品隱藏融資章）*/
+/* 【V2修復新增】客戶簡報版 — 保證金額內聯紅色高亮，非融資產品隱藏融資章 */
 function buildClientReport(prod) {
   const sym = prod.currency === 'HKD' ? 'HK$' : 'US$';
   const now = new Date().toLocaleString('zh-HK');
+  /* 修復4②：固定 5/10/15/20 年份循環讀取 cashValue（數據來源：productData.js）*/
   const years = chartConfig.fixedYears;
   const premium = prod.minPremium;
   const discPct = prod.discount.firstYear;
   const paidPremium = Math.round(premium * (1 - discPct) * prod.payPeriods[0]);
 
-  /* 保證金額用紅色高亮 */
+  /* 修復4③：保證金額統一紅色高亮樣式內聯，避免外部 CSS 丟失 */
+  const RED = 'color:#c01c28;font-weight:700;';
   const cvRows = years.map(y => {
     const cv = prod.cashValue[y];
-    if (!cv) return '';
+    if (!cv) return `<tr><td>第 ${y} 年</td><td style="${RED}">${sym}—</td><td>${sym}—</td></tr>`;
     const guaranteed = cv[0];
     const total = cv[0] + cv[1];
-    return `<tr><td>第 ${y} 年</td><td class="guaranteed">${sym}${guaranteed.toLocaleString()}</td><td>${sym}${total.toLocaleString()}</td></tr>`;
+    return `<tr><td>第 ${y} 年</td><td style="${RED}">${sym}${guaranteed.toLocaleString()}</td><td>${sym}${total.toLocaleString()}</td></tr>`;
   }).join('');
 
   let html = `<div class="report-page">
@@ -505,17 +527,17 @@ function buildClientReport(prod) {
     <div class="report-row"><span>日期</span><span>${now}</span></div>
 
     <div class="report-intro">
-      以下為您專屬的保險方案摘要。<span style="color:var(--danger);font-weight:700;">紅色金額為保證金額</span>，即合約確定的收益。
+      以下為您專屬的保險方案摘要。<span style="${RED}">紅色金額為保證金額</span>，即合約確定的收益。
       非保證部分視乎保險公司投資表現，實際金額可能更高或更低。
     </div>
 
     <div class="report-section-title">💰 保費摘要</div>
     <div class="report-row"><span>每年保費</span><span>${sym}${premium.toLocaleString()}</span></div>
     <div class="report-row"><span>首年折扣</span><span>${(discPct*100)}%</span></div>
-    <div class="report-row"><span>實付總保費</span><span class="guaranteed">${sym}${paidPremium.toLocaleString()}</span></div>
+    <div class="report-row"><span>實付總保費</span><span style="${RED}">${sym}${paidPremium.toLocaleString()}</span></div>
 
-    <div class="report-section-title">📊 保單價值一覽（保證金額以紅色標示）</div>
-    <table class="report-table">
+    <div class="report-section-title">📊 保單價值一覽（紅色為保證金額）</div>
+    <table class="report-table" style="page-break-inside:avoid;">
       <thead><tr><th>年份</th><th>保證金額</th><th>預期總金額</th></tr></thead>
       <tbody>${cvRows}</tbody>
     </table>
@@ -528,17 +550,18 @@ function buildClientReport(prod) {
     </div>
   </div>`;
 
-  /* 融資章僅 C521 顯示，且用通俗表述 */
+  /* 修復4①：supportFinancing=true 才顯示融資章，false 完全隱藏 */
   if (prod.supportFinancing) {
     const finPremium = parseFloat(document.getElementById('fin-premium').value) || premium;
     const finResult = calculateFinancing(prod, finPremium, state.finScenario);
     const info = finResult.basicInfo;
+    /* 固定讀取第20年數據（數據來源：finConfig.js calculateFinancing）*/
     const y20 = finResult.yearByYear[20];
     html += `<div class="report-page">
       <div class="report-title">🏦 保費融資說明（僅供參考）</div>
       <div class="report-row"><span>貸款銀行</span><span>${finConfig.bankName}</span></div>
       <div class="report-row"><span>貸款比例</span><span>${(finConfig.maxLoanRatio*100)}%</span></div>
-      <div class="report-row"><span>您需自付的金額</span><span class="guaranteed">${sym}${info.actualPrincipal.toLocaleString()}</span></div>
+      <div class="report-row"><span>您需自付的金額</span><span style="${RED}">${sym}${info.actualPrincipal.toLocaleString()}</span></div>
       <div class="report-row"><span>貸款手續費</span><span>${sym}${info.loanFee.toLocaleString()}</span></div>
       <div class="report-row"><span>當前貸款利率</span><span>${(info.loanRate*100).toFixed(3)}%</span></div>
       ${y20 ? `<div class="report-row"><span>第20年預計淨資產</span><span>${sym}${y20.netValue.toLocaleString()}</span></div>
@@ -553,23 +576,24 @@ function buildClientReport(prod) {
   return html;
 }
 
-/* 專業顧問版（完整收益表、IRR、融資雙場景、免責聲明）*/
+/* 【V2修復新增】專業顧問版 — 完整收益表+IRR+融資雙場景+免責聲明 */
 function buildProfessionalReport(prod) {
   const sym = prod.currency === 'HKD' ? 'HK$' : 'US$';
   const now = new Date().toLocaleString('zh-HK');
+  /* 修復4②：固定 5/10/15/20 年份循環讀取 cashValue + IRR（數據來源：productData.js）*/
   const years = chartConfig.fixedYears;
   const premium = prod.minPremium;
   const discPct = prod.discount.firstYear;
   const paidPremium = Math.round(premium * (1 - discPct) * prod.payPeriods[0]);
 
-  /* 完整收益表 */
+  /* 完整收益表：保證 + 非保證 + 總值 + IRR */
   const cvRows = years.map(y => {
     const cv = prod.cashValue[y];
-    if (!cv) return '';
     const irr = prod.irr[y];
+    if (!cv) return `<tr><td>第 ${y} 年</td><td>${sym}—</td><td>${sym}—</td><td>${sym}—</td><td>—</td></tr>`;
     return `<tr>
       <td>第 ${y} 年</td>
-      <td>${sym}${cv[0].toLocaleString()}</td>
+      <td style="color:#c01c28;font-weight:700;">${sym}${cv[0].toLocaleString()}</td>
       <td>${sym}${cv[1].toLocaleString()}</td>
       <td>${sym}${(cv[0]+cv[1]).toLocaleString()}</td>
       <td>${irr ? (irr*100).toFixed(2)+'%' : '—'}</td>
@@ -591,24 +615,24 @@ function buildProfessionalReport(prod) {
     <div class="report-row"><span>首年折扣率</span><span>${(discPct*100)}%</span></div>
     <div class="report-row"><span>續期折扣率</span><span>${(prod.discount.renewal*100)}%</span></div>
     <div class="report-row"><span>預繳保費利率</span><span>${(prod.discount.prepay*100)}%</span></div>
-    <div class="report-row"><span>實付總保費</span><span style="color:var(--accent);font-weight:700">${sym}${paidPremium.toLocaleString()}</span></div>
+    <div class="report-row"><span>實付總保費</span><span style="color:#f5a623;font-weight:700;">${sym}${paidPremium.toLocaleString()}</span></div>
 
     <div class="report-section-title">📊 完整收益表（保證/非保證/總值/IRR）</div>
-    <table class="report-table">
+    <table class="report-table" style="page-break-inside:avoid;">
       <thead><tr><th>年份</th><th>保證現金價值</th><th>非保證分紅</th><th>總價值</th><th>IRR</th></tr></thead>
       <tbody>${cvRows}</tbody>
     </table>
   </div>`;
 
-  /* 融資雙場景測試（僅 C521）*/
+  /* 修復4①：融資雙場景測試僅 supportFinancing=true 產品展示（數據來源：finConfig.js）*/
   if (prod.supportFinancing) {
     const finPremium = parseFloat(document.getElementById('fin-premium').value) || premium;
+    /* 正常 + 悲觀雙場景計算 */
     const normalResult = calculateFinancing(prod, finPremium, 'normal');
     const pessResult = calculateFinancing(prod, finPremium, 'pessimistic');
     const nInfo = normalResult.basicInfo;
-    const pInfo = pessResult.basicInfo;
 
-    /* 雙場景對比表 */
+    /* 雙場景對比表 — 固定 5/10/15/20 年份 */
     const finRows = years.map(y => {
       const nd = normalResult.yearByYear[y];
       const pd = pessResult.yearByYear[y];
@@ -616,9 +640,9 @@ function buildProfessionalReport(prod) {
       return `<tr>
         <td>第 ${y} 年</td>
         <td>${sym}${nd.totalCashValue.toLocaleString()}</td>
-        <td>${(nd.returnRate*100).toFixed(2)}%</td>
+        <td style="color:#26a269;font-weight:700;">${(nd.returnRate*100).toFixed(2)}%</td>
         <td>${sym}${pd.totalCashValue.toLocaleString()}</td>
-        <td>${(pd.returnRate*100).toFixed(2)}%</td>
+        <td style="color:#c01c28;font-weight:700;">${(pd.returnRate*100).toFixed(2)}%</td>
       </tr>`;
     }).join('');
 
@@ -632,7 +656,7 @@ function buildProfessionalReport(prod) {
       <div class="report-row"><span>手續費 (${(finConfig.loanFeeRate*100)}%)</span><span>${sym}${nInfo.loanFee.toLocaleString()}</span></div>
 
       <div class="report-section-title">雙場景對比（正常 vs 悲觀）</div>
-      <table class="report-table">
+      <table class="report-table" style="page-break-inside:avoid;">
         <thead><tr><th>年份</th><th>正常退出總值</th><th>正常年化回報</th><th>悲觀退出總值</th><th>悲觀年化回報</th></tr></thead>
         <tbody>${finRows}</tbody>
       </table>
@@ -645,7 +669,7 @@ function buildProfessionalReport(prod) {
     </div>`;
   }
 
-  /* 標準免責聲明 */
+  /* 標準免責聲明（獨立頁面）*/
   html += `<div class="report-page">
     <div class="report-title">⚠️ 重要免責聲明</div>
     <div class="report-disclaimer">

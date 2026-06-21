@@ -134,8 +134,8 @@
       <span id="report-status" class="report-status"></span>
     </div>
 
-    <!-- 報告預覽區（隱藏，生成 PDF 時用） -->
-    <div id="report-preview" style="display:none;"></div>
+    <!-- 【V2修復新增】報告預覽區：用 visibility:hidden 代替 display:none，html2pdf 可完整捕獲 -->
+    <div id="report-preview" style="visibility:hidden;position:absolute;left:-9999px;top:0;width:794px;"></div>
   </section>
 
 </main>
