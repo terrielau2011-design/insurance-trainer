@@ -230,12 +230,14 @@ function initChartProductSelect() {
 function onChartProductChange() {
   state.chartProductId = document.getElementById('chart-product-select').value;
   renderAllCharts();
+  calcFinancing(); /* 修復：切換產品時刷新融資面板 */
 }
 
 function renderAllCharts() {
   updatePieChart();
   updateWealthChart();
   updateOppChart();
+  calcFinancing(); /* 修復：渲染圖表時同步刷新融資 */
 }
 
 /* 3a 繳費構成餅圖（數據來源：productData.discount + chartConfig.pieChart）*/
@@ -356,14 +358,27 @@ function switchFinScene(scene) {
 function calcFinancing() {
   if (!chartConfig.modules.financing) return;
   const prod = productData.find(p => p.id === state.chartProductId);
-  /* 融資面板僅 supportFinancing=true 產品顯示 */
+  const section = document.getElementById('section-financing');
+
+  /* 融資面板僅 supportFinancing=true 產品顯示，其他產品隱藏並清空數據 */
   if (!prod || !prod.supportFinancing) {
-    document.getElementById('section-financing').style.display = 'none';
+    if (section) {
+      section.style.display = 'none';
+      /* 清空融資數據 */
+      document.getElementById('fin-results').innerHTML = '';
+      document.getElementById('fin-compare').innerHTML = '';
+    }
     return;
   }
-  document.getElementById('section-financing').style.display = '';
+  if (section) section.style.display = '';
 
-  const premium = parseFloat(document.getElementById('fin-premium').value) || prod.minPremium;
+  /* 切換到融資產品時，更新保費輸入框預設值 */
+  const finPremInput = document.getElementById('fin-premium');
+  if (finPremInput && (!finPremInput.value || parseInt(finPremInput.value) !== prod.minPremium)) {
+    finPremInput.value = prod.minPremium;
+  }
+
+  const premium = parseFloat(finPremInput.value) || prod.minPremium;
 
   /* 調用 finConfig.js 的 calculateFinancing（數據來源：finConfig + productData）*/
   const result = calculateFinancing(prod, premium, state.finScenario);
