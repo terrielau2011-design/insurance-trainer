@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 function onDataReady() {
+  console.log('🛡 Insurance Trainer v3.2.1 | 7 products loaded');
   initNeedTags();
   initProductList();
   initBankList();
@@ -247,6 +248,11 @@ function updatePayTermOptions() {
     lab.appendChild(r); lab.appendChild(document.createTextNode(` ${txt}`));
     c.appendChild(lab);
   });
+  /* v3.2.1: 切換產品時更新保費輸入框為標準保費 */
+  const premInput = document.getElementById('s1-premium');
+  if (premInput && prod.standardPremium) {
+    premInput.value = prod.standardPremium;
+  }
 }
 
 /* ═══ 場景切換 ═══ */
@@ -263,7 +269,7 @@ function switchScene(n) {
 function calcScene1() {
   const prod = getProductById(state.primaryProduct);
   if (!prod) return;
-  const base = parseFloat(document.getElementById('s1-premium').value) || prod.annualPremium;
+  const base = parseFloat(document.getElementById('s1-premium').value) || prod.standardPremium || prod.annualPremium;
   const payTerm = parseInt(document.querySelector('input[name="s1pt"]:checked')?.value || prod.payTerms[0]);
   const discY1 = (parseFloat(document.getElementById('s1-discount-y1').value)||0)/100;
   const prepay = (parseFloat(document.getElementById('s1-prepay').value)||0)/100;
@@ -369,7 +375,7 @@ function initCharts() {
 function updateWealthChart() {
   const prod = getProductById(state.primaryProduct);
   if (!prod || !echartsInstances.wealth) return;
-  const userPremium = parseFloat(document.getElementById('s1-premium').value) || prod.annualPremium;
+  const userPremium = parseFloat(document.getElementById('s1-premium').value) || prod.standardPremium || prod.annualPremium;
   const target = parseFloat(document.getElementById('s1-target-amount').value) || 0;
   const dataPoints = prod.unitData || prod.policyData || [];
   const years = dataPoints.map(d => `第${d.year}年`);
@@ -449,7 +455,7 @@ function updateOppChart() {
   const prod = getProductById(state.primaryProduct);
   if (!prod || !echartsInstances.opp) return;
   const customRate = parseFloat(document.getElementById('opp-custom-rate').value) || 5;
-  const base = parseFloat(document.getElementById('s1-premium').value) || prod.annualPremium;
+  const base = parseFloat(document.getElementById('s1-premium').value) || prod.standardPremium || prod.annualPremium;
   const ratio = base / getBasePremiumUnit(prod);
   const years = [5, 10, 15, 20].filter(y => prod.policyData.some(d => d.year <= y));
   /* 本計劃平均年度單利 */
@@ -544,7 +550,7 @@ function updateComparisonChart() {
       markLine: isPrimary ? {
         symbol: 'none',
         data: (() => {
-          const be = calcBreakEvenYear(prod, prod.standardPremium || prod.annualPremium || 1);
+          const be = calcBreakEvenYear(prod, prod.standardPremium || prod.standardPremium || prod.annualPremium || 1);
           const lines = [];
           if (be?.breakEvenYear) lines.push({ xAxis: `第${be.breakEvenYear}年`, label: { formatter: `回本\n${be.ratio}倍`, color: '#26a269', fontSize: 9 }, lineStyle: { color: '#26a269', type: 'dashed' } });
           if (be?.guaranteedBreakEven) lines.push({ xAxis: `第${be.guaranteedBreakEven}年`, label: { formatter: '保證\n回本', color: '#1a5fb4', fontSize: 9 }, lineStyle: { color: '#1a5fb4', type: 'dotted' } });
@@ -656,7 +662,7 @@ function updateOpportunityTable() {
   const prod = getProductById(state.primaryProduct);
   if (!prod) return;
   const obsYear = 20;
-  const userPremium = parseFloat(document.getElementById('s1-premium').value) || prod.annualPremium || prod.standardPremium;
+  const userPremium = parseFloat(document.getElementById('s1-premium').value) || prod.standardPremium || prod.annualPremium || prod.standardPremium;
   const sym = (appConfig.currencySymbols||{})[state.displayCurrency||prod.currency] || '';
 
   /* v3.2：用 unitData 計算本方案平均年度單利 */
