@@ -294,13 +294,17 @@ function calcScene2() {
   let policyVal = 0;
   if (dEnd) policyVal = (dEnd.guaranteedCV + dEnd.nonGuaranteedBonus) * ratio;
 
-  /* ⑤ 淨收益 = 退出金額 - 貸款 - 手續費 - 總利息 */
+  /* ⑤ NAV = 退出金額 - 貸款 - 手續費 - 利息（手續費在這裡扣一次） */
   const intCurr = loan * rate * term;
   const intCap = loan * cap * term;
-  const netCurr = policyVal - loan - fee - intCurr;
-  const netCap = policyVal - loan - fee - intCap;
+  const navCurr = policyVal - loan - fee - intCurr;
+  const navCap = policyVal - loan - fee - intCap;
 
-  /* ⑥ 年化單利 = 淨收益 / 客戶總出資成本 / 年期 */
+  /* ⑥ 淨收益 = NAV - 實際本金（不再扣手續費，因為 NAV 已扣過）*/
+  const netCurr = navCurr - principal;
+  const netCap = navCap - principal;
+
+  /* ⑦ 年化單利 = 淨收益 / 客戶總出資成本 / 年期 */
   const roiCurr = cost > 0 ? (netCurr / cost) * 100 : 0;
   const roiCap = cost > 0 ? (netCap / cost) * 100 : 0;
   const annCurr = term > 0 ? roiCurr / term : 0;

@@ -22,7 +22,7 @@
       "payTermLabels": { "5": "5年繳" },
       "annualPremium": 200000,
       "isFinanceable": true,
-      "firstDayCVRatio": 0.95,
+      "firstDayCVRatio": 0.7869,
       "brochureFile": "C521_豐饒傳承III.pdf",
       "needTags": ["家族傳承", "財富增值", "保費融資"],
       "highlights": [
@@ -46,6 +46,7 @@
         { "year": 3, "premiumPaid": 600000, "guaranteedCV": 460000, "nonGuaranteedBonus": 0 },
         { "year": 4, "premiumPaid": 800000, "guaranteedCV": 656900, "nonGuaranteedBonus": 0 },
         { "year": 5, "premiumPaid": 1000000, "guaranteedCV": 853500, "nonGuaranteedBonus": 43000 },
+        { "year": 9, "premiumPaid": 1000000, "guaranteedCV": 938000, "nonGuaranteedBonus": 414640 },
         { "year": 10, "premiumPaid": 1000000, "guaranteedCV": 955000, "nonGuaranteedBonus": 460220 },
         { "year": 15, "premiumPaid": 1000000, "guaranteedCV": 1001690, "nonGuaranteedBonus": 792160 },
         { "year": 20, "premiumPaid": 1000000, "guaranteedCV": 1003240, "nonGuaranteedBonus": 1283600 },
