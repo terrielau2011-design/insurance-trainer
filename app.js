@@ -312,11 +312,13 @@ function calcScene2() {
   /* ④ 客戶總出資成本 = 實際本金 + 手續費 */
   const cost = principal + fee;
 
-  /* 退出金額 = 保證退出金額 + 分紅實現率 × 預期部分（固定值，不從 policyData 插值）*/
+  /* 退出金額 = (保證退出金額 + 分紅實現率 × 預期部分) × 縮放係數 */
   const fin = prod.financing || {};
-  const guaranteedExit = fin.guaranteedExit || 562800;
-  const expectedBonus = fin.expectedBonus || 248784;
-  const policyVal = guaranteedExit + expectedBonus;  /* 811,584 */
+  const standardPrem = prod.standardPremium || 200000;
+  const scalingFactor = totalPrem / 600000;  /* Excel 基準是 600,000 */
+  const guaranteedExit = (fin.guaranteedExit || 562800) * scalingFactor;
+  const expectedBonus = (fin.expectedBonus || 248784) * scalingFactor;
+  const policyVal = guaranteedExit + expectedBonus;
 
   /* ⑤ NAV = 退出金額 - 貸款 - 手續費 - 利息（手續費在這裡扣一次） */
   const intCurr = loan * rate * term;
@@ -518,28 +520,31 @@ function updateComparisonChart() {
   if (ids.length < 2) return;
   const years = [1,5,10,15,20,25,30];
   const series = [];
-  const markLines = []; /* 回本年份豎線 */
 
-  ids.forEach((pid, idx) => {
+  ids.forEach((pid) => {
     const prod = getProductById(pid);
-    if (!prod) return null;
-    const base = prod.standardPremium || prod.annualPremium || 1;
+    if (!prod) return;
     const isPrimary = pid === state.primaryProduct;
+    const dataPoints = prod.unitData || prod.policyData || [];
+
+    /* 用 unitData 計算總價值倍數（×100%顯示）*/
+    const dataValues = years.map(y => {
+      const d = getPolicyDataAtYear(prod, y);
+      if (!d) return null;
+      const ug = d.unitGuaranteed !== undefined ? d.unitGuaranteed : 0;
+      const ub = d.unitBonus !== undefined ? d.unitBonus : 0;
+      return +((ug + ub) * 100).toFixed(1);
+    });
+
     series.push({
       name: prod.name, type: 'line', smooth: true,
-      data: years.map(y => {
-        const d = getPolicyDataAtYear(prod, y);
-        if (!d) return null;
-        const ug = d.unitGuaranteed !== undefined ? d.unitGuaranteed : (d.guaranteedCV / base);
-        const ub = d.unitBonus !== undefined ? d.unitBonus : (d.nonGuaranteedBonus / base);
-        return +((ug + ub) * 100).toFixed(1);
-      }),
+      data: dataValues,
       itemStyle: { color: isPrimary ? '#1a5fb4' : '#b0bec5' },
       lineStyle: { width: isPrimary ? 3 : 1.5, opacity: isPrimary ? 1 : 0.6 },
       markLine: isPrimary ? {
         symbol: 'none',
         data: (() => {
-          const be = calcBreakEvenYear(prod, base);
+          const be = calcBreakEvenYear(prod, prod.standardPremium || prod.annualPremium || 1);
           const lines = [];
           if (be?.breakEvenYear) lines.push({ xAxis: `第${be.breakEvenYear}年`, label: { formatter: `回本\n${be.ratio}倍`, color: '#26a269', fontSize: 9 }, lineStyle: { color: '#26a269', type: 'dashed' } });
           if (be?.guaranteedBreakEven) lines.push({ xAxis: `第${be.guaranteedBreakEven}年`, label: { formatter: '保證\n回本', color: '#1a5fb4', fontSize: 9 }, lineStyle: { color: '#1a5fb4', type: 'dotted' } });
@@ -550,11 +555,11 @@ function updateComparisonChart() {
   });
 
   echartsInstances.comparison.setOption({
-    tooltip: { trigger: 'axis' },
+    tooltip: { trigger: 'axis', formatter: p => { let s = p[0].axisValue + '<br/>'; p.forEach(i => { if (i.value != null) s += `${i.marker}${i.seriesName}: ${i.value}%<br/>`; }); return s; } },
     legend: { top: 0, textStyle: { fontSize: 10 } },
     grid: { left: '8%', right: '5%', bottom: '10%' },
     xAxis: { type: 'category', data: years.map(y=>`第${y}年`), axisLabel: { interval: 0 } },
-    yAxis: { type: 'value', name: '總資產(×保費%)', axisLabel: { formatter: '{value}%' } },
+    yAxis: { type: 'value', name: '總資產(×保費%)', axisLabel: { formatter: '{value}%' }, scale: true },
     series
   }, true);
   updateComparisonTable(ids);
@@ -651,17 +656,25 @@ function updateOpportunityTable() {
   const prod = getProductById(state.primaryProduct);
   if (!prod) return;
   const obsYear = 20;
-  const base = parseFloat(document.getElementById('s1-premium').value) || prod.annualPremium;
-  const ratio = base / getBasePremiumUnit(prod);
-  const d = getPolicyDataAtYear(prod, obsYear);
-  if (!d) return;
-  const total = (d.guaranteedCV + d.nonGuaranteedBonus) * ratio;
-  const paid = (d.premiumPaid ?? d.principal ?? 0) * ratio;
-  const irr = paid > 0 ? ((total - paid) / paid / obsYear * 100) : 0;
+  const userPremium = parseFloat(document.getElementById('s1-premium').value) || prod.annualPremium || prod.standardPremium;
   const sym = (appConfig.currencySymbols||{})[state.displayCurrency||prod.currency] || '';
 
+  /* v3.2：用 unitData 計算本方案平均年度單利 */
+  const d = getPolicyDataAtYear(prod, obsYear);
+  let irr = 0;
+  if (d) {
+    const ug = d.unitGuaranteed !== undefined ? d.unitGuaranteed : 0;
+    const ub = d.unitBonus !== undefined ? d.unitBonus : 0;
+    const totalValue = (ug + ub) * userPremium;
+    /* 折扣後總保費 */
+    const discPct = ((prod.discounts?.firstYear?.defaultPercent)||0)/100;
+    const payTerm = prod.payTerms?.[0] || 1;
+    const paidTotal = userPremium * (1 - discPct) * payTerm;
+    irr = paidTotal > 0 ? ((totalValue - paidTotal) / paidTotal / obsYear * 100) : 0;
+  }
+
   const rows = [
-    { tool: '🏠 本儲蓄保險方案', ret: `<span class="return-positive">${irr.toFixed(2)}% 單利</span>`, threshold: `${sym}${fmt(state.s1Results.netTotal||paid)}`, liq: '低', risk: '早期退保虧損、非保證分紅波動', diff: '—', hl: true },
+    { tool: '🏠 本儲蓄保險方案', ret: `<span class="return-positive">${irr.toFixed(2)}% 單利</span>`, threshold: `${sym}${fmt(state.s1Results.netTotal||userPremium)}`, liq: '低', risk: '早期退保虧損、非保證分紅波動', diff: '—', hl: true },
     { tool: '🇺🇸 美國長期國債ETF（TLT/VGLT）', ret: '4.0%-4.7%', threshold: '約25-150美元（1股）', liq: '高', risk: '利率風險、匯率風險、30%利息預扣稅', diff: '收益隨利率波動，ETF無固定到期保本', hl: false },
     { tool: '🏦 銀行定期存款', ret: '1.5%-3.5%', threshold: '約1,000美元起', liq: '高', risk: '利率下行風險、再投資風險', diff: '收益確定但較低，受存款保障（最高80萬港元）', hl: false },
     { tool: '📊 高股息ETF（如00900等）', ret: '約7.6%（非保證）', threshold: '約數萬港元', liq: '高', risk: '價格波動風險、股息不穩定', diff: '收益非保證，需承擔市場波動，無保本機制', hl: false },
