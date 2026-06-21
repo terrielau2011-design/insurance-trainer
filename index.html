@@ -3,15 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>保險產品對比與財務演算工具 V1</title>
+  <title>保險產品對比與財務演算工具 V2</title>
   <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
 <!-- 版本浮層 -->
-<div id="version-badge">V1.0</div>
+<div id="version-badge">V2.0</div>
 
 <header class="app-header">
   <div class="header-inner">
@@ -19,7 +20,7 @@
       <span class="brand-icon">🛡</span>
       <div>
         <h1>保險產品對比與財務演算工具</h1>
-        <p>Insurance Product Comparison & Financial Calculator <span class="version-tag">V1.0</span></p>
+        <p>Insurance Product Comparison & Financial Calculator <span class="version-tag">V2.0</span></p>
       </div>
     </div>
   </div>
@@ -113,6 +114,28 @@
     <div class="fin-results" id="fin-results"></div>
 
     <div class="fin-compare-table" id="fin-compare"></div>
+  </section>
+
+  <!-- ═══【V2報告模塊】PDF報告生成 ═══ -->
+  <section class="section-card" id="section-report">
+    <div class="section-header">
+      <span class="section-badge">5</span>
+      <h2>客戶投保明白備忘錄</h2>
+      <span class="section-tag">V2 報告</span>
+    </div>
+
+    <!-- 報告控制欄 -->
+    <div class="report-toolbar">
+      <select id="report-version" class="select-field">
+        <option value="client">客戶簡報版</option>
+        <option value="professional">專業顧問版</option>
+      </select>
+      <button class="btn btn-primary" id="btn-generate-report" onclick="generateReport()" disabled>📋 生成報告</button>
+      <span id="report-status" class="report-status"></span>
+    </div>
+
+    <!-- 報告預覽區（隱藏，生成 PDF 時用） -->
+    <div id="report-preview" style="display:none;"></div>
   </section>
 
 </main>

@@ -124,6 +124,7 @@ function toggleProductSelect(prodId) {
 
   updateCompareTable();
   updateChartSection();
+  updateReportButton(); /* 【V2報告模塊】選中產品後啟用報告按鈕 */
 }
 
 /* 對比表（數據來源：productData.js）*/
@@ -230,7 +231,8 @@ function initChartProductSelect() {
 function onChartProductChange() {
   state.chartProductId = document.getElementById('chart-product-select').value;
   renderAllCharts();
-  calcFinancing(); /* 修復：切換產品時刷新融資面板 */
+  calcFinancing();
+  updateReportButton(); /* 【V2報告模塊】切換產品時更新按鈕狀態 */
 }
 
 function renderAllCharts() {
@@ -422,3 +424,257 @@ function calcFinancing() {
 window.addEventListener('resize', () => {
   Object.values(echartsInstances).forEach(c => c && c.resize());
 });
+
+/* ══════════════════════════════════════════
+   【V2報告模塊】PDF 報告生成
+   數據來源：productData.js / finConfig.js / chartConfig.js
+══════════════════════════════════════════ */
+
+/* 更新報告按鈕狀態（選中產品後啟用）*/
+function updateReportButton() {
+  const btn = document.getElementById('btn-generate-report');
+  if (!btn) return;
+  btn.disabled = !state.chartProductId;
+}
+
+/* 生成報告 */
+function generateReport() {
+  if (!state.chartProductId) return;
+  const prod = productData.find(p => p.id === state.chartProductId);
+  if (!prod) return;
+
+  const version = document.getElementById('report-version').value;
+  const statusEl = document.getElementById('report-status');
+  statusEl.className = 'report-status loading';
+  statusEl.textContent = '⏳ 正在生成報告...';
+
+  /* 構建報告 HTML */
+  const reportHTML = version === 'client' ? buildClientReport(prod) : buildProfessionalReport(prod);
+  const preview = document.getElementById('report-preview');
+  preview.innerHTML = reportHTML;
+  preview.style.display = '';
+
+  /* 用 html2pdf 生成 PDF */
+  const filename = `${prod.name}_${version === 'client' ? '客戶簡報' : '專業顧問'}_${new Date().toISOString().slice(0,10)}.pdf`;
+  const opt = {
+    margin: [10, 10, 10, 10],
+    filename: filename,
+    image: { type: 'jpeg', quality: 0.95 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+    pagebreak: { mode: ['css', 'legacy'], before: '.report-page' }
+  };
+
+  html2pdf().set(opt).from(preview).save().then(() => {
+    statusEl.className = 'report-status success';
+    statusEl.textContent = '✅ 報告已生成！';
+    preview.style.display = 'none';
+    showReportModal(filename);
+    setTimeout(() => { statusEl.textContent = ''; statusEl.className = 'report-status'; }, 5000);
+  }).catch(err => {
+    statusEl.className = 'report-status';
+    statusEl.textContent = '❌ 生成失敗：' + err.message;
+    preview.style.display = 'none';
+  });
+}
+
+/* 客戶簡報版（通俗表述，保證金額高亮，非融資產品隱藏融資章）*/
+function buildClientReport(prod) {
+  const sym = prod.currency === 'HKD' ? 'HK$' : 'US$';
+  const now = new Date().toLocaleString('zh-HK');
+  const years = chartConfig.fixedYears;
+  const premium = prod.minPremium;
+  const discPct = prod.discount.firstYear;
+  const paidPremium = Math.round(premium * (1 - discPct) * prod.payPeriods[0]);
+
+  /* 保證金額用紅色高亮 */
+  const cvRows = years.map(y => {
+    const cv = prod.cashValue[y];
+    if (!cv) return '';
+    const guaranteed = cv[0];
+    const total = cv[0] + cv[1];
+    return `<tr><td>第 ${y} 年</td><td class="guaranteed">${sym}${guaranteed.toLocaleString()}</td><td>${sym}${total.toLocaleString()}</td></tr>`;
+  }).join('');
+
+  let html = `<div class="report-page">
+    <div class="report-title">📋 客戶投保方案摘要</div>
+    <div class="report-row"><span>產品名稱</span><span>${prod.name}</span></div>
+    <div class="report-row"><span>保險公司</span><span>${prod.insurer}</span></div>
+    <div class="report-row"><span>計價幣別</span><span>${prod.currency}</span></div>
+    <div class="report-row"><span>繳費年期</span><span>${prod.payPeriods[0]} 年</span></div>
+    <div class="report-row"><span>日期</span><span>${now}</span></div>
+
+    <div class="report-intro">
+      以下為您專屬的保險方案摘要。<span style="color:var(--danger);font-weight:700;">紅色金額為保證金額</span>，即合約確定的收益。
+      非保證部分視乎保險公司投資表現，實際金額可能更高或更低。
+    </div>
+
+    <div class="report-section-title">💰 保費摘要</div>
+    <div class="report-row"><span>每年保費</span><span>${sym}${premium.toLocaleString()}</span></div>
+    <div class="report-row"><span>首年折扣</span><span>${(discPct*100)}%</span></div>
+    <div class="report-row"><span>實付總保費</span><span class="guaranteed">${sym}${paidPremium.toLocaleString()}</span></div>
+
+    <div class="report-section-title">📊 保單價值一覽（保證金額以紅色標示）</div>
+    <table class="report-table">
+      <thead><tr><th>年份</th><th>保證金額</th><th>預期總金額</th></tr></thead>
+      <tbody>${cvRows}</tbody>
+    </table>
+
+    <div class="report-section-title">📌 重要提示</div>
+    <div class="report-disclaimer">
+      本摘要中的「保證金額」為合約確定的收益。「預期總金額」包含非保證的分紅，
+      實際金額視乎保險公司的投資表現而定，可能較高或較低。<br><br>
+      保單早期退保可能導致本金虧損。如對本方案有任何疑問，請聯繫您的保險顧問。
+    </div>
+  </div>`;
+
+  /* 融資章僅 C521 顯示，且用通俗表述 */
+  if (prod.supportFinancing) {
+    const finPremium = parseFloat(document.getElementById('fin-premium').value) || premium;
+    const finResult = calculateFinancing(prod, finPremium, state.finScenario);
+    const info = finResult.basicInfo;
+    const y20 = finResult.yearByYear[20];
+    html += `<div class="report-page">
+      <div class="report-title">🏦 保費融資說明（僅供參考）</div>
+      <div class="report-row"><span>貸款銀行</span><span>${finConfig.bankName}</span></div>
+      <div class="report-row"><span>貸款比例</span><span>${(finConfig.maxLoanRatio*100)}%</span></div>
+      <div class="report-row"><span>您需自付的金額</span><span class="guaranteed">${sym}${info.actualPrincipal.toLocaleString()}</span></div>
+      <div class="report-row"><span>貸款手續費</span><span>${sym}${info.loanFee.toLocaleString()}</span></div>
+      <div class="report-row"><span>當前貸款利率</span><span>${(info.loanRate*100).toFixed(3)}%</span></div>
+      ${y20 ? `<div class="report-row"><span>第20年預計淨資產</span><span>${sym}${y20.netValue.toLocaleString()}</span></div>
+      <div class="report-row"><span>第20年預計年化回報</span><span>${(y20.returnRate*100).toFixed(2)}%</span></div>` : ''}
+      <div class="report-disclaimer">
+        ⚠️ 融資方案存在利率波動風險。如利率上升，您的利息支出將增加，回報可能下降。
+        以上數據基於當前利率計算，僅供參考，實際結果以銀行最終批核為準。
+      </div>
+    </div>`;
+  }
+
+  return html;
+}
+
+/* 專業顧問版（完整收益表、IRR、融資雙場景、免責聲明）*/
+function buildProfessionalReport(prod) {
+  const sym = prod.currency === 'HKD' ? 'HK$' : 'US$';
+  const now = new Date().toLocaleString('zh-HK');
+  const years = chartConfig.fixedYears;
+  const premium = prod.minPremium;
+  const discPct = prod.discount.firstYear;
+  const paidPremium = Math.round(premium * (1 - discPct) * prod.payPeriods[0]);
+
+  /* 完整收益表 */
+  const cvRows = years.map(y => {
+    const cv = prod.cashValue[y];
+    if (!cv) return '';
+    const irr = prod.irr[y];
+    return `<tr>
+      <td>第 ${y} 年</td>
+      <td>${sym}${cv[0].toLocaleString()}</td>
+      <td>${sym}${cv[1].toLocaleString()}</td>
+      <td>${sym}${(cv[0]+cv[1]).toLocaleString()}</td>
+      <td>${irr ? (irr*100).toFixed(2)+'%' : '—'}</td>
+    </tr>`;
+  }).join('');
+
+  let html = `<div class="report-page">
+    <div class="report-title">📋 專業顧問版 — 客戶投保方案分析</div>
+    <div class="report-row"><span>產品名稱</span><span>${prod.name}</span></div>
+    <div class="report-row"><span>產品編碼</span><span>${prod.id}</span></div>
+    <div class="report-row"><span>保險公司</span><span>${prod.insurer}</span></div>
+    <div class="report-row"><span>計價幣別</span><span>${prod.currency}</span></div>
+    <div class="report-row"><span>繳費年期</span><span>${prod.payPeriods[0]} 年</span></div>
+    <div class="report-row"><span>回本年份</span><span>第 ${prod.breakEvenYear} 年</span></div>
+    <div class="report-row"><span>生成日期</span><span>${now}</span></div>
+
+    <div class="report-section-title">💰 保費與折扣分析</div>
+    <div class="report-row"><span>每年保費</span><span>${sym}${premium.toLocaleString()}</span></div>
+    <div class="report-row"><span>首年折扣率</span><span>${(discPct*100)}%</span></div>
+    <div class="report-row"><span>續期折扣率</span><span>${(prod.discount.renewal*100)}%</span></div>
+    <div class="report-row"><span>預繳保費利率</span><span>${(prod.discount.prepay*100)}%</span></div>
+    <div class="report-row"><span>實付總保費</span><span style="color:var(--accent);font-weight:700">${sym}${paidPremium.toLocaleString()}</span></div>
+
+    <div class="report-section-title">📊 完整收益表（保證/非保證/總值/IRR）</div>
+    <table class="report-table">
+      <thead><tr><th>年份</th><th>保證現金價值</th><th>非保證分紅</th><th>總價值</th><th>IRR</th></tr></thead>
+      <tbody>${cvRows}</tbody>
+    </table>
+  </div>`;
+
+  /* 融資雙場景測試（僅 C521）*/
+  if (prod.supportFinancing) {
+    const finPremium = parseFloat(document.getElementById('fin-premium').value) || premium;
+    const normalResult = calculateFinancing(prod, finPremium, 'normal');
+    const pessResult = calculateFinancing(prod, finPremium, 'pessimistic');
+    const nInfo = normalResult.basicInfo;
+    const pInfo = pessResult.basicInfo;
+
+    /* 雙場景對比表 */
+    const finRows = years.map(y => {
+      const nd = normalResult.yearByYear[y];
+      const pd = pessResult.yearByYear[y];
+      if (!nd || !pd) return '';
+      return `<tr>
+        <td>第 ${y} 年</td>
+        <td>${sym}${nd.totalCashValue.toLocaleString()}</td>
+        <td>${(nd.returnRate*100).toFixed(2)}%</td>
+        <td>${sym}${pd.totalCashValue.toLocaleString()}</td>
+        <td>${(pd.returnRate*100).toFixed(2)}%</td>
+      </tr>`;
+    }).join('');
+
+    html += `<div class="report-page">
+      <div class="report-title">🏦 保費融資雙場景壓力測試</div>
+      <div class="report-section-title">基本參數</div>
+      <div class="report-row"><span>貸款銀行</span><span>${finConfig.bankName}</span></div>
+      <div class="report-row"><span>總保費</span><span>${sym}${nInfo.totalPremium.toLocaleString()}</span></div>
+      <div class="report-row"><span>貸款金額 (${(finConfig.maxLoanRatio*100)}%)</span><span>${sym}${nInfo.loanAmount.toLocaleString()}</span></div>
+      <div class="report-row"><span>自付本金</span><span>${sym}${nInfo.actualPrincipal.toLocaleString()}</span></div>
+      <div class="report-row"><span>手續費 (${(finConfig.loanFeeRate*100)}%)</span><span>${sym}${nInfo.loanFee.toLocaleString()}</span></div>
+
+      <div class="report-section-title">雙場景對比（正常 vs 悲觀）</div>
+      <table class="report-table">
+        <thead><tr><th>年份</th><th>正常退出總值</th><th>正常年化回報</th><th>悲觀退出總值</th><th>悲觀年化回報</th></tr></thead>
+        <tbody>${finRows}</tbody>
+      </table>
+
+      <div class="report-section-title">場景參數</div>
+      <div class="report-row"><span>正常場景利率</span><span>${(finConfig.scenarios.normal.rate*100).toFixed(3)}%</span></div>
+      <div class="report-row"><span>正常場景實現率</span><span>${(finConfig.scenarios.normal.realizationRate*100)}%</span></div>
+      <div class="report-row"><span>悲觀場景利率</span><span>${(finConfig.scenarios.pessimistic.rate*100).toFixed(3)}%</span></div>
+      <div class="report-row"><span>悲觀場景實現率</span><span>${(finConfig.scenarios.pessimistic.realizationRate*100)}%</span></div>
+    </div>`;
+  }
+
+  /* 標準免責聲明 */
+  html += `<div class="report-page">
+    <div class="report-title">⚠️ 重要免責聲明</div>
+    <div class="report-disclaimer">
+      1. 本報告由保險銷售培訓工具自動生成，僅供持牌保險從業員內部參考，不構成任何投保或財務建議。<br><br>
+      2. 非保證分紅及融資預計回報屬非保證演示數據，視保險公司分紅表現、市場息口波動而定。<br><br>
+      3. 保單早期退保會產生本金虧損，融資產品存在利率上行風險及匯兌風險。<br><br>
+      4. 所有數字以正式保單文件及計劃書為準。客戶如有疑問，請向持牌保險顧問查詢。<br><br>
+      5. IRR（內部回報率）為基於假設條件的估算值，不代表實際投資回報。
+    </div>
+    <div class="report-signature">
+      <div><p>客戶簽名確認：</p><div class="report-sig-line"></div></div>
+      <div style="text-align:right;"><p>顧問簽署：</p><div class="report-sig-line"></div></div>
+    </div>
+  </div>`;
+
+  return html;
+}
+
+/* 生成完成彈窗 */
+function showReportModal(filename) {
+  const modal = document.createElement('div');
+  modal.className = 'report-modal';
+  modal.innerHTML = `
+    <div class="report-modal-card">
+      <h3>✅ 報告已生成</h3>
+      <p>PDF 已下載至您的裝置<br><small>${filename}</small></p>
+      <button class="btn btn-primary" onclick="this.closest('.report-modal').remove()">確定</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+}
