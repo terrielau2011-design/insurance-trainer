@@ -1,13 +1,33 @@
 {
-  "version": "3.0.0",
+  "version": "3.1.0",
   "lastUpdated": "2025-06-21",
   "config": {
-    "currencySymbols": { "HKD": "HK$", "USD": "US$" },
-    "productCategories": ["分紅儲蓄", "多元貨幣", "可融資", "人壽保障"],
-    "banks": [
-      { "id": "bank_gdb", "name": "廣發銀行香港分行", "maxLTV": 95, "baseRate": "P - 1.975%", "minAmount": 500000 }
+    "currencySymbols": {
+      "HKD": "HK$",
+      "USD": "US$"
+    },
+    "productCategories": [
+      "分紅儲蓄",
+      "多元貨幣",
+      "可融資",
+      "人壽保障"
     ],
-    "needTags": ["教育金", "退休", "家族傳承", "保費融資", "財富增值"]
+    "banks": [
+      {
+        "id": "bank_gdb",
+        "name": "廣發銀行香港分行",
+        "maxLTV": 95,
+        "baseRate": "P - 1.975%",
+        "minAmount": 500000
+      }
+    ],
+    "needTags": [
+      "教育金",
+      "退休",
+      "家族傳承",
+      "保費融資",
+      "財富增值"
+    ]
   },
   "products": [
     {
@@ -17,43 +37,171 @@
       "company": "中國人壽保險(海外)",
       "category": "可融資",
       "currency": "USD",
-      "supportedCurrencies": ["USD"],
-      "payTerms": [5],
-      "payTermLabels": { "5": "5年繳" },
+      "supportedCurrencies": [
+        "USD"
+      ],
+      "payTerms": [
+        5
+      ],
+      "payTermLabels": {
+        "5": "5年繳"
+      },
       "annualPremium": 200000,
       "isFinanceable": true,
       "firstDayCVRatio": 0.7869,
       "brochureFile": "C521_豐饒傳承III.pdf",
-      "needTags": ["家族傳承", "財富增值", "保費融資"],
-      "highlights": [
-        { "icon": "💎", "title": "雙重增值・長線穩健", "desc": "保證現金價值隨年期遞增，第5個保單週年起特設非保證終期紅利，鎖定跨世代長線高回報。" },
-        { "icon": "🔄", "title": "無限次轉換受保人", "desc": "支援無限次更改受保人且保障期伸延至新受保人終身，真正實現「一張保單，富傳百代」。" },
-        { "icon": "🛡️", "title": "獨創保單暫託人機制", "desc": "預先指定暫託人，若不幸發生意外，資產自動依意願託管與傳承，免除繁瑣法律程序。" },
-        { "icon": "💰", "title": "保費融資・利潤槓桿", "desc": "高達95%首日現價貸款額度，配合低息環境，輕鬆撬動18.9%平均年度化單利回報。" },
-        { "icon": "🌍", "title": "多元貨幣・靈活防禦", "desc": "應對全球經濟波動，自由切換主流貨幣，完美優化個人及家族的資產配置安全結構。" }
+      "needTags": [
+        "家族傳承",
+        "財富增值",
+        "保費融資"
       ],
-      "discounts": { "firstYear": { "maxPercent": 30, "defaultPercent": 12.5 }, "product": { "renewalPercent": 0, "defaultPercent": 0, "maxPercent": 0 } },
+      "highlights": [
+        {
+          "icon": "💎",
+          "title": "雙重增值・長線穩健",
+          "desc": "保證現金價值隨年期遞增，第5個保單週年起特設非保證終期紅利，鎖定跨世代長線高回報。"
+        },
+        {
+          "icon": "🔄",
+          "title": "無限次轉換受保人",
+          "desc": "支援無限次更改受保人且保障期伸延至新受保人終身，真正實現「一張保單，富傳百代」。"
+        },
+        {
+          "icon": "🛡️",
+          "title": "獨創保單暫託人機制",
+          "desc": "預先指定暫託人，若不幸發生意外，資產自動依意願託管與傳承，免除繁瑣法律程序。"
+        },
+        {
+          "icon": "💰",
+          "title": "保費融資・利潤槓桿",
+          "desc": "高達95%首日現價貸款額度，配合低息環境，輕鬆撬動18.9%平均年度化單利回報。"
+        },
+        {
+          "icon": "🌍",
+          "title": "多元貨幣・靈活防禦",
+          "desc": "應對全球經濟波動，自由切換主流貨幣，完美優化個人及家族的資產配置安全結構。"
+        }
+      ],
+      "discounts": {
+        "firstYear": {
+          "maxPercent": 30,
+          "defaultPercent": 12.5
+        },
+        "product": {
+          "renewalPercent": 0,
+          "defaultPercent": 0,
+          "maxPercent": 0
+        }
+      },
       "privileges": [
-        { "threshold": 300000, "icon": "🏥", "name": "星級體檢禮遇" },
-        { "threshold": 600000, "icon": "🚗", "name": "機場或高鐵站接送" },
-        { "threshold": 1000000, "icon": "📋", "name": "第二醫療資訊" },
-        { "threshold": 3000000, "icon": "🟢", "name": "綠色通道" },
-        { "threshold": 5000000, "icon": "👥", "name": "導醫導診或陪診服務" }
+        {
+          "threshold": 300000,
+          "icon": "🏥",
+          "name": "星級體檢禮遇"
+        },
+        {
+          "threshold": 600000,
+          "icon": "🚗",
+          "name": "機場或高鐵站接送"
+        },
+        {
+          "threshold": 1000000,
+          "icon": "📋",
+          "name": "第二醫療資訊"
+        },
+        {
+          "threshold": 3000000,
+          "icon": "🟢",
+          "name": "綠色通道"
+        },
+        {
+          "threshold": 5000000,
+          "icon": "👥",
+          "name": "導醫導診或陪診服務"
+        }
       ],
       "policyData": [
-        { "year": 1, "premiumPaid": 200000, "guaranteedCV": 67000, "nonGuaranteedBonus": 0 },
-        { "year": 2, "premiumPaid": 400000, "guaranteedCV": 263300, "nonGuaranteedBonus": 0 },
-        { "year": 3, "premiumPaid": 600000, "guaranteedCV": 460000, "nonGuaranteedBonus": 0 },
-        { "year": 4, "premiumPaid": 800000, "guaranteedCV": 656900, "nonGuaranteedBonus": 0 },
-        { "year": 5, "premiumPaid": 1000000, "guaranteedCV": 853500, "nonGuaranteedBonus": 43000 },
-        { "year": 9, "premiumPaid": 1000000, "guaranteedCV": 938000, "nonGuaranteedBonus": 414640 },
-        { "year": 10, "premiumPaid": 1000000, "guaranteedCV": 955000, "nonGuaranteedBonus": 460220 },
-        { "year": 15, "premiumPaid": 1000000, "guaranteedCV": 1001690, "nonGuaranteedBonus": 792160 },
-        { "year": 20, "premiumPaid": 1000000, "guaranteedCV": 1003240, "nonGuaranteedBonus": 1283600 },
-        { "year": 25, "premiumPaid": 1000000, "guaranteedCV": 1004840, "nonGuaranteedBonus": 1909700 },
-        { "year": 30, "premiumPaid": 1000000, "guaranteedCV": 1007310, "nonGuaranteedBonus": 2724880 }
+        {
+          "year": 1,
+          "premiumPaid": 200000,
+          "guaranteedCV": 67000,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 2,
+          "premiumPaid": 400000,
+          "guaranteedCV": 263300,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 3,
+          "premiumPaid": 600000,
+          "guaranteedCV": 460000,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 4,
+          "premiumPaid": 800000,
+          "guaranteedCV": 656900,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 5,
+          "premiumPaid": 1000000,
+          "guaranteedCV": 853500,
+          "nonGuaranteedBonus": 43000
+        },
+        {
+          "year": 9,
+          "premiumPaid": 1000000,
+          "guaranteedCV": 938000,
+          "nonGuaranteedBonus": 414640
+        },
+        {
+          "year": 10,
+          "premiumPaid": 1000000,
+          "guaranteedCV": 955000,
+          "nonGuaranteedBonus": 460220
+        },
+        {
+          "year": 15,
+          "premiumPaid": 1000000,
+          "guaranteedCV": 1001690,
+          "nonGuaranteedBonus": 792160
+        },
+        {
+          "year": 20,
+          "premiumPaid": 1000000,
+          "guaranteedCV": 1003240,
+          "nonGuaranteedBonus": 1283600
+        },
+        {
+          "year": 25,
+          "premiumPaid": 1000000,
+          "guaranteedCV": 1004840,
+          "nonGuaranteedBonus": 1909700
+        },
+        {
+          "year": 30,
+          "premiumPaid": 1000000,
+          "guaranteedCV": 1007310,
+          "nonGuaranteedBonus": 2724880
+        }
       ],
-      "financing": { "loanFeeRate": 2.0, "defaultLoanTerm": 9, "maxLoanTerm": 10, "defaultLTV": 95, "benchmarkRate": 3.275, "capRate": 3.9, "prepayRate": 3.5, "prepayFee": 2.0 }
+      "financing": {
+        "loanFeeRate": 2.0,
+        "defaultLoanTerm": 9,
+        "maxLoanTerm": 10,
+        "defaultLTV": 95,
+        "benchmarkRate": 3.275,
+        "capRate": 3.9,
+        "prepayRate": 3.5,
+        "prepayFee": 2.0,
+        "guaranteedExit": 562800,
+        "expectedBonus": 248784
+      },
+      "mainTag": "家族傳承 · 保費融資杠杆",
+      "subTag": "高淨值家族世代傳承 · 長期復利增值 · 3.9%封頂融資利率"
     },
     {
       "id": "c540",
@@ -62,39 +210,147 @@
       "company": "中國人壽保險(海外)",
       "category": "分紅儲蓄",
       "currency": "USD",
-      "supportedCurrencies": ["USD"],
-      "payTerms": [5],
-      "payTermLabels": { "5": "5年繳" },
+      "supportedCurrencies": [
+        "USD"
+      ],
+      "payTerms": [
+        5
+      ],
+      "payTermLabels": {
+        "5": "5年繳"
+      },
       "annualPremium": 16000,
       "isFinanceable": false,
       "brochureFile": "C540_傲龍盛世.pdf",
-      "needTags": ["退休", "教育金", "財富增值"],
-      "highlights": [
-        { "icon": "💎", "title": "四重收益結構", "desc": "保證現金價值＋非保證復歸紅利＋非保證終期紅利＋紅利管理權益户口，收益層次豐富。" },
-        { "icon": "🔄", "title": "保單分拆與無限轉受保人", "desc": "支援保單分拆、無限次轉換受保人、指定保單暫託人，靈活傳承。" },
-        { "icon": "⚡", "title": "預期總回本期短至4年", "desc": "預期總回本年期短至4年，資金靈活度極高。" },
-        { "icon": "📈", "title": "長線複利增值", "desc": "第20年預期總值達已繳保費270%，第30年達585%。" },
-        { "icon": "🏦", "title": "預繳保費利率3.5%", "desc": "預繳保費享受3.5%保證利率，提升資金效率。" }
+      "needTags": [
+        "退休",
+        "教育金",
+        "財富增值"
       ],
-      "discounts": { "firstYear": { "maxPercent": 15, "defaultPercent": 5 }, "product": { "renewalPercent": 0, "defaultPercent": 0, "maxPercent": 0 } },
+      "highlights": [
+        {
+          "icon": "💎",
+          "title": "四重收益結構",
+          "desc": "保證現金價值＋非保證復歸紅利＋非保證終期紅利＋紅利管理權益户口，收益層次豐富。"
+        },
+        {
+          "icon": "🔄",
+          "title": "保單分拆與無限轉受保人",
+          "desc": "支援保單分拆、無限次轉換受保人、指定保單暫託人，靈活傳承。"
+        },
+        {
+          "icon": "⚡",
+          "title": "預期總回本期短至4年",
+          "desc": "預期總回本年期短至4年，資金靈活度極高。"
+        },
+        {
+          "icon": "📈",
+          "title": "長線複利增值",
+          "desc": "第20年預期總值達已繳保費270%，第30年達585%。"
+        },
+        {
+          "icon": "🏦",
+          "title": "預繳保費利率3.5%",
+          "desc": "預繳保費享受3.5%保證利率，提升資金效率。"
+        }
+      ],
+      "discounts": {
+        "firstYear": {
+          "maxPercent": 15,
+          "defaultPercent": 5
+        },
+        "product": {
+          "renewalPercent": 0,
+          "defaultPercent": 0,
+          "maxPercent": 0
+        }
+      },
       "privileges": [
-        { "threshold": 50000, "icon": "🏥", "name": "星級體檢禮遇" },
-        { "threshold": 100000, "icon": "🚗", "name": "機場或高鐵站接送" },
-        { "threshold": 200000, "icon": "📋", "name": "第二醫療資訊" },
-        { "threshold": 500000, "icon": "🟢", "name": "綠色通道" }
+        {
+          "threshold": 50000,
+          "icon": "🏥",
+          "name": "星級體檢禮遇"
+        },
+        {
+          "threshold": 100000,
+          "icon": "🚗",
+          "name": "機場或高鐵站接送"
+        },
+        {
+          "threshold": 200000,
+          "icon": "📋",
+          "name": "第二醫療資訊"
+        },
+        {
+          "threshold": 500000,
+          "icon": "🟢",
+          "name": "綠色通道"
+        }
       ],
       "policyData": [
-        { "year": 1, "premiumPaid": 16000, "guaranteedCV": 0, "nonGuaranteedBonus": 0 },
-        { "year": 2, "premiumPaid": 32000, "guaranteedCV": 0, "nonGuaranteedBonus": 0 },
-        { "year": 3, "premiumPaid": 48000, "guaranteedCV": 200, "nonGuaranteedBonus": 2061 },
-        { "year": 4, "premiumPaid": 64000, "guaranteedCV": 1120, "nonGuaranteedBonus": 4137 },
-        { "year": 5, "premiumPaid": 80000, "guaranteedCV": 2720, "nonGuaranteedBonus": 12952 },
-        { "year": 10, "premiumPaid": 80000, "guaranteedCV": 50800, "nonGuaranteedBonus": 53037 },
-        { "year": 15, "premiumPaid": 80000, "guaranteedCV": 58800, "nonGuaranteedBonus": 88131 },
-        { "year": 20, "premiumPaid": 80000, "guaranteedCV": 80217, "nonGuaranteedBonus": 135362 },
-        { "year": 25, "premiumPaid": 80000, "guaranteedCV": 80497, "nonGuaranteedBonus": 250907 },
-        { "year": 30, "premiumPaid": 80000, "guaranteedCV": 80674, "nonGuaranteedBonus": 387708 }
-      ]
+        {
+          "year": 1,
+          "premiumPaid": 16000,
+          "guaranteedCV": 0,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 2,
+          "premiumPaid": 32000,
+          "guaranteedCV": 0,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 3,
+          "premiumPaid": 48000,
+          "guaranteedCV": 200,
+          "nonGuaranteedBonus": 2061
+        },
+        {
+          "year": 4,
+          "premiumPaid": 64000,
+          "guaranteedCV": 1120,
+          "nonGuaranteedBonus": 4137
+        },
+        {
+          "year": 5,
+          "premiumPaid": 80000,
+          "guaranteedCV": 2720,
+          "nonGuaranteedBonus": 12952
+        },
+        {
+          "year": 10,
+          "premiumPaid": 80000,
+          "guaranteedCV": 50800,
+          "nonGuaranteedBonus": 53037
+        },
+        {
+          "year": 15,
+          "premiumPaid": 80000,
+          "guaranteedCV": 58800,
+          "nonGuaranteedBonus": 88131
+        },
+        {
+          "year": 20,
+          "premiumPaid": 80000,
+          "guaranteedCV": 80217,
+          "nonGuaranteedBonus": 135362
+        },
+        {
+          "year": 25,
+          "premiumPaid": 80000,
+          "guaranteedCV": 80497,
+          "nonGuaranteedBonus": 250907
+        },
+        {
+          "year": 30,
+          "premiumPaid": 80000,
+          "guaranteedCV": 80674,
+          "nonGuaranteedBonus": 387708
+        }
+      ],
+      "mainTag": "子女教育金 · 退休年金",
+      "subTag": "5年起靈活提領 · 提領後收益下滑極小 · 65歲轉年金"
     },
     {
       "id": "c537",
@@ -103,39 +359,147 @@
       "company": "中國人壽保險(海外)",
       "category": "分紅儲蓄",
       "currency": "USD",
-      "supportedCurrencies": ["USD"],
-      "payTerms": [1],
-      "payTermLabels": { "1": "躉繳" },
+      "supportedCurrencies": [
+        "USD"
+      ],
+      "payTerms": [
+        1
+      ],
+      "payTermLabels": {
+        "1": "躉繳"
+      },
       "annualPremium": 100000,
       "isFinanceable": false,
       "brochureFile": "C537_傲龍盛世.pdf",
-      "needTags": ["退休", "教育金", "財富增值"],
-      "highlights": [
-        { "icon": "💎", "title": "四重收益結構", "desc": "保證現金價值＋非保證復歸紅利＋非保證終期紅利＋紅利管理權益户口。" },
-        { "icon": "⚡", "title": "躉繳快速增值", "desc": "整付保費一次性投入，預期回本期13年，資金效率最大化。" },
-        { "icon": "🔄", "title": "保單分拆與無限轉受保人", "desc": "支援保單分拆、無限次轉換受保人、指定保單暫託人。" },
-        { "icon": "📈", "title": "第30年預期總值661%", "desc": "第30年預期退保金額達已繳保費約661%。" },
-        { "icon": "🏦", "title": "保費折扣優惠", "desc": "躉繳享5%保費折扣，實際投入更抵。" }
+      "needTags": [
+        "退休",
+        "教育金",
+        "財富增值"
       ],
-      "discounts": { "firstYear": { "maxPercent": 5, "defaultPercent": 5 }, "product": { "renewalPercent": 0, "defaultPercent": 0, "maxPercent": 0 } },
+      "highlights": [
+        {
+          "icon": "💎",
+          "title": "四重收益結構",
+          "desc": "保證現金價值＋非保證復歸紅利＋非保證終期紅利＋紅利管理權益户口。"
+        },
+        {
+          "icon": "⚡",
+          "title": "躉繳快速增值",
+          "desc": "整付保費一次性投入，預期回本期13年，資金效率最大化。"
+        },
+        {
+          "icon": "🔄",
+          "title": "保單分拆與無限轉受保人",
+          "desc": "支援保單分拆、無限次轉換受保人、指定保單暫託人。"
+        },
+        {
+          "icon": "📈",
+          "title": "第30年預期總值661%",
+          "desc": "第30年預期退保金額達已繳保費約661%。"
+        },
+        {
+          "icon": "🏦",
+          "title": "保費折扣優惠",
+          "desc": "躉繳享5%保費折扣，實際投入更抵。"
+        }
+      ],
+      "discounts": {
+        "firstYear": {
+          "maxPercent": 5,
+          "defaultPercent": 5
+        },
+        "product": {
+          "renewalPercent": 0,
+          "defaultPercent": 0,
+          "maxPercent": 0
+        }
+      },
       "privileges": [
-        { "threshold": 50000, "icon": "🏥", "name": "星級體檢禮遇" },
-        { "threshold": 100000, "icon": "🚗", "name": "機場或高鐵站接送" },
-        { "threshold": 200000, "icon": "📋", "name": "第二醫療資訊" },
-        { "threshold": 500000, "icon": "🟢", "name": "綠色通道" }
+        {
+          "threshold": 50000,
+          "icon": "🏥",
+          "name": "星級體檢禮遇"
+        },
+        {
+          "threshold": 100000,
+          "icon": "🚗",
+          "name": "機場或高鐵站接送"
+        },
+        {
+          "threshold": 200000,
+          "icon": "📋",
+          "name": "第二醫療資訊"
+        },
+        {
+          "threshold": 500000,
+          "icon": "🟢",
+          "name": "綠色通道"
+        }
       ],
       "policyData": [
-        { "year": 1, "premiumPaid": 100000, "guaranteedCV": 27920, "nonGuaranteedBonus": 0 },
-        { "year": 2, "premiumPaid": 100000, "guaranteedCV": 30320, "nonGuaranteedBonus": 25276 },
-        { "year": 3, "premiumPaid": 100000, "guaranteedCV": 31920, "nonGuaranteedBonus": 43845 },
-        { "year": 4, "premiumPaid": 100000, "guaranteedCV": 35320, "nonGuaranteedBonus": 64685 },
-        { "year": 5, "premiumPaid": 100000, "guaranteedCV": 38480, "nonGuaranteedBonus": 68191 },
-        { "year": 10, "premiumPaid": 100000, "guaranteedCV": 66300, "nonGuaranteedBonus": 89125 },
-        { "year": 15, "premiumPaid": 100000, "guaranteedCV": 100200, "nonGuaranteedBonus": 116783 },
-        { "year": 20, "premiumPaid": 100000, "guaranteedCV": 100602, "nonGuaranteedBonus": 207058 },
-        { "year": 25, "premiumPaid": 100000, "guaranteedCV": 101638, "nonGuaranteedBonus": 356064 },
-        { "year": 30, "premiumPaid": 100000, "guaranteedCV": 103044, "nonGuaranteedBonus": 558393 }
-      ]
+        {
+          "year": 1,
+          "premiumPaid": 100000,
+          "guaranteedCV": 27920,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 2,
+          "premiumPaid": 100000,
+          "guaranteedCV": 30320,
+          "nonGuaranteedBonus": 25276
+        },
+        {
+          "year": 3,
+          "premiumPaid": 100000,
+          "guaranteedCV": 31920,
+          "nonGuaranteedBonus": 43845
+        },
+        {
+          "year": 4,
+          "premiumPaid": 100000,
+          "guaranteedCV": 35320,
+          "nonGuaranteedBonus": 64685
+        },
+        {
+          "year": 5,
+          "premiumPaid": 100000,
+          "guaranteedCV": 38480,
+          "nonGuaranteedBonus": 68191
+        },
+        {
+          "year": 10,
+          "premiumPaid": 100000,
+          "guaranteedCV": 66300,
+          "nonGuaranteedBonus": 89125
+        },
+        {
+          "year": 15,
+          "premiumPaid": 100000,
+          "guaranteedCV": 100200,
+          "nonGuaranteedBonus": 116783
+        },
+        {
+          "year": 20,
+          "premiumPaid": 100000,
+          "guaranteedCV": 100602,
+          "nonGuaranteedBonus": 207058
+        },
+        {
+          "year": 25,
+          "premiumPaid": 100000,
+          "guaranteedCV": 101638,
+          "nonGuaranteedBonus": 356064
+        },
+        {
+          "year": 30,
+          "premiumPaid": 100000,
+          "guaranteedCV": 103044,
+          "nonGuaranteedBonus": 558393
+        }
+      ],
+      "mainTag": "子女教育金 · 退休年金",
+      "subTag": "5年起靈活提領 · 提領後收益下滑極小 · 65歲轉年金"
     },
     {
       "id": "c535",
@@ -144,39 +508,146 @@
       "company": "中國人壽保險(海外)",
       "category": "分紅儲蓄",
       "currency": "USD",
-      "supportedCurrencies": ["USD"],
-      "payTerms": [1],
-      "payTermLabels": { "1": "躉繳" },
+      "supportedCurrencies": [
+        "USD"
+      ],
+      "payTerms": [
+        1
+      ],
+      "payTermLabels": {
+        "1": "躉繳"
+      },
       "annualPremium": 100000,
       "isFinanceable": false,
       "brochureFile": "C535_鑽逸傳承.pdf",
-      "needTags": ["家族傳承", "財富增值"],
-      "highlights": [
-        { "icon": "💎", "title": "三重收益結構", "desc": "保證現金價值＋非保證終期紅利＋終期紅利管理權益户口總額。" },
-        { "icon": "🏛️", "title": "整付保費・長線傳承", "desc": "整付保費、長線儲蓄、財富傳承，適合高淨值客戶一次性配置。" },
-        { "icon": "📈", "title": "第30年預期退保540%", "desc": "第30年預期退保金額可達已繳保費約540%。" },
-        { "icon": "🔄", "title": "保單暫託人機制", "desc": "可指定暫託人，確保資產依意願傳承。" },
-        { "icon": "🏦", "title": "保費折扣4%", "desc": "躉繳享4%保費折扣，實際投入96,000美元。" }
+      "needTags": [
+        "家族傳承",
+        "財富增值"
       ],
-      "discounts": { "firstYear": { "maxPercent": 4, "defaultPercent": 4 }, "product": { "renewalPercent": 0, "defaultPercent": 0, "maxPercent": 0 } },
+      "highlights": [
+        {
+          "icon": "💎",
+          "title": "三重收益結構",
+          "desc": "保證現金價值＋非保證終期紅利＋終期紅利管理權益户口總額。"
+        },
+        {
+          "icon": "🏛️",
+          "title": "整付保費・長線傳承",
+          "desc": "整付保費、長線儲蓄、財富傳承，適合高淨值客戶一次性配置。"
+        },
+        {
+          "icon": "📈",
+          "title": "第30年預期退保540%",
+          "desc": "第30年預期退保金額可達已繳保費約540%。"
+        },
+        {
+          "icon": "🔄",
+          "title": "保單暫託人機制",
+          "desc": "可指定暫託人，確保資產依意願傳承。"
+        },
+        {
+          "icon": "🏦",
+          "title": "保費折扣4%",
+          "desc": "躉繳享4%保費折扣，實際投入96,000美元。"
+        }
+      ],
+      "discounts": {
+        "firstYear": {
+          "maxPercent": 4,
+          "defaultPercent": 4
+        },
+        "product": {
+          "renewalPercent": 0,
+          "defaultPercent": 0,
+          "maxPercent": 0
+        }
+      },
       "privileges": [
-        { "threshold": 50000, "icon": "🏥", "name": "星級體檢禮遇" },
-        { "threshold": 100000, "icon": "🚗", "name": "機場或高鐵站接送" },
-        { "threshold": 200000, "icon": "📋", "name": "第二醫療資訊" },
-        { "threshold": 500000, "icon": "🟢", "name": "綠色通道" }
+        {
+          "threshold": 50000,
+          "icon": "🏥",
+          "name": "星級體檢禮遇"
+        },
+        {
+          "threshold": 100000,
+          "icon": "🚗",
+          "name": "機場或高鐵站接送"
+        },
+        {
+          "threshold": 200000,
+          "icon": "📋",
+          "name": "第二醫療資訊"
+        },
+        {
+          "threshold": 500000,
+          "icon": "🟢",
+          "name": "綠色通道"
+        }
       ],
       "policyData": [
-        { "year": 1, "premiumPaid": 100000, "guaranteedCV": 81800, "nonGuaranteedBonus": 0 },
-        { "year": 2, "premiumPaid": 100000, "guaranteedCV": 82000, "nonGuaranteedBonus": 0 },
-        { "year": 3, "premiumPaid": 100000, "guaranteedCV": 82100, "nonGuaranteedBonus": 9167 },
-        { "year": 4, "premiumPaid": 100000, "guaranteedCV": 82200, "nonGuaranteedBonus": 17800 },
-        { "year": 5, "premiumPaid": 100000, "guaranteedCV": 82300, "nonGuaranteedBonus": 23450 },
-        { "year": 10, "premiumPaid": 100000, "guaranteedCV": 83300, "nonGuaranteedBonus": 70344 },
-        { "year": 15, "premiumPaid": 100000, "guaranteedCV": 97500, "nonGuaranteedBonus": 114095 },
-        { "year": 20, "premiumPaid": 100000, "guaranteedCV": 100400, "nonGuaranteedBonus": 188703 },
-        { "year": 25, "premiumPaid": 100000, "guaranteedCV": 101800, "nonGuaranteedBonus": 288679 },
-        { "year": 30, "premiumPaid": 100000, "guaranteedCV": 102700, "nonGuaranteedBonus": 436943 }
-      ]
+        {
+          "year": 1,
+          "premiumPaid": 100000,
+          "guaranteedCV": 81800,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 2,
+          "premiumPaid": 100000,
+          "guaranteedCV": 82000,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 3,
+          "premiumPaid": 100000,
+          "guaranteedCV": 82100,
+          "nonGuaranteedBonus": 9167
+        },
+        {
+          "year": 4,
+          "premiumPaid": 100000,
+          "guaranteedCV": 82200,
+          "nonGuaranteedBonus": 17800
+        },
+        {
+          "year": 5,
+          "premiumPaid": 100000,
+          "guaranteedCV": 82300,
+          "nonGuaranteedBonus": 23450
+        },
+        {
+          "year": 10,
+          "premiumPaid": 100000,
+          "guaranteedCV": 83300,
+          "nonGuaranteedBonus": 70344
+        },
+        {
+          "year": 15,
+          "premiumPaid": 100000,
+          "guaranteedCV": 97500,
+          "nonGuaranteedBonus": 114095
+        },
+        {
+          "year": 20,
+          "premiumPaid": 100000,
+          "guaranteedCV": 100400,
+          "nonGuaranteedBonus": 188703
+        },
+        {
+          "year": 25,
+          "premiumPaid": 100000,
+          "guaranteedCV": 101800,
+          "nonGuaranteedBonus": 288679
+        },
+        {
+          "year": 30,
+          "premiumPaid": 100000,
+          "guaranteedCV": 102700,
+          "nonGuaranteedBonus": 436943
+        }
+      ],
+      "mainTag": "大額傳承 · 整付增值",
+      "subTag": "一次性繳費 · 保單分拆 · 鎖定終期紅利"
     },
     {
       "id": "zhixuan",
@@ -185,36 +656,137 @@
       "company": "立橋人壽保險有限公司",
       "category": "分紅儲蓄",
       "currency": "HKD",
-      "supportedCurrencies": ["HKD"],
-      "payTerms": [1],
-      "payTermLabels": { "1": "整付" },
+      "supportedCurrencies": [
+        "HKD"
+      ],
+      "payTerms": [
+        1
+      ],
+      "payTermLabels": {
+        "1": "整付"
+      },
       "annualPremium": 1578900,
       "isFinanceable": false,
       "brochureFile": "智選儲蓄保.pdf",
-      "needTags": ["退休", "財富增值"],
-      "highlights": [
-        { "icon": "🛡️", "title": "保證現金價值＋終期紅利", "desc": "雙重收益結構，保證部分穩健，非保證終期紅利提供增值潛力。" },
-        { "icon": "📅", "title": "保障期20年或25年", "desc": "可選20年或25年保障期，期滿保證回報率每年2.22%。" },
-        { "icon": "💼", "title": "身故賠償102%", "desc": "身故賠償為已繳總保費102%或保證現金價值（較高者）＋終期紅利。" },
-        { "icon": "📈", "title": "預期總回報4.98%", "desc": "保單期滿時預期總回報率為每年4.98%。" },
-        { "icon": "💰", "title": "首年保費折扣5%", "desc": "享78,945港元首年保費折扣，實際投入1,499,955港元。" }
+      "needTags": [
+        "退休",
+        "財富增值"
       ],
-      "discounts": { "firstYear": { "maxPercent": 5, "defaultPercent": 5 }, "product": { "renewalPercent": 0, "defaultPercent": 0, "maxPercent": 0 } },
+      "highlights": [
+        {
+          "icon": "🛡️",
+          "title": "保證現金價值＋終期紅利",
+          "desc": "雙重收益結構，保證部分穩健，非保證終期紅利提供增值潛力。"
+        },
+        {
+          "icon": "📅",
+          "title": "保障期20年或25年",
+          "desc": "可選20年或25年保障期，期滿保證回報率每年2.22%。"
+        },
+        {
+          "icon": "💼",
+          "title": "身故賠償102%",
+          "desc": "身故賠償為已繳總保費102%或保證現金價值（較高者）＋終期紅利。"
+        },
+        {
+          "icon": "📈",
+          "title": "預期總回報4.98%",
+          "desc": "保單期滿時預期總回報率為每年4.98%。"
+        },
+        {
+          "icon": "💰",
+          "title": "首年保費折扣5%",
+          "desc": "享78,945港元首年保費折扣，實際投入1,499,955港元。"
+        }
+      ],
+      "discounts": {
+        "firstYear": {
+          "maxPercent": 5,
+          "defaultPercent": 5
+        },
+        "product": {
+          "renewalPercent": 0,
+          "defaultPercent": 0,
+          "maxPercent": 0
+        }
+      },
       "privileges": [],
       "policyData": [
-        { "year": 1, "premiumPaid": 1578900, "guaranteedCV": 1373643, "nonGuaranteedBonus": 0 },
-        { "year": 2, "premiumPaid": 1578900, "guaranteedCV": 1495471, "nonGuaranteedBonus": 0 },
-        { "year": 3, "premiumPaid": 1578900, "guaranteedCV": 1602978, "nonGuaranteedBonus": 0 },
-        { "year": 4, "premiumPaid": 1578900, "guaranteedCV": 1718112, "nonGuaranteedBonus": 0 },
-        { "year": 5, "premiumPaid": 1578900, "guaranteedCV": 1819430, "nonGuaranteedBonus": 0 },
-        { "year": 6, "premiumPaid": 1578900, "guaranteedCV": 1862407, "nonGuaranteedBonus": 88418 },
-        { "year": 7, "premiumPaid": 1578900, "guaranteedCV": 1905969, "nonGuaranteedBonus": 137364 },
-        { "year": 8, "premiumPaid": 1578900, "guaranteedCV": 1950273, "nonGuaranteedBonus": 189468 },
-        { "year": 9, "premiumPaid": 1578900, "guaranteedCV": 1995430, "nonGuaranteedBonus": 246308 },
-        { "year": 10, "premiumPaid": 1578900, "guaranteedCV": 2041439, "nonGuaranteedBonus": 309464 },
-        { "year": 15, "premiumPaid": 1578900, "guaranteedCV": 2184377, "nonGuaranteedBonus": 828923 },
-        { "year": 20, "premiumPaid": 1578900, "guaranteedCV": 2325136, "nonGuaranteedBonus": 1642056 }
-      ]
+        {
+          "year": 1,
+          "premiumPaid": 1578900,
+          "guaranteedCV": 1373643,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 2,
+          "premiumPaid": 1578900,
+          "guaranteedCV": 1495471,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 3,
+          "premiumPaid": 1578900,
+          "guaranteedCV": 1602978,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 4,
+          "premiumPaid": 1578900,
+          "guaranteedCV": 1718112,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 5,
+          "premiumPaid": 1578900,
+          "guaranteedCV": 1819430,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 6,
+          "premiumPaid": 1578900,
+          "guaranteedCV": 1862407,
+          "nonGuaranteedBonus": 88418
+        },
+        {
+          "year": 7,
+          "premiumPaid": 1578900,
+          "guaranteedCV": 1905969,
+          "nonGuaranteedBonus": 137364
+        },
+        {
+          "year": 8,
+          "premiumPaid": 1578900,
+          "guaranteedCV": 1950273,
+          "nonGuaranteedBonus": 189468
+        },
+        {
+          "year": 9,
+          "premiumPaid": 1578900,
+          "guaranteedCV": 1995430,
+          "nonGuaranteedBonus": 246308
+        },
+        {
+          "year": 10,
+          "premiumPaid": 1578900,
+          "guaranteedCV": 2041439,
+          "nonGuaranteedBonus": 309464
+        },
+        {
+          "year": 15,
+          "premiumPaid": 1578900,
+          "guaranteedCV": 2184377,
+          "nonGuaranteedBonus": 828923
+        },
+        {
+          "year": 20,
+          "premiumPaid": 1578900,
+          "guaranteedCV": 2325136,
+          "nonGuaranteedBonus": 1642056
+        }
+      ],
+      "mainTag": "中短期穩健儲蓄 · 保本增值",
+      "subTag": "前5年保證高收益 · 2年回本 · 5-25年中期規劃"
     },
     {
       "id": "aarrb1u",
@@ -223,34 +795,125 @@
       "company": "中國太平洋人壽保險(香港)",
       "category": "分紅儲蓄",
       "currency": "USD",
-      "supportedCurrencies": ["USD"],
-      "payTerms": [10],
-      "payTermLabels": { "10": "10年繳" },
+      "supportedCurrencies": [
+        "USD"
+      ],
+      "payTerms": [
+        10
+      ],
+      "payTermLabels": {
+        "10": "10年繳"
+      },
       "annualPremium": 16000,
       "isFinanceable": false,
       "brochureFile": "BR149FB1813_103901.pdf",
-      "needTags": ["教育金", "退休"],
-      "highlights": [
-        { "icon": "🎓", "title": "教育金最佳選擇", "desc": "10年繳費期配合長線增值，適合為子女提前儲備教育基金。" },
-        { "icon": "💎", "title": "歸原紅利＋終期紅利", "desc": "雙重非保證紅利結構，歸原紅利提供穩定現金流，終期紅利捕捉長線增值。" },
-        { "icon": "🛡️", "title": "保障至130歲", "desc": "保障期至130歲，一張保單陪伴終身。" },
-        { "icon": "📈", "title": "第30年預期總值796%", "desc": "第30年預期退保金額達已繳保費約796%。" },
-        { "icon": "💰", "title": "低門檻入場", "desc": "年保費僅16,000美元，適合中產家庭長線規劃。" }
+      "needTags": [
+        "教育金",
+        "退休"
       ],
-      "discounts": { "firstYear": { "maxPercent": 0, "defaultPercent": 0 }, "product": { "renewalPercent": 0, "defaultPercent": 0, "maxPercent": 0 } },
+      "highlights": [
+        {
+          "icon": "🎓",
+          "title": "教育金最佳選擇",
+          "desc": "10年繳費期配合長線增值，適合為子女提前儲備教育基金。"
+        },
+        {
+          "icon": "💎",
+          "title": "歸原紅利＋終期紅利",
+          "desc": "雙重非保證紅利結構，歸原紅利提供穩定現金流，終期紅利捕捉長線增值。"
+        },
+        {
+          "icon": "🛡️",
+          "title": "保障至130歲",
+          "desc": "保障期至130歲，一張保單陪伴終身。"
+        },
+        {
+          "icon": "📈",
+          "title": "第30年預期總值796%",
+          "desc": "第30年預期退保金額達已繳保費約796%。"
+        },
+        {
+          "icon": "💰",
+          "title": "低門檻入場",
+          "desc": "年保費僅16,000美元，適合中產家庭長線規劃。"
+        }
+      ],
+      "discounts": {
+        "firstYear": {
+          "maxPercent": 0,
+          "defaultPercent": 0
+        },
+        "product": {
+          "renewalPercent": 0,
+          "defaultPercent": 0,
+          "maxPercent": 0
+        }
+      },
       "privileges": [],
       "policyData": [
-        { "year": 1, "premiumPaid": 16000, "guaranteedCV": 0, "nonGuaranteedBonus": 0 },
-        { "year": 2, "premiumPaid": 32000, "guaranteedCV": 0, "nonGuaranteedBonus": 0 },
-        { "year": 3, "premiumPaid": 48000, "guaranteedCV": 3200, "nonGuaranteedBonus": 0 },
-        { "year": 4, "premiumPaid": 64000, "guaranteedCV": 16000, "nonGuaranteedBonus": 0 },
-        { "year": 5, "premiumPaid": 80000, "guaranteedCV": 40000, "nonGuaranteedBonus": 4000 },
-        { "year": 10, "premiumPaid": 160000, "guaranteedCV": 152000, "nonGuaranteedBonus": 12921 },
-        { "year": 15, "premiumPaid": 160000, "guaranteedCV": 160000, "nonGuaranteedBonus": 88176 },
-        { "year": 20, "premiumPaid": 160000, "guaranteedCV": 162499, "nonGuaranteedBonus": 226531 },
-        { "year": 25, "premiumPaid": 160000, "guaranteedCV": 166315, "nonGuaranteedBonus": 385561 },
-        { "year": 30, "premiumPaid": 160000, "guaranteedCV": 170338, "nonGuaranteedBonus": 626166 }
-      ]
+        {
+          "year": 1,
+          "premiumPaid": 16000,
+          "guaranteedCV": 0,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 2,
+          "premiumPaid": 32000,
+          "guaranteedCV": 0,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 3,
+          "premiumPaid": 48000,
+          "guaranteedCV": 3200,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 4,
+          "premiumPaid": 64000,
+          "guaranteedCV": 16000,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 5,
+          "premiumPaid": 80000,
+          "guaranteedCV": 40000,
+          "nonGuaranteedBonus": 4000
+        },
+        {
+          "year": 10,
+          "premiumPaid": 160000,
+          "guaranteedCV": 152000,
+          "nonGuaranteedBonus": 12921
+        },
+        {
+          "year": 15,
+          "premiumPaid": 160000,
+          "guaranteedCV": 160000,
+          "nonGuaranteedBonus": 88176
+        },
+        {
+          "year": 20,
+          "premiumPaid": 160000,
+          "guaranteedCV": 162499,
+          "nonGuaranteedBonus": 226531
+        },
+        {
+          "year": 25,
+          "premiumPaid": 160000,
+          "guaranteedCV": 166315,
+          "nonGuaranteedBonus": 385561
+        },
+        {
+          "year": 30,
+          "premiumPaid": 160000,
+          "guaranteedCV": 170338,
+          "nonGuaranteedBonus": 626166
+        }
+      ],
+      "mainTag": "教育金 · 退休現金流",
+      "subTag": "2年短繳費 · 靈活提取 · 升學養老支出匹配"
     },
     {
       "id": "aaxvt1u",
@@ -259,34 +922,125 @@
       "company": "中國太平洋人壽保險(香港)",
       "category": "分紅儲蓄",
       "currency": "USD",
-      "supportedCurrencies": ["USD"],
-      "payTerms": [3],
-      "payTermLabels": { "3": "3年繳" },
+      "supportedCurrencies": [
+        "USD"
+      ],
+      "payTerms": [
+        3
+      ],
+      "payTermLabels": {
+        "3": "3年繳"
+      },
       "annualPremium": 333330,
       "isFinanceable": false,
       "brochureFile": "BR149FB1813_103033.pdf",
-      "needTags": ["家族傳承", "財富增值"],
-      "highlights": [
-        { "icon": "🏛️", "title": "家族傳承首選", "desc": "3年短繳期快速儲入，保障至130歲，實現跨代財富傳承。" },
-        { "icon": "💎", "title": "保證＋終期紅利", "desc": "保證現金價值穩健，終期紅利提供長線增值潛力。" },
-        { "icon": "📈", "title": "第20年預期總值229%", "desc": "第20年預期退保金額達已繳保費約229%。" },
-        { "icon": "⚡", "title": "3年繳・高額配置", "desc": "3年短繳期適合高淨值客戶快速完成大額資產配置。" },
-        { "icon": "🛡️", "title": "意外身故賠償", "desc": "意外身故賠償為已繳保費100%，以250,000美元為限。" }
+      "needTags": [
+        "家族傳承",
+        "財富增值"
       ],
-      "discounts": { "firstYear": { "maxPercent": 10, "defaultPercent": 10 }, "product": { "renewalPercent": 17, "defaultPercent": 17, "maxPercent": 17 } },
+      "highlights": [
+        {
+          "icon": "🏛️",
+          "title": "家族傳承首選",
+          "desc": "3年短繳期快速儲入，保障至130歲，實現跨代財富傳承。"
+        },
+        {
+          "icon": "💎",
+          "title": "保證＋終期紅利",
+          "desc": "保證現金價值穩健，終期紅利提供長線增值潛力。"
+        },
+        {
+          "icon": "📈",
+          "title": "第20年預期總值229%",
+          "desc": "第20年預期退保金額達已繳保費約229%。"
+        },
+        {
+          "icon": "⚡",
+          "title": "3年繳・高額配置",
+          "desc": "3年短繳期適合高淨值客戶快速完成大額資產配置。"
+        },
+        {
+          "icon": "🛡️",
+          "title": "意外身故賠償",
+          "desc": "意外身故賠償為已繳保費100%，以250,000美元為限。"
+        }
+      ],
+      "discounts": {
+        "firstYear": {
+          "maxPercent": 10,
+          "defaultPercent": 10
+        },
+        "product": {
+          "renewalPercent": 17,
+          "defaultPercent": 17,
+          "maxPercent": 17
+        }
+      },
       "privileges": [],
       "policyData": [
-        { "year": 1, "premiumPaid": 333330, "guaranteedCV": 226660, "nonGuaranteedBonus": 0 },
-        { "year": 2, "premiumPaid": 666660, "guaranteedCV": 550950, "nonGuaranteedBonus": 0 },
-        { "year": 3, "premiumPaid": 999990, "guaranteedCV": 886580, "nonGuaranteedBonus": 0 },
-        { "year": 4, "premiumPaid": 999990, "guaranteedCV": 892220, "nonGuaranteedBonus": 0 },
-        { "year": 5, "premiumPaid": 999990, "guaranteedCV": 895000, "nonGuaranteedBonus": 163000 },
-        { "year": 10, "premiumPaid": 999990, "guaranteedCV": 977720, "nonGuaranteedBonus": 445070 },
-        { "year": 15, "premiumPaid": 999990, "guaranteedCV": 1025000, "nonGuaranteedBonus": 798490 },
-        { "year": 20, "premiumPaid": 999990, "guaranteedCV": 1051990, "nonGuaranteedBonus": 1236400 },
-        { "year": 25, "premiumPaid": 999990, "guaranteedCV": 1067660, "nonGuaranteedBonus": 1800240 },
-        { "year": 30, "premiumPaid": 999990, "guaranteedCV": 1084210, "nonGuaranteedBonus": 2540210 }
-      ]
+        {
+          "year": 1,
+          "premiumPaid": 333330,
+          "guaranteedCV": 226660,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 2,
+          "premiumPaid": 666660,
+          "guaranteedCV": 550950,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 3,
+          "premiumPaid": 999990,
+          "guaranteedCV": 886580,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 4,
+          "premiumPaid": 999990,
+          "guaranteedCV": 892220,
+          "nonGuaranteedBonus": 0
+        },
+        {
+          "year": 5,
+          "premiumPaid": 999990,
+          "guaranteedCV": 895000,
+          "nonGuaranteedBonus": 163000
+        },
+        {
+          "year": 10,
+          "premiumPaid": 999990,
+          "guaranteedCV": 977720,
+          "nonGuaranteedBonus": 445070
+        },
+        {
+          "year": 15,
+          "premiumPaid": 999990,
+          "guaranteedCV": 1025000,
+          "nonGuaranteedBonus": 798490
+        },
+        {
+          "year": 20,
+          "premiumPaid": 999990,
+          "guaranteedCV": 1051990,
+          "nonGuaranteedBonus": 1236400
+        },
+        {
+          "year": 25,
+          "premiumPaid": 999990,
+          "guaranteedCV": 1067660,
+          "nonGuaranteedBonus": 1800240
+        },
+        {
+          "year": 30,
+          "premiumPaid": 999990,
+          "guaranteedCV": 1084210,
+          "nonGuaranteedBonus": 2540210
+        }
+      ],
+      "mainTag": "跨代傳承 · 財富永續",
+      "subTag": "如意傳承金 · 保單繼承獎勵 · 富過三代架構"
     }
   ]
 }
