@@ -385,8 +385,8 @@ function generateClientReport() {
     reportHtml += '<p><strong>IRR 20年:</strong> ' + (p.irr_20 || '待補') + '%</p>';
     reportHtml += '<p><strong>產品類型:</strong> ' + p.life_type + ' | <strong>保證回報:</strong> ' + p.guarantee + '</p>';
     reportHtml += '<p><strong>產品特色:</strong> ' + p.feature_short + '</p>';
-    reportHtml += '<div class="highlight"><strong>★ 網紅亮點:</strong> ' + p.influencer_point + '</div>';
-<em>' + p.scene_desc + '</em></div>';
+    reportHtml += '<div class="highlight"><strong>★ 網紅亮點:</strong> ' + p.influencer_point + '</strong>'
++ '<em>' + p.scene_desc + '</em></div>';
     reportHtml += '<p><strong>標籤:</strong> ' + (p.tag_list || []).join('、') + '</p>';
     if (p.finance_support === '是') {
       reportHtml += '<p><strong>保費融資:</strong>支持(最低融資額 USD' + finConfig.finance_terms.INS01.min_finance_amount + ',LTV ' + (finConfig.finance_terms.INS01.loan_to_value * 100) + '%,利率 ' + (finConfig.finance_terms.INS01.interest_rate * 100) + '%)</p>';
