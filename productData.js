@@ -1,126 +1,160 @@
-// ════════════════════════════════════════════════════════════
-// productData.js — 所有保險產品核心數據
-// 數據來源：用戶提供的產品計劃書，統一標準格式
-// ════════════════════════════════════════════════════════════
+// productData.js v1.0-launch
+// 保險產品數據源｜原有JS物件格式｜兼容舊架構
+// 包含 productData、finConfig、chartConfig
+// v1.0-launch 數據範圍：INS01+INS02 共10款產品
 
-const productData = [
-  {
-    id: "C521",
-    name: "豐饒傳承儲蓄保險計劃 III(美元)",
-    insurer: "中國人壽保險(海外)",
-    currency: "USD",
-    payPeriods: [5],
-    minPremium: 200000,
-    tags: ["高淨值資產配置", "跨境財富規劃", "槓桿融資", "低風險穩定回報"],
-    discount: { firstYear: 0.125, renewal: 0, prepay: 0.045 },
-    cashValue: {
-      1: [67000, 0], 2: [263300, 0], 3: [460000, 0], 4: [656900, 0],
-      5: [853500, 43000], 10: [955000, 460220], 15: [1001690, 792160], 20: [1003240, 1283600],
-    },
-    irr: { 5: 0.018, 10: 0.035, 15: 0.042, 20: 0.048 },
-    breakEvenYear: 8,
-    supportFinancing: true,
+const productData = {
+  version: "v1.0-launch",
+  generated_at: "2026-06-23",
+  scope: "INS01+INS02 only (10 products)",
+
+  insurance_companies: {
+    "INS01": { ins_id: "INS01", ins_name: "中國人壽海外", currency: "HKD/USD/CNY", coop_status: "啟用" },
+    "INS02": { ins_id: "INS02", ins_name: "中國太平洋人壽", currency: "HKD/USD/CNY", coop_status: "啟用" },
+    "INS03": { ins_id: "INS03", ins_name: "立橋人壽", currency: "HKD/USD/CNY", coop_status: "啟用" },
+    "INS04": { ins_id: "INS04", ins_name: "萬通保險", currency: "HKD/USD/CNY", coop_status: "啟用" }
   },
-  {
-    id: "AAXVT1U",
-    name: "世代臻享儲蓄壽險計劃(榮耀版)",
-    insurer: "中國太平洋人壽保險(香港)",
-    currency: "USD",
-    payPeriods: [3],
-    minPremium: 333330,
-    tags: ["短期儲蓄", "資產傳承", "穩定收益"],
-    discount: { firstYear: 0.1, renewal: 0.17, prepay: 0.045 },
-    cashValue: {
-      1: [226660, 0], 2: [550950, 0], 3: [886580, 0], 4: [892220, 0],
-      5: [895000, 163000], 10: [977720, 445070], 15: [1025000, 798490], 20: [1051990, 1236400],
+
+  products: [
+    {
+      prod_id: "P001", ins_id: "INS01", ins_name: "中國人壽海外",
+      prod_name: "傲瓏盛世儲蓄保險計劃", pay_term: "0，2，5", min_prem: 8000,
+      break_year: 5, irr_20: 5.6, guarantee: "否", life_type: "終身儲蓄",
+      tag_list: ["整付入場", "分期入場"],
+      feature_short: "USD8000/HKD64000/CNY51200（整付/2/5年繳）；多幣種；IRR20約5.6-6.0%；回本5年",
+      finance_support: "否",
+      influencer_point: "USD8000起3種貨幣（USD/HKD/CNY）｜回本5年｜終身分紅",
+      scene_desc: "「一張保單，3種貨幣，資產全球配置」；主打小額入場+多幣種切換"
     },
-    irr: { 5: 0.022, 10: 0.038, 15: 0.045, 20: 0.052 },
-    breakEvenYear: 7,
-    supportFinancing: false,
-  },
-  {
-    id: "AARRB1U",
-    name: "金如意儲蓄保險計劃(星耀版)",
-    insurer: "中國太平洋人壽保險(香港)",
-    currency: "USD",
-    payPeriods: [10],
-    minPremium: 16000,
-    tags: ["長期儲蓄", "退休規劃", "小額入場"],
-    discount: { firstYear: 0, renewal: 0, prepay: 0 },
-    cashValue: {
-      1: [0, 0], 2: [0, 0], 3: [3200, 0], 4: [16000, 0],
-      5: [40000, 4000], 10: [152000, 12921], 15: [160000, 88176], 20: [162499, 226531],
+    {
+      prod_id: "P002", ins_id: "INS01", ins_name: "中國人壽海外",
+      prod_name: "鑽逸傳承儲蓄保險計劃尊尚版", pay_term: "0", min_prem: 8000,
+      break_year: 4, irr_20: 5.4, guarantee: "否", life_type: "終身儲蓄",
+      tag_list: ["整付入場"],
+      feature_short: "USD8000/HKD64000（整付）；HKD回本4年；IRR20約5.0-5.4%",
+      finance_support: "否",
+      influencer_point: "USD8000整付門檻｜HKD回本4年最快｜終身傳承",
+      scene_desc: "「整付入場，4年回本，傳承利器」；針對高淨值客戶快速建立美元保單"
     },
-    irr: { 10: 0.025, 15: 0.032, 20: 0.04 },
-    breakEvenYear: 10,
-    supportFinancing: false,
-  },
-  {
-    id: "WLL001",
-    name: "智選儲蓄保",
-    insurer: "立橋人壽保險有限公司",
-    currency: "HKD",
-    payPeriods: [1],
-    minPremium: 1578900,
-    tags: ["短期儲蓄", "保證回報", "20年期"],
-    discount: { firstYear: 0.05, renewal: 0, prepay: 0 },
-    cashValue: {
-      1: [1373643, 0], 2: [1495471, 0], 5: [1819430, 0],
-      10: [2041439, 102186], 15: [2184377, 273718], 20: [2325136, 1642056],
+    {
+      prod_id: "P003", ins_id: "INS01", ins_name: "中國人壽海外",
+      prod_name: "豐饒傳承儲蓄保險計劃III", pay_term: "5", min_prem: 200000,
+      break_year: 5, irr_20: 4.9, guarantee: "否", life_type: "終身儲蓄",
+      tag_list: ["分期入場", "高淨值資產配置", "槓桿融資"],
+      feature_short: "USD200000年繳（5年預繳）；總保費874683預繳；保費融資專用；回本5年；IRR20約4.9%",
+      finance_support: "是",
+      influencer_point: "USD200,000起，5年預繳｜保費融資專用｜回本5年｜總保費達1M",
+      scene_desc: "「保費融資最佳工具：5年回本+槓桿放大+預繳3.5%保證利率」；針對高淨值客戶資產傳承+融資套利"
     },
-    irr: { 10: 0.028, 15: 0.035, 20: 0.0498 },
-    breakEvenYear: 3,
-    supportFinancing: false,
-  },
-  {
-    id: "C535",
-    name: "鑽逸傳承儲蓄保險計劃(尊尚版)(美元)",
-    insurer: "中國人壽保險(海外)",
-    currency: "USD",
-    payPeriods: [1],
-    minPremium: 100000,
-    tags: ["終身保障", "資產傳承", "整付入場"],
-    discount: { firstYear: 0.04, renewal: 0, prepay: 0 },
-    cashValue: {
-      1: [81800, 0], 2: [82000, 0], 3: [82100, 9167], 5: [82300, 23450],
-      10: [83300, 70344], 15: [97500, 114095], 20: [100400, 188703],
+    {
+      prod_id: "P004", ins_id: "INS01", ins_name: "中國人壽海外",
+      prod_name: "智裕世代多元貨幣保險計劃卓越", pay_term: "5", min_prem: 8000,
+      break_year: 5, irr_20: 5.8, guarantee: "否", life_type: "終身儲蓄",
+      tag_list: ["分期入場", "跨境財富規劃"],
+      feature_short: "USD8000/HKD64000/CNY51200年繳（5年繳）；9種貨幣切換；回本5年；IRR20約5.7-6.0%",
+      finance_support: "否",
+      influencer_point: "USD8000起5年繳｜9種貨幣切換｜回本5年｜跨境財富規劃",
+      scene_desc: "「9種貨幣自由切換，留學移民海外資產配置首選」；針對跨境家庭"
     },
-    irr: { 10: 0.03, 15: 0.038, 20: 0.045 },
-    breakEvenYear: 15,
-    supportFinancing: false,
-  },
-  {
-    id: "C537",
-    name: "傲瓏盛世儲蓄保險計劃(美元)(躉繳)",
-    insurer: "中國人壽保險(海外)",
-    currency: "USD",
-    payPeriods: [1],
-    minPremium: 100000,
-    tags: ["終身保障", "長期收益", "整付入場"],
-    discount: { firstYear: 0, renewal: 0, prepay: 0 },
-    cashValue: {
-      1: [27920, 0], 2: [30320, 25276], 3: [31920, 43845], 5: [38480, 68191],
-      10: [66300, 164491], 15: [100200, 314195], 20: [100602, 487058],
+    {
+      prod_id: "P005", ins_id: "INS01", ins_name: "中國人壽海外",
+      prod_name: "優暇人生延期年金計劃II", pay_term: "5，10", min_prem: 2400,
+      break_year: null, irr_20: null, guarantee: "否", life_type: "定期儲蓄",
+      tag_list: ["分期入場", "退休規劃"],
+      feature_short: "USD2400/HKD18000年繳；5/10年繳；年金入息；90歲TIRR約4.0-4.2%（官方）",
+      finance_support: "否",
+      influencer_point: "USD2400起｜年金入息｜90歲TIRR約4.0%｜退休規劃",
+      scene_desc: "「穩定年金入息+意外身故保障，退休生活無憂」；針對準退休人士"
     },
-    irr: { 10: 0.032, 15: 0.04, 20: 0.048 },
-    breakEvenYear: 13,
-    supportFinancing: false,
-  },
-  {
-    id: "C540",
-    name: "傲瓏盛世儲蓄保險計劃(美元)(5年繳)",
-    insurer: "中國人壽保險(海外)",
-    currency: "USD",
-    payPeriods: [5],
-    minPremium: 16000,
-    tags: ["長期儲蓄", "終身保障", "分期入場"],
-    discount: { firstYear: 0.06, renewal: 0, prepay: 0 },
-    cashValue: {
-      1: [0, 0], 2: [0, 0], 3: [200, 2061], 4: [1120, 4137], 5: [2720, 12952],
-      10: [50800, 53037], 15: [58800, 88131], 20: [80217, 135361],
+    {
+      prod_id: "P006", ins_id: "INS02", ins_name: "中國太平洋人壽",
+      prod_name: "金如意儲蓄保險計劃星耀版", pay_term: "0，2，5，10", min_prem: 25000,
+      break_year: 6, irr_20: 6.2, guarantee: "否", life_type: "終身儲蓄",
+      tag_list: ["整付入場", "分期入場", "高淨值資產配置"],
+      feature_short: "USD25000整付/2/5/10年繳；IRR20約6.2-6.4%；受6.5%上限限制；回本6年（2年繳基準）",
+      finance_support: "否",
+      influencer_point: "USD25,000起｜4種繳費期選擇｜IRR20約6.2%｜回本6年｜受6.5%上限",
+      scene_desc: "「最高IRR產品，4種繳費期靈活選擇」；針對追求高回報的儲蓄客戶"
     },
-    irr: { 10: 0.028, 15: 0.035, 20: 0.042 },
-    breakEvenYear: 15,
-    supportFinancing: false,
+    {
+      prod_id: "P007", ins_id: "INS02", ins_name: "中國太平洋人壽",
+      prod_name: "金安逸儲蓄保險計劃", pay_term: "3", min_prem: 30000,
+      break_year: 7, irr_20: 3.1, guarantee: "是", life_type: "終身儲蓄",
+      tag_list: ["分期入場", "穩定收益"],
+      feature_short: "USD30000/HKD240000年繳（3年繳）；保證回報；回本7年；IRR20約3.1-3.5%",
+      finance_support: "否",
+      influencer_point: "USD30,000起｜3年保證回報｜保證IRR｜回本7年",
+      scene_desc: "「保證回報零分紅，穩健首選」；針對保守型投資者"
+    },
+    {
+      prod_id: "P008", ins_id: "INS02", ins_name: "中國太平洋人壽",
+      prod_name: "世代臻享儲蓄壽險計劃榮耀版", pay_term: "3", min_prem: 12500,
+      break_year: 5, irr_20: 4.2, guarantee: "否", life_type: "終身儲蓄",
+      tag_list: ["分期入場", "小額入場"],
+      feature_short: "USD12500年繳（3年繳）；回本5年；IRR20約4.2%",
+      finance_support: "否",
+      influencer_point: "USD12,500起3年繳｜回本5年｜IRR20約4.2%｜小額入場",
+      scene_desc: "「低門檻享5年回本+終身分紅」；針對年輕儲蓄客戶"
+    },
+    {
+      prod_id: "P009", ins_id: "INS02", ins_name: "中國太平洋人壽",
+      prod_name: "金相伴終身入息保險計劃", pay_term: "0，6", min_prem: 60000,
+      break_year: null, irr_20: 1.5, guarantee: "否", life_type: "終身儲蓄",
+      tag_list: ["整付入場", "退休規劃", "資產傳承"],
+      feature_short: "USD60000/HKD480000整付/6年繳；終身年金入息；IRR20約1.4-2.0%；入息型無短期回本點",
+      finance_support: "否",
+      influencer_point: "USD60,000起｜整付/6年繳｜終身年金入息｜退休規劃｜資產傳承",
+      scene_desc: "「整付+終身入息雙選項，退休傳承雙引擎」；針對準退休高端客戶"
+    },
+    {
+      prod_id: "P010", ins_id: "INS02", ins_name: "中國太平洋人壽",
+      prod_name: "頤養天年延期年金計劃終身", pay_term: "5，10", min_prem: 3000,
+      break_year: null, irr_20: 2.8, guarantee: "否", life_type: "定期儲蓄",
+      tag_list: ["分期入場", "退休規劃"],
+      feature_short: "USD3000-6000年繳；5/10年繳；90歲TIRR約4.18%（官方）；IRR20約2.8-3.2%；年金類無標準回本期",
+      finance_support: "否",
+      influencer_point: "USD3000起｜5/10年繳｜90歲TIRR約4.18%｜延期年金",
+      scene_desc: "「延期年金規劃，鎖定未來退休現金流」；針對中長期退休規劃"
+    }
+  ],
+
+  influencer_highlight: [
+    { prod_id: "P001", influencer_point: "USD8000起3種貨幣（USD/HKD/CNY）｜回本5年｜終身分紅", scene_desc: "「一張保單，3種貨幣，資產全球配置」；主打小額入場+多幣種切換" },
+    { prod_id: "P002", influencer_point: "USD8000整付門檻｜HKD回本4年最快｜終身傳承", scene_desc: "「整付入場，4年回本，傳承利器」；針對高淨值客戶快速建立美元保單" },
+    { prod_id: "P003", influencer_point: "USD200,000起，5年預繳｜保費融資專用｜回本5年｜總保費達1M", scene_desc: "「保費融資最佳工具：5年回本+槓桿放大+預繳3.5%保證利率」；針對高淨值客戶資產傳承+融資套利" },
+    { prod_id: "P004", influencer_point: "USD8000起5年繳｜9種貨幣切換｜回本5年｜跨境財富規劃", scene_desc: "「9種貨幣自由切換，留學移民海外資產配置首選」；針對跨境家庭" },
+    { prod_id: "P005", influencer_point: "USD2400起｜年金入息｜90歲TIRR約4.0%｜退休規劃", scene_desc: "「穩定年金入息+意外身故保障，退休生活無憂」；針對準退休人士" },
+    { prod_id: "P006", influencer_point: "USD25,000起｜4種繳費期選擇｜IRR20約6.2%｜回本6年｜受6.5%上限", scene_desc: "「最高IRR產品，4種繳費期靈活選擇」；針對追求高回報的儲蓄客戶" },
+    { prod_id: "P007", influencer_point: "USD30,000起｜3年保證回報｜保證IRR｜回本7年", scene_desc: "「保證回報零分紅，穩健首選」；針對保守型投資者" },
+    { prod_id: "P008", influencer_point: "USD12,500起3年繳｜回本5年｜IRR20約4.2%｜小額入場", scene_desc: "「低門檻享5年回本+終身分紅」；針對年輕儲蓄客戶" },
+    { prod_id: "P009", influencer_point: "USD60,000起｜整付/6年繳｜終身年金入息｜退休規劃｜資產傳承", scene_desc: "「整付+終身入息雙選項，退休傳承雙引擎」；針對準退休高端客戶" },
+    { prod_id: "P010", influencer_point: "USD3000起｜5/10年繳｜90歲TIRR約4.18%｜延期年金", scene_desc: "「延期年金規劃，鎖定未來退休現金流」；針對中長期退休規劃" }
+  ],
+
+  tags: [
+    { tag_name: "高淨值資產配置", 篩選規則: "min_prem ≥ 100000、支持保費融資、美元計價產品優先" },
+    { tag_name: "跨境財富規劃", 篩選規則: "幣種包含USD、可離岸資產配置、終身分紅壽險" },
+    { tag_name: "槓桿融資", 篩選規則: "finance_support = 是，支持保費融資計劃" },
+    { tag_name: "短期儲蓄", 篩選規則: "break_year ≤ 10，回本速度快" },
+    { tag_name: "資產傳承", 篩選規則: "life_type = 終身儲蓄，具備身故傳承價值" },
+    { tag_name: "穩定收益", 篩選規則: "guarantee = 是，保證回報佔比高" },
+    { tag_name: "退休規劃", 篩選規則: "長期持有價值高、20年期IRR表現優、適合長線持有" },
+    { tag_name: "整付入場", 篩選規則: "pay_term = 0（躉繳/整付）" },
+    { tag_name: "分期入場", 篩選規則: "pay_term ≥ 1 且 pay_term ≤ 10（分期繳費）" },
+    { tag_name: "教育基金", 篩選規則: "中期回本、彈性提取現金價值、適合10–20年規劃" },
+    { tag_name: "小額入場", 篩選規則: "min_prem ＜ 20000，低門檻投保" }
+  ]
+};
+
+const finConfig = {
+  version: "v1.0-launch",
+  base_currency: "USD",
+  exchange_rates: {
+    "HKD_to_USD": 0.128,
+    "USD_to_HKD": 7.8,
+    "CNY_to_USD": 0.138,
+    "USD_to_CNY": 7.25
   },
-];
+  finance_terms: {
+    "INS01": {
+      product_codes: ["C521", "C522", "C535", "C
