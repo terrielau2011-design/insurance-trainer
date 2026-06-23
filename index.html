@@ -1,152 +1,126 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-HK">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>保險產品對比與財務演算工具 V2</title>
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>保險產品比較器 v1.0-launch｜INS01+INS02 精選10款</title>
+<script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.5.0/echarts.min.js"></script>
+<script src="https://cdn.bootcdn.net/ajax/libs/html2pdf.js/0.10.2/html2pdf.bundle.min.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", "PingFang TC", sans-serif; background: #f5f6f8; color: #2c3e50; padding: 20px; }
+header { background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); color: #fff; padding: 24px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; }
+h1 { font-size: 22px; margin-bottom: 6px; }
+.subtitle { font-size: 13px; opacity: 0.85; }
+.stats { display: flex; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+.stat-badge { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px; }
+.header-actions { display: flex; gap: 10px; }
+.header-btn { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4); padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; position: relative; }
+.header-btn:hover { background: rgba(255,255,255,0.3); }
+.badge { position: absolute; top: -6px; right: -6px; background: #d4af37; color: #fff; border-radius: 10px; min-width: 18px; height: 18px; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0 4px; }
+.layout { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+@media (max-width: 768px) { .layout { grid-template-columns: 1fr; } }
+.sidebar { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); height: fit-content; position: sticky; top: 20px; }
+.sidebar h3 { font-size: 15px; margin-bottom: 12px; color: #1e3a5f; }
+.tag-group { margin-bottom: 16px; }
+.tag-label { display: flex; align-items: center; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 0.15s; }
+.tag-label:hover { background: #f0f4f8; }
+.tag-label input { margin-right: 8px; cursor: pointer; }
+.tag-rule { font-size: 11px; color: #7a8a99; margin: 2px 0 6px 26px; }
+.action-row { display: flex; gap: 8px; margin-top: 12px; }
+.btn { flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all 0.15s; }
+.btn-primary { background: #1e3a5f; color: #fff; }
+.btn-primary:hover { background: #2c5282; }
+.btn-ghost { background: #e8ecf0; color: #2c3e50; }
+.btn-ghost:hover { background: #d4dae0; }
+.main { display: flex; flex-direction: column; gap: 16px; }
+.result-header { background: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; color: #1e3a5f; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+.product-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s; margin-bottom: 16px; }
+.product-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; gap: 12px; }
+.prod-title { font-size: 17px; font-weight: 700; color: #1e3a5f; margin-bottom: 4px; }
+.prod-meta { font-size: 12px; color: #7a8a99; }
+.compare-toggle { font-size: 12px; color: #1e3a5f; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+.compare-toggle input { cursor: pointer; }
+.finance-tag { background: #d4af37; color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.finance-tag.no { display: none; }
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+@media (max-width: 600px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+.metric { background: #f7f9fc; padding: 8px 10px; border-radius: 6px; }
+.metric-label { font-size: 11px; color: #7a8a99; margin-bottom: 2px; }
+.metric-value { font-size: 14px; font-weight: 700; color: #1e3a5f; }
+.metric-value.tbd { color: #b0b8c0; font-weight: 400; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.tag-chip { background: #e8f0fe; color: #1e3a5f; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.feature-text { font-size: 13px; line-height: 1.6; color: #4a5568; margin: 8px 0; padding: 10px; background: #fafbfc; border-left: 3px solid #1e3a5f; border-radius: 4px; }
+.influencer-block { margin-top: 12px; padding: 12px; background: #fffbf0; border-radius: 8px; border: 1px solid #ffe0a0; }
+.influencer-block .point { font-size: 13px; font-weight: 700; color: #c47a1e; margin-bottom: 6px; }
+.influencer-block .scene { font-size: 12px; color: #6b5a3e; line-height: 1.5; font-style: italic; }
+.card-actions { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed #e8ecf0; }
+.card-actions .btn { flex: 1; }
+.no-result { background: #fff; padding: 40px; text-align: center; border-radius: 12px; color: #7a8a99; }
+#comparePanel { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 16px; display: none; }
+.compare-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; }
+.compare-header h3 { font-size: 15px; color: #1e3a5f; }
+.compare-header > div { display: flex; gap: 8px; }
+.compare-header .btn { flex: none; padding: 6px 12px; }
+.compare-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.compare-table th, .compare-table td { border: 1px solid #e0e6ed; padding: 8px 10px; text-align: left; }
+.compare-table th { background: #1e3a5f; color: #fff; font-weight: 600; }
+.compare-table tr:nth-child(even) { background: #f7f9fc; }
+#chartModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; }
+.modal-content { background: #fff; margin: 40px auto; padding: 24px; max-width: 900px; border-radius: 12px; position: relative; }
+.modal-close { position: absolute; top: 12px; right: 16px; background: none; border: none; font-size: 24px; cursor: pointer; color: #7a8a99; }
+#chartContainer { width: 100%; height: 500px; }
+footer { text-align: center; margin-top: 30px; color: #7a8a99; font-size: 12px; }
+</style>
 </head>
 <body>
 
-<!-- 版本浮層 -->
-<div id="version-badge">V2.0</div>
-
-<header class="app-header">
-  <div class="header-inner">
-    <div class="brand">
-      <span class="brand-icon">🛡</span>
-      <div>
-        <h1>保險產品對比與財務演算工具</h1>
-        <p>Insurance Product Comparison & Financial Calculator <span class="version-tag">V2.0</span></p>
-      </div>
+<header>
+  <div>
+    <h1>保險產品比較器 v1.0-launch</h1>
+    <div class="subtitle">INS01 中國人壽海外 + INS02 中國太平洋人壽｜共10款精選產品｜ECharts 5.5.0 動態圖表 + 多產品對比 + 客戶 PDF 報告</div>
+    <div class="stats">
+      <span class="stat-badge" id="stat-total">10 款產品</span>
+      <span class="stat-badge" id="stat-shown">顯示全部</span>
+      <span class="stat-badge" id="stat-filter">未啟用篩選</span>
     </div>
+  </div>
+  <div class="header-actions">
+    <button class="header-btn" id="generateReportBtn">
+      生成客戶PDF報告
+      <span class="badge" id="reportBadge">0</span>
+    </button>
   </div>
 </header>
 
-<main class="app-main">
-
-  <!-- ═══ 模塊1：客戶需求標籤篩選 ═══ -->
-  <section class="section-card" id="section-tags" style="display:none;">
-    <div class="section-header">
-      <span class="section-badge">1</span>
-      <h2>客戶需求標籤篩選</h2>
+<div class="layout">
+  <aside class="sidebar">
+    <h3>標籤篩選（可多選）</h3>
+    <div class="tag-group" id="tagContainer"></div>
+    <div class="action-row">
+      <button class="btn btn-primary" id="clearBtn">清除全部</button>
     </div>
-    <div class="tags-container" id="tags-container"></div>
-  </section>
+  </aside>
+  <main class="main">
+    <div id="comparePanel"></div>
+    <div class="result-header" id="resultHeader">顯示 10 款產品</div>
+    <div id="productContainer"></div>
+  </main>
+</div>
 
-  <!-- ═══ 模塊2：產品多維對比 ═══ -->
-  <section class="section-card" id="section-products">
-    <div class="section-header">
-      <span class="section-badge">2</span>
-      <h2>產品選擇與多維對比</h2>
-      <span class="hint-text" style="margin-left:auto;">最多選4款加入對比</span>
-    </div>
-    <div class="product-grid" id="product-grid"></div>
-  </section>
+<div id="chartModal">
+  <div class="modal-content">
+    <button class="modal-close" onclick="closeChartModal()">×</button>
+    <h2 id="chartTitle" style="margin-bottom:16px;color:#1e3a5f"></h2>
+    <div id="chartContainer"></div>
+  </div>
+</div>
 
-  <!-- 對比表 -->
-  <section class="section-card" id="section-compare" style="display:none;">
-    <div class="section-header">
-      <span class="section-badge">⚖</span>
-      <h2>跨產品對比表</h2>
-    </div>
-    <div class="table-wrapper">
-      <table class="compare-table" id="compare-table">
-        <thead><tr id="compare-thead"></tr></thead>
-        <tbody id="compare-tbody"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- ═══ 模塊3：動態圖表 ═══ -->
-  <section class="section-card" id="section-charts" style="display:none;">
-    <div class="section-header">
-      <span class="section-badge">3</span>
-      <h2>動態財務圖表</h2>
-      <div class="product-dropdown">
-        <select id="chart-product-select" class="select-field" onchange="onChartProductChange()"></select>
-      </div>
-    </div>
-
-    <!-- 3a 繳費構成餅圖 -->
-    <div class="chart-block" id="block-pie" style="display:none;">
-      <h3 class="chart-title">🥧 繳費構成餅圖</h3>
-      <div id="chart-pie" style="width:100%;height:300px;"></div>
-    </div>
-
-    <!-- 3b 財富走勢圖 -->
-    <div class="chart-block" id="block-wealth" style="display:none;">
-      <h3 class="chart-title">📈 財富走勢圖</h3>
-      <div class="chart-controls">
-        <label><input type="checkbox" id="show-pessimistic" onchange="updateWealthChart()"> 顯示悲觀場景</label>
-        <label><input type="checkbox" id="show-optimistic" onchange="updateWealthChart()"> 顯示樂觀場景</label>
-        <label>目標金額：<input type="number" id="target-amount" value="2000000" min="0" step="100000" oninput="updateWealthChart()" style="width:120px;"></label>
-      </div>
-      <div id="chart-wealth" style="width:100%;height:400px;"></div>
-    </div>
-
-    <!-- 3c 跨資產柱圖 -->
-    <div class="chart-block" id="block-opp" style="display:none;">
-      <h3 class="chart-title">📊 跨資產機會成本對比</h3>
-      <div id="chart-opp" style="width:100%;height:400px;"></div>
-    </div>
-  </section>
-
-  <!-- ═══ 模塊4：廣發融資演算 ═══ -->
-  <section class="section-card" id="section-financing" style="display:none;">
-    <div class="section-header">
-      <span class="section-badge">4</span>
-      <h2>廣發銀行保費融資演算</h2>
-      <div class="scene-toggle">
-        <button class="toggle-btn active" id="btn-normal" onclick="switchFinScene('normal')">正常場景</button>
-        <button class="toggle-btn" id="btn-pessimistic" onclick="switchFinScene('pessimistic')">悲觀場景</button>
-      </div>
-    </div>
-
-    <div class="fin-input-row">
-      <label>保費（USD）</label>
-      <input type="number" id="fin-premium" value="200000" min="200000" step="10000" oninput="calcFinancing()" />
-    </div>
-
-    <div class="fin-results" id="fin-results"></div>
-
-    <div class="fin-compare-table" id="fin-compare"></div>
-  </section>
-
-  <!-- ═══【V2報告模塊】PDF報告生成 ═══ -->
-  <section class="section-card" id="section-report">
-    <div class="section-header">
-      <span class="section-badge">5</span>
-      <h2>客戶投保明白備忘錄</h2>
-      <span class="section-tag">V2 報告</span>
-    </div>
-
-    <!-- 報告控制欄 -->
-    <div class="report-toolbar">
-      <select id="report-version" class="select-field">
-        <option value="client">客戶簡報版</option>
-        <option value="professional">專業顧問版</option>
-      </select>
-      <button class="btn btn-primary" id="btn-generate-report" onclick="generateReport()" disabled>📋 生成報告</button>
-      <span id="report-status" class="report-status"></span>
-    </div>
-
-    <!-- 【V2修复新增】报告预览区：用 visibility:hidden 代替 display:none，html2pdf 可完整捕获 -->
-    <div id="reportWrap" style="visibility:hidden;position:absolute;left:-9999px;top:0;"></div>
-  </section>
-
-</main>
-
-<footer class="app-footer">
-  <p>⚠️ 本系統僅供持牌保險從業員內部培訓使用，所有數據計算僅供參考，不構成任何投保或財務建議。</p>
-</footer>
+<footer>保險產品比較器｜數據版本 v1.0-launch｜2026-06-23</footer>
 
 <script src="productData.js"></script>
-<script src="finConfig.js"></script>
-<script src="chartConfig.js"></script>
-<script src="main.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
