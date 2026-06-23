@@ -1,7 +1,7 @@
 // app.js v1.0-launch
-// 保險產品比較器|兼容舊版 ECharts 圖表、多產品對比、客戶 PDF 報告
-// 數據源:productData.js(productData + finConfig + chartConfig)
-// 修復:所有 &amp;&amp; 為標準 JS 運算符,確保多產品對比表格正常渲染
+// 保險產品比較器 - 兼容舊版 ECharts 圖表、多產品對比、客戶 PDF 報告
+// 數據源:productData.js (productData + finConfig + chartConfig)
+// 所有 if 判斷使用標準 &amp;&amp; 運算符, 標點統一英文半角
 
 // ====== 全局變量 ======
 let selectedTagList = [];
@@ -9,14 +9,14 @@ let comparedProductIds = [];
 let reportItems = [];
 let currentChart = null;
 
-// ====== 數據載入(從 productData.js 同步讀取)======
+// ====== 數據載入(從 productData.js 同步讀取) ======
 function loadProductData() {
   if (typeof productData === 'undefined') {
     document.getElementById('productContainer').innerHTML =
-      '<div class="no-result">productData.js 載入失敗,請確認檔案路徑正確</div>';
+      '<div class="no-result">productData.js 載入失敗, 請確認檔案路徑正確</div>';
     return;
   }
-  console.log('[v1.0-launch] 已載入 ' + productData.products.length + ' 款產品,' + productData.tags.length + ' 個標籤');
+  console.log('[v1.0-launch] 已載入 ' + productData.products.length + ' 款產品, ' + productData.tags.length + ' 個標籤');
   initApp();
 }
 
@@ -34,7 +34,9 @@ function renderTagPanel() {
 }
 
 function getSelectedTags() {
-  return Array.from(document.querySelectorAll('.tag-label input:checked')).map(function(el) { return el.value; });
+  return Array.from(document.querySelectorAll('.tag-label input:checked')).map(function(el) {
+    return el.value;
+  });
 }
 
 function onTagChange() {
@@ -47,12 +49,16 @@ function onTagChange() {
 function filterProducts() {
   if (!selectedTagList || selectedTagList.length === 0) return productData.products;
   return productData.products.filter(function(p) {
-    return selectedTagList.every(function(t) { return p.tag_list.indexOf(t) !== -1; });
+    return selectedTagList.every(function(t) {
+      return p.tag_list.indexOf(t) !== -1;
+    });
   });
 }
 
 function formatVal(v, suffix) {
-  if (v === null || v === undefined || v === '待補') return '<span class="metric-value tbd">待補</span>';
+  if (v === null || v === undefined || v === '待補') {
+    return '<span class="metric-value tbd">待補</span>';
+  }
   return '<span class="metric-value">' + v + (suffix || '') + '</span>';
 }
 
@@ -63,13 +69,15 @@ function renderProductList() {
   if (!container) return;
 
   if (list.length === 0) {
-    container.innerHTML = '<div class="no-result">無符合條件的產品,請調整標籤組合</div>';
+    container.innerHTML = '<div class="no-result">無符合條件的產品, 請調整標籤組合</div>';
     if (header) header.textContent = '顯示 0 款產品';
     return;
   }
 
   container.innerHTML = list.map(function(p) {
-    const chips = (p.tag_list || []).map(function(t) { return '<span class="tag-chip">' + t + '</span>'; }).join('');
+    const chips = (p.tag_list || []).map(function(t) {
+      return '<span class="tag-chip">' + t + '</span>';
+    }).join('');
     const financeClass = p.finance_support === '是' ? '' : 'no';
     const isChecked = comparedProductIds.indexOf(p.prod_id) !== -1 ? 'checked' : '';
     return '<div class="product-card" data-prod-id="' + p.prod_id + '">' +
@@ -111,11 +119,17 @@ function updateFilterStats() {
   const list = filterProducts();
   const statShown = document.getElementById('stat-shown');
   const statFilter = document.getElementById('stat-filter');
-  if (statShown) statShown.textContent = list.length === productData.products.length ? '顯示全部' : '篩選後 ' + list.length + ' 款';
-  if (statFilter) statFilter.textContent = selectedTagList.length === 0 ? '未啟用篩選' : '已選 ' + selectedTagList.length + ' 個標籤:' + selectedTagList.join('、');
+  if (statShown) {
+    statShown.textContent = list.length === productData.products.length ? '顯示全部' : '篩選後 ' + list.length + ' 款';
+  }
+  if (statFilter) {
+    statFilter.textContent = selectedTagList.length === 0
+      ? '未啟用篩選'
+      : '已選 ' + selectedTagList.length + ' 個標籤: ' + selectedTagList.join(', ');
+  }
 }
 
-// ====== 多產品對比邏輯(沿用舊版)======
+// ====== 多產品對比邏輯 ======
 function onCompareToggle(prodId) {
   const idx = comparedProductIds.indexOf(prodId);
   if (idx === -1) {
@@ -141,21 +155,34 @@ function updateCompareBadge() {
 function renderComparePanel() {
   const panel = document.getElementById('comparePanel');
   if (!panel) return;
-  if (comparedProductIds.length === 0) { panel.style.display = 'none'; return; }
+  if (comparedProductIds.length === 0) {
+    panel.style.display = 'none';
+    return;
+  }
   panel.style.display = 'block';
   const products = comparedProductIds.map(function(id) {
-    return productData.products.find(function(p) { return p.prod_id === id; });
+    return productData.products.find(function(p) {
+      return p.prod_id === id;
+    });
   }).filter(Boolean);
 
   const rows = ['prod_name', 'ins_name', 'min_prem', 'pay_term', 'break_year', 'irr_20', 'guarantee', 'life_type', 'finance_support'];
   const labels = {
-    prod_name: '產品名稱', ins_name: '保險公司', min_prem: '最低保費(USD)',
-    pay_term: '繳費年期', break_year: '回本年', irr_20: 'IRR 20年(%)',
-    guarantee: '保證回報', life_type: '產品類型', finance_support: '保費融資'
+    prod_name: '產品名稱',
+    ins_name: '保險公司',
+    min_prem: '最低保費(USD)',
+    pay_term: '繳費年期',
+    break_year: '回本年',
+    irr_20: 'IRR 20年(%)',
+    guarantee: '保證回報',
+    life_type: '產品類型',
+    finance_support: '保費融資'
   };
 
   let html = '<table class="compare-table"><thead><tr><th>比較項</th>';
-  products.forEach(function(p) { html += '<th>' + p.prod_name + '</th>'; });
+  products.forEach(function(p) {
+    html += '<th>' + p.prod_name + '</th>';
+  });
   html += '</tr></thead><tbody>';
 
   rows.forEach(function(r) {
@@ -163,13 +190,13 @@ function renderComparePanel() {
     products.forEach(function(p) {
       let v = p[r];
       let display = v;
-      if (v === null || v === undefined) display = '—';
-      if (r === 'irr_20') {
-        if (v !== null &amp;&amp; v !== undefined) {
-          display = v + '%';
-        }
+      if (v === null || v === undefined) {
+        display = '-';
+      } else if (r === 'irr_20') {
+        display = v + '%';
+      } else if (r === 'break_year' &amp;&amp; v === null) {
+        display = '待補';
       }
-      if (r === 'break_year' &amp;&amp; v === null) display = '待補';
       html += '<td>' + display + '</td>';
     });
     html += '</tr>';
@@ -177,7 +204,7 @@ function renderComparePanel() {
 
   html += '</tbody></table>';
   panel.innerHTML = '<div class="compare-header">' +
-    '<h3>產品對比(' + products.length + '款)</h3>' +
+    '<h3>產品對比 (' + products.length + '款)</h3>' +
     '<div>' +
     '<button class="btn btn-ghost" onclick="showMultiProductChart()">多產品圖表</button> ' +
     '<button class="btn btn-ghost" onclick="clearCompare()">清空</button>' +
@@ -187,14 +214,18 @@ function renderComparePanel() {
 
 function clearCompare() {
   comparedProductIds = [];
-  document.querySelectorAll('.compare-toggle input').forEach(function(cb) { cb.checked = false; });
+  document.querySelectorAll('.compare-toggle input').forEach(function(cb) {
+    cb.checked = false;
+  });
   updateCompareBadge();
   renderComparePanel();
 }
 
-// ====== ECharts 收益曲線圖(單產品)======
+// ====== ECharts 收益曲線圖 (單產品) ======
 function showIncomeChart(prodId) {
-  const product = productData.products.find(function(p) { return p.prod_id === prodId; });
+  const product = productData.products.find(function(p) {
+    return p.prod_id === prodId;
+  });
   if (!product) return;
   const modal = document.getElementById('chartModal');
   const title = document.getElementById('chartTitle');
@@ -207,28 +238,64 @@ function showIncomeChart(prodId) {
   const cfg = chartConfig.income_chart;
   const initial = parseFloat(product.min_prem) || 10000;
   const irr = parseFloat(product.irr_20) || 0;
-  const guaranteedSeries = cfg.years.map(function(y) { return Math.round(initial * Math.pow(1 + finConfig.irr_params.guarantee_rate_low, y)); });
-  const projectedSeries = cfg.years.map(function(y) { return Math.round(initial * Math.pow(1 + irr/100, y)); });
+  const guaranteedSeries = cfg.years.map(function(y) {
+    return Math.round(initial * Math.pow(1 + finConfig.irr_params.guarantee_rate_low, y));
+  });
+  const projectedSeries = cfg.years.map(function(y) {
+    return Math.round(initial * Math.pow(1 + irr / 100, y));
+  });
 
   const option = {
     backgroundColor: chartConfig.theme.backgroundColor,
-    title: { text: product.prod_name, subtext: product.ins_name, left: 'center', textStyle: chartConfig.theme.title },
+    title: {
+      text: product.prod_name,
+      subtext: product.ins_name,
+      left: 'center',
+      textStyle: chartConfig.theme.title
+    },
     tooltip: cfg.tooltip,
-    legend: { data: [cfg.series_names.guaranteed, cfg.series_names.projected], top: cfg.legend_position.top, textStyle: chartConfig.theme.legend.textStyle },
-    xAxis: { type: 'category', data: cfg.years.map(function(y) { return '第' + y + '年'; }) },
+    legend: {
+      data: [cfg.series_names.guaranteed, cfg.series_names.projected],
+      top: cfg.legend_position.top,
+      textStyle: chartConfig.theme.legend.textStyle
+    },
+    xAxis: {
+      type: 'category',
+      data: cfg.years.map(function(y) {
+        return '第' + y + '年';
+      })
+    },
     yAxis: { type: 'value', name: cfg.y_axis_name },
     series: [
-      { name: cfg.series_names.guaranteed, type: 'line', data: guaranteedSeries, smooth: cfg.smooth, itemStyle: { color: cfg.colors.guaranteed }, animation: cfg.animation },
-      { name: cfg.series_names.projected, type: 'line', data: projectedSeries, smooth: cfg.smooth, itemStyle: { color: cfg.colors.projected }, animation: cfg.animation }
+      {
+        name: cfg.series_names.guaranteed,
+        type: 'line',
+        data: guaranteedSeries,
+        smooth: cfg.smooth,
+        itemStyle: { color: cfg.colors.guaranteed },
+        animation: cfg.animation
+      },
+      {
+        name: cfg.series_names.projected,
+        type: 'line',
+        data: projectedSeries,
+        smooth: cfg.smooth,
+        itemStyle: { color: cfg.colors.projected },
+        animation: cfg.animation
+      }
     ]
   };
   currentChart.setOption(option);
-  window.addEventListener('resize', function() { if (currentChart) currentChart.resize(); });
+  window.addEventListener('resize', function() {
+    if (currentChart) currentChart.resize();
+  });
 }
 
-// ====== ECharts IRR對比圖(單產品 vs 行業均值)======
+// ====== ECharts IRR 對比圖 (單產品 vs 行業均值) ======
 function showIRRChart(prodId) {
-  const product = productData.products.find(function(p) { return p.prod_id === prodId; });
+  const product = productData.products.find(function(p) {
+    return p.prod_id === prodId;
+  });
   if (!product) return;
   const modal = document.getElementById('chartModal');
   const title = document.getElementById('chartTitle');
@@ -243,31 +310,46 @@ function showIRRChart(prodId) {
   const avgIRR = 4.5;
   const option = {
     backgroundColor: chartConfig.theme.backgroundColor,
-    title: { text: cfg.title, subtext: product.prod_name, left: 'center', textStyle: chartConfig.theme.title },
+    title: {
+      text: cfg.title,
+      subtext: product.prod_name,
+      left: 'center',
+      textStyle: chartConfig.theme.title
+    },
     tooltip: { trigger: 'axis' },
     xAxis: { type: 'category', data: [product.prod_name, '行業平均'] },
     yAxis: { type: 'value', name: 'IRR %', min: cfg.y_axis_min, max: cfg.y_axis_max },
     series: [{
       name: '20年IRR',
       type: cfg.type,
-      data: [{ value: irr, itemStyle: { color: cfg.color } }, { value: avgIRR, itemStyle: { color: '#7a8a99' } }],
+      data: [
+        { value: irr, itemStyle: { color: cfg.color } },
+        { value: avgIRR, itemStyle: { color: '#7a8a99' } }
+      ],
       label: { show: true, position: 'top', formatter: '{c}%' }
     }]
   };
   currentChart.setOption(option);
-  window.addEventListener('resize', function() { if (currentChart) currentChart.resize(); });
+  window.addEventListener('resize', function() {
+    if (currentChart) currentChart.resize();
+  });
 }
 
-// ====== ECharts 多產品 IRR 對比圖(多選後)======
+// ====== ECharts 多產品 IRR 對比圖 (多選後) ======
 function showMultiProductChart() {
-  if (comparedProductIds.length === 0) { alert('請先勾選產品'); return; }
+  if (comparedProductIds.length === 0) {
+    alert('請先勾選產品');
+    return;
+  }
   const products = comparedProductIds.map(function(id) {
-    return productData.products.find(function(p) { return p.prod_id === id; });
+    return productData.products.find(function(p) {
+      return p.prod_id === id;
+    });
   }).filter(Boolean);
 
   const modal = document.getElementById('chartModal');
   const title = document.getElementById('chartTitle');
-  if (title) title.textContent = '多產品IRR對比(' + products.length + '款)';
+  if (title) title.textContent = '多產品 IRR 對比 (' + products.length + '款)';
   if (modal) modal.style.display = 'block';
 
   if (currentChart) currentChart.dispose();
@@ -277,7 +359,12 @@ function showMultiProductChart() {
     backgroundColor: chartConfig.theme.backgroundColor,
     title: { text: '20年IRR多產品對比', left: 'center', textStyle: chartConfig.theme.title },
     tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: products.map(function(p) { return p.prod_name; }) },
+    xAxis: {
+      type: 'category',
+      data: products.map(function(p) {
+        return p.prod_name;
+      })
+    },
     yAxis: { type: 'value', name: 'IRR %' },
     series: [{
       name: '20年IRR',
@@ -289,16 +376,21 @@ function showMultiProductChart() {
     }]
   };
   currentChart.setOption(option);
-  window.addEventListener('resize', function() { if (currentChart) currentChart.resize(); });
+  window.addEventListener('resize', function() {
+    if (currentChart) currentChart.resize();
+  });
 }
 
 function closeChartModal() {
   const modal = document.getElementById('chartModal');
   if (modal) modal.style.display = 'none';
-  if (currentChart) { currentChart.dispose(); currentChart = null; }
+  if (currentChart) {
+    currentChart.dispose();
+    currentChart = null;
+  }
 }
 
-// ====== 客戶 PDF 報告導出(沿用舊版邏輯)======
+// ====== 客戶 PDF 報告導出 ======
 function addToReport(prodId) {
   if (reportItems.indexOf(prodId) === -1) {
     reportItems.push(prodId);
@@ -320,7 +412,9 @@ function generateClientReport() {
     return;
   }
   const products = reportItems.map(function(id) {
-    return productData.products.find(function(p) { return p.prod_id === id; });
+    return productData.products.find(function(p) {
+      return p.prod_id === id;
+    });
   }).filter(Boolean);
 
   let reportHtml = '<html><head><meta charset="UTF-8"><title>客戶比較報告</title>' +
@@ -335,39 +429,48 @@ function generateClientReport() {
     '.footer{margin-top:40px;padding-top:20px;border-top:1px solid #ddd;color:#7a8a99;font-size:12px;}' +
     '</style></head><body>';
   reportHtml += '<h1>保險產品比較報告</h1>';
-  reportHtml += '<p>報告日期:' + new Date().toLocaleDateString('zh-HK') + '</p>';
-  reportHtml += '<p>顧問:' + finConfig.report.contact + '|' + finConfig.report.company_name + '</p>';
-  reportHtml += '<p>產品數量:' + products.length + ' 款</p>';
+  reportHtml += '<p>報告日期: ' + new Date().toLocaleDateString('zh-HK') + '</p>';
+  reportHtml += '<p>顧問: ' + finConfig.report.contact + ' | ' + finConfig.report.company_name + '</p>';
+  reportHtml += '<p>產品數量: ' + products.length + ' 款</p>';
   reportHtml += '<h2>產品對比總覽</h2><table><tr><th>產品</th><th>保司</th><th>最低保費</th><th>回本年</th><th>IRR 20年</th><th>保證回報</th><th>保費融資</th></tr>';
   products.forEach(function(p) {
-    reportHtml += '<tr><td>' + p.prod_name + '</td><td>' + p.ins_name + '</td><td>USD' + p.min_prem + '</td><td>' + (p.break_year || '待補') + '</td><td>' + (p.irr_20 || '待補') + '%</td><td>' + p.guarantee + '</td><td>' + p.finance_support + '</td></tr>';
+    reportHtml += '<tr><td>' + p.prod_name + '</td>' +
+      '<td>' + p.ins_name + '</td>' +
+      '<td>USD' + p.min_prem + '</td>' +
+      '<td>' + (p.break_year || '待補') + '</td>' +
+      '<td>' + (p.irr_20 || '待補') + '%</td>' +
+      '<td>' + p.guarantee + '</td>' +
+      '<td>' + p.finance_support + '</td></tr>';
   });
   reportHtml += '</table>';
   products.forEach(function(p) {
     reportHtml += '<div class="product-section">';
-    reportHtml += '<h2>' + p.prod_name + '(' + p.prod_id + ')</h2>';
-    reportHtml += '<p><strong>保險公司:</strong>' + p.ins_name + '</p>';
-    reportHtml += '<p><strong>繳費年期:</strong>' + p.pay_term + '</p>';
-    reportHtml += '<p><strong>最低保費:</strong>USD' + p.min_prem + '</p>';
-    reportHtml += '<p><strong>回本年:</strong>' + (p.break_year || '待補') + '</p>';
-    reportHtml += '<p><strong>IRR 20年:</strong>' + (p.irr_20 || '待補') + '%</p>';
-    reportHtml += '<p><strong>產品類型:</strong>' + p.life_type + '|<strong>保證回報:</strong>' + p.guarantee + '</p>';
-    reportHtml += '<p><strong>產品特色:</strong>' + p.feature_short + '</p>';
-    reportHtml += '<div class="highlight"><strong>★ 網紅亮點:</strong>' + p.influencer_point + '
+    reportHtml += '<h2>' + p.prod_name + ' (' + p.prod_id + ')</h2>';
+    reportHtml += '<p><strong>保險公司:</strong> ' + p.ins_name + '</p>';
+    reportHtml += '<p><strong>繳費年期:</strong> ' + p.pay_term + '</p>';
+    reportHtml += '<p><strong>最低保費:</strong> USD' + p.min_prem + '</p>';
+    reportHtml += '<p><strong>回本年:</strong> ' + (p.break_year || '待補') + '</p>';
+    reportHtml += '<p><strong>IRR 20年:</strong> ' + (p.irr_20 || '待補') + '%</p>';
+    reportHtml += '<p><strong>產品類型:</strong> ' + p.life_type + ' | <strong>保證回報:</strong> ' + p.guarantee + '</p>';
+    reportHtml += '<p><strong>產品特色:</strong> ' + p.feature_short + '</p>';
+    reportHtml += '<div class="highlight"><strong>★ 網紅亮點:</strong> ' + p.influencer_point + '
 <em>' + p.scene_desc + '</em></div>';
-    reportHtml += '<p><strong>標籤:</strong>' + (p.tag_list || []).join('、') + '</p>';
+    reportHtml += '<p><strong>標籤:</strong> ' + (p.tag_list || []).join(', ') + '</p>';
     if (p.finance_support === '是') {
-      reportHtml += '<p><strong>保費融資:</strong>支持(最低融資額 USD' + finConfig.finance_terms.INS01.min_finance_amount + ',LTV ' + (finConfig.finance_terms.INS01.loan_to_value * 100) + '%,利率 ' + (finConfig.finance_terms.INS01.interest_rate * 100) + '%)</p>';
+      reportHtml += '<p><strong>保費融資:</strong> 支持 (最低融資額 USD' + finConfig.finance_terms.INS01.min_finance_amount + ', LTV ' + (finConfig.finance_terms.INS01.loan_to_value * 100) + '%, 利率 ' + (finConfig.finance_terms.INS01.interest_rate * 100) + '%)</p>';
     }
     reportHtml += '</div>';
   });
   reportHtml += '<div class="footer">';
-  reportHtml += '<p>本報告由 ' + finConfig.report.company_name + ' 提供|數據版本 ' + productData.version + '|' + productData.generated_at + '</p>';
-  reportHtml += '<p>本報告僅供參考,最終保單條款以保險公司正式保單文件為準。</p>';
+  reportHtml += '<p>本報告由 ' + finConfig.report.company_name + ' 提供 | 數據版本 ' + productData.version + ' | ' + productData.generated_at + '</p>';
+  reportHtml += '<p>本報告僅供參考, 最終保單條款以保險公司正式保單文件為準.</p>';
   reportHtml += '</div></body></html>';
 
   const w = window.open('', '_blank');
-  if (!w) { alert('請允許彈出視窗'); return; }
+  if (!w) {
+    alert('請允許彈出視窗');
+    return;
+  }
   w.document.write(reportHtml);
   w.document.close();
 
@@ -396,7 +499,9 @@ function initApp() {
   const clearBtn = document.getElementById('clearBtn');
   if (clearBtn) {
     clearBtn.addEventListener('click', function() {
-      document.querySelectorAll('.tag-label input').forEach(function(el) { el.checked = false; });
+      document.querySelectorAll('.tag-label input').forEach(function(el) {
+        el.checked = false;
+      });
       selectedTagList = [];
       renderProductList();
       updateFilterStats();
