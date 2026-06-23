@@ -1,26 +1,23 @@
 // app.js v1.0-launch
-// 保險產品比較器｜兼容舊版 ECharts 圖表、多產品對比、客戶 PDF 報告
-// 數據源：productData.js（productData + finConfig + chartConfig）
-// 修復：所有 &amp;&amp; 為標準 JS 運算符，確保多產品對比表格正常渲染
+// 保險產品比較器|兼容舊版 ECharts 圖表、多產品對比、客戶 PDF 報告
+// 數據源:productData.js(productData + finConfig + chartConfig)
+// 修復:所有 &amp;&amp; 為標準 JS 運算符,確保多產品對比表格正常渲染
 
-// ====== 全局變量 ======
 let selectedTagList = [];
 let comparedProductIds = [];
 let reportItems = [];
 let currentChart = null;
 
-// ====== 數據載入（從 productData.js 同步讀取）======
 function loadProductData() {
   if (typeof productData === 'undefined') {
     document.getElementById('productContainer').innerHTML =
-      '<div class="no-result">productData.js 載入失敗，請確認檔案路徑正確</div>';
+      '<div class="no-result">productData.js 載入失敗,請確認檔案路徑正確</div>';
     return;
   }
-  console.log('[v1.0-launch] 已載入 ' + productData.products.length + ' 款產品，' + productData.tags.length + ' 個標籤');
+  console.log('[v1.0-launch] 已載入 ' + productData.products.length + ' 款產品,' + productData.tags.length + ' 個標籤');
   initApp();
 }
 
-// ====== 標籤面板渲染 ======
 function renderTagPanel() {
   const container = document.getElementById('tagContainer');
   if (!container) return;
@@ -43,7 +40,6 @@ function onTagChange() {
   updateFilterStats();
 }
 
-// ====== 產品列表渲染 ======
 function filterProducts() {
   if (!selectedTagList || selectedTagList.length === 0) return productData.products;
   return productData.products.filter(function(p) {
@@ -63,7 +59,7 @@ function renderProductList() {
   if (!container) return;
 
   if (list.length === 0) {
-    container.innerHTML = '<div class="no-result">無符合條件的產品，請調整標籤組合</div>';
+    container.innerHTML = '<div class="no-result">無符合條件的產品,請調整標籤組合</div>';
     if (header) header.textContent = '顯示 0 款產品';
     return;
   }
@@ -76,7 +72,7 @@ function renderProductList() {
       '<div class="card-head">' +
         '<div style="flex:1">' +
           '<div class="prod-title">' + p.prod_name + '</div>' +
-          '<div class="prod-meta">' + p.ins_name + ' ｜ ' + p.prod_id + '</div>' +
+          '<div class="prod-meta">' + p.ins_name + ' | ' + p.prod_id + '</div>' +
         '</div>' +
         '<label class="compare-toggle">' +
           '<input type="checkbox" value="' + p.prod_id + '" onchange="onCompareToggle(this.value)" ' + isChecked + '> 加入對比' +
@@ -112,10 +108,9 @@ function updateFilterStats() {
   const statShown = document.getElementById('stat-shown');
   const statFilter = document.getElementById('stat-filter');
   if (statShown) statShown.textContent = list.length === productData.products.length ? '顯示全部' : '篩選後 ' + list.length + ' 款';
-  if (statFilter) statFilter.textContent = selectedTagList.length === 0 ? '未啟用篩選' : '已選 ' + selectedTagList.length + ' 個標籤：' + selectedTagList.join('、');
+  if (statFilter) statFilter.textContent = selectedTagList.length === 0 ? '未啟用篩選' : '已選 ' + selectedTagList.length + ' 個標籤:' + selectedTagList.join('、');
 }
 
-// ====== 多產品對比邏輯（沿用舊版）======
 function onCompareToggle(prodId) {
   const idx = comparedProductIds.indexOf(prodId);
   if (idx === -1) {
@@ -173,7 +168,7 @@ function renderComparePanel() {
 
   html += '</tbody></table>';
   panel.innerHTML = '<div class="compare-header">' +
-    '<h3>產品對比（' + products.length + '款）</h3>' +
+    '<h3>產品對比(' + products.length + '款)</h3>' +
     '<div>' +
     '<button class="btn btn-ghost" onclick="showMultiProductChart()">多產品圖表</button> ' +
     '<button class="btn btn-ghost" onclick="clearCompare()">清空</button>' +
@@ -188,13 +183,12 @@ function clearCompare() {
   renderComparePanel();
 }
 
-// ====== ECharts 收益曲線圖（單產品）======
 function showIncomeChart(prodId) {
   const product = productData.products.find(function(p) { return p.prod_id === prodId; });
   if (!product) return;
   const modal = document.getElementById('chartModal');
   const title = document.getElementById('chartTitle');
-  if (title) title.textContent = product.prod_name + ' ｜ ' + chartConfig.income_chart.title;
+  if (title) title.textContent = product.prod_name + ' | ' + chartConfig.income_chart.title;
   if (modal) modal.style.display = 'block';
 
   if (currentChart) currentChart.dispose();
@@ -222,13 +216,12 @@ function showIncomeChart(prodId) {
   window.addEventListener('resize', function() { if (currentChart) currentChart.resize(); });
 }
 
-// ====== ECharts IRR對比圖（單產品 vs 行業均值）======
 function showIRRChart(prodId) {
   const product = productData.products.find(function(p) { return p.prod_id === prodId; });
   if (!product) return;
   const modal = document.getElementById('chartModal');
   const title = document.getElementById('chartTitle');
-  if (title) title.textContent = product.prod_name + ' ｜ ' + chartConfig.irr_compare_chart.title;
+  if (title) title.textContent = product.prod_name + ' | ' + chartConfig.irr_compare_chart.title;
   if (modal) modal.style.display = 'block';
 
   if (currentChart) currentChart.dispose();
@@ -254,7 +247,6 @@ function showIRRChart(prodId) {
   window.addEventListener('resize', function() { if (currentChart) currentChart.resize(); });
 }
 
-// ====== ECharts 多產品 IRR 對比圖（多選後）======
 function showMultiProductChart() {
   if (comparedProductIds.length === 0) { alert('請先勾選產品'); return; }
   const products = comparedProductIds.map(function(id) {
@@ -263,7 +255,7 @@ function showMultiProductChart() {
 
   const modal = document.getElementById('chartModal');
   const title = document.getElementById('chartTitle');
-  if (title) title.textContent = '多產品IRR對比（' + products.length + '款）';
+  if (title) title.textContent = '多產品IRR對比(' + products.length + '款)';
   if (modal) modal.style.display = 'block';
 
   if (currentChart) currentChart.dispose();
@@ -293,9 +285,6 @@ function closeChartModal() {
   if (modal) modal.style.display = 'none';
   if (currentChart) { currentChart.dispose(); currentChart = null; }
 }
-
-// ====== 客戶 PDF 報告導出（沿用舊版邏輯）======
-let reportItems = [];
 
 function addToReport(prodId) {
   if (reportItems.indexOf(prodId) === -1) {
@@ -333,9 +322,9 @@ function generateClientReport() {
     '.footer{margin-top:40px;padding-top:20px;border-top:1px solid #ddd;color:#7a8a99;font-size:12px;}' +
     '</style></head><body>';
   reportHtml += '<h1>保險產品比較報告</h1>';
-  reportHtml += '<p>報告日期：' + new Date().toLocaleDateString('zh-HK') + '</p>';
-  reportHtml += '<p>顧問：' + finConfig.report.contact + '｜' + finConfig.report.company_name + '</p>';
-  reportHtml += '<p>產品數量：' + products.length + ' 款</p>';
+  reportHtml += '<p>報告日期:' + new Date().toLocaleDateString('zh-HK') + '</p>';
+  reportHtml += '<p>顧問:' + finConfig.report.contact + '|' + finConfig.report.company_name + '</p>';
+  reportHtml += '<p>產品數量:' + products.length + ' 款</p>';
   reportHtml += '<h2>產品對比總覽</h2><table><tr><th>產品</th><th>保司</th><th>最低保費</th><th>回本年</th><th>IRR 20年</th><th>保證回報</th><th>保費融資</th></tr>';
   products.forEach(function(p) {
     reportHtml += '<tr><td>' + p.prod_name + '</td><td>' + p.ins_name + '</td><td>USD' + p.min_prem + '</td><td>' + (p.break_year || '待補') + '</td><td>' + (p.irr_20 || '待補') + '%</td><td>' + p.guarantee + '</td><td>' + p.finance_support + '</td></tr>';
@@ -343,25 +332,25 @@ function generateClientReport() {
   reportHtml += '</table>';
   products.forEach(function(p) {
     reportHtml += '<div class="product-section">';
-    reportHtml += '<h2>' + p.prod_name + '（' + p.prod_id + '）</h2>';
-    reportHtml += '<p><strong>保險公司：</strong>' + p.ins_name + '</p>';
-    reportHtml += '<p><strong>繳費年期：</strong>' + p.pay_term + '</p>';
-    reportHtml += '<p><strong>最低保費：</strong>USD' + p.min_prem + '</p>';
-    reportHtml += '<p><strong>回本年：</strong>' + (p.break_year || '待補') + '</p>';
-    reportHtml += '<p><strong>IRR 20年：</strong>' + (p.irr_20 || '待補') + '%</p>';
-    reportHtml += '<p><strong>產品類型：</strong>' + p.life_type + '｜<strong>保證回報：</strong>' + p.guarantee + '</p>';
-    reportHtml += '<p><strong>產品特色：</strong>' + p.feature_short + '</p>';
-    reportHtml += '<div class="highlight"><strong>★ 網紅亮點：</strong>' + p.influencer_point + '
+    reportHtml += '<h2>' + p.prod_name + '(' + p.prod_id + ')</h2>';
+    reportHtml += '<p><strong>保險公司:</strong>' + p.ins_name + '</p>';
+    reportHtml += '<p><strong>繳費年期:</strong>' + p.pay_term + '</p>';
+    reportHtml += '<p><strong>最低保費:</strong>USD' + p.min_prem + '</p>';
+    reportHtml += '<p><strong>回本年:</strong>' + (p.break_year || '待補') + '</p>';
+    reportHtml += '<p><strong>IRR 20年:</strong>' + (p.irr_20 || '待補') + '%</p>';
+    reportHtml += '<p><strong>產品類型:</strong>' + p.life_type + '|<strong>保證回報:</strong>' + p.guarantee + '</p>';
+    reportHtml += '<p><strong>產品特色:</strong>' + p.feature_short + '</p>';
+    reportHtml += '<div class="highlight"><strong>★ 網紅亮點:</strong>' + p.influencer_point + '
 <em>' + p.scene_desc + '</em></div>';
-    reportHtml += '<p><strong>標籤：</strong>' + (p.tag_list || []).join('、') + '</p>';
+    reportHtml += '<p><strong>標籤:</strong>' + (p.tag_list || []).join('、') + '</p>';
     if (p.finance_support === '是') {
-      reportHtml += '<p><strong>保費融資：</strong>支持（最低融資額 USD' + finConfig.finance_terms.INS01.min_finance_amount + '，LTV ' + (finConfig.finance_terms.INS01.loan_to_value * 100) + '%，利率 ' + (finConfig.finance_terms.INS01.interest_rate * 100) + '%）</p>';
+      reportHtml += '<p><strong>保費融資:</strong>支持(最低融資額 USD' + finConfig.finance_terms.INS01.min_finance_amount + ',LTV ' + (finConfig.finance_terms.INS01.loan_to_value * 100) + '%,利率 ' + (finConfig.finance_terms.INS01.interest_rate * 100) + '%)</p>';
     }
     reportHtml += '</div>';
   });
   reportHtml += '<div class="footer">';
-  reportHtml += '<p>本報告由 ' + finConfig.report.company_name + ' 提供｜數據版本 ' + productData.version + '｜' + productData.generated_at + '</p>';
-  reportHtml += '<p>本報告僅供參考，最終保單條款以保險公司正式保單文件為準。</p>';
+  reportHtml += '<p>本報告由 ' + finConfig.report.company_name + ' 提供|數據版本 ' + productData.version + '|' + productData.generated_at + '</p>';
+  reportHtml += '<p>本報告僅供參考,最終保單條款以保險公司正式保單文件為準。</p>';
   reportHtml += '</div></body></html>';
 
   const w = window.open('', '_blank');
@@ -369,7 +358,6 @@ function generateClientReport() {
   w.document.write(reportHtml);
   w.document.close();
 
-  // 添加PDF導出按鈕
   setTimeout(function() {
     const btn = w.document.createElement('button');
     btn.textContent = '導出PDF';
@@ -387,7 +375,6 @@ function generateClientReport() {
   }, 500);
 }
 
-// ====== 初始化 ======
 function initApp() {
   renderTagPanel();
   renderProductList();
