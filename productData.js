@@ -1,7 +1,7 @@
 // productData.js v1.0-launch
-// 保險產品數據源｜原有JS物件格式｜兼容舊架構
+// 保險產品數據源|原有JS物件格式|兼容舊架構
 // 包含 productData、finConfig、chartConfig
-// v1.0-launch 數據範圍：INS01+INS02 共10款產品
+// v1.0-launch 數據範圍:INS01+INS02 共10款產品
 
 const productData = {
   version: "v1.0-launch",
@@ -106,7 +106,7 @@ const productData = {
       feature_short: "USD60000/HKD480000整付/6年繳;終身年金入息;IRR20約1.4-2.0%;入息型無短期回本點",
       finance_support: "否",
       influencer_point: "USD60,000起|整付/6年繳|終身年金入息|退休規劃|資產傳承",
-      scene_desc: "[整付+終身入息両選項,退休傳承両引擎];針對準退休高端客戶"
+      scene_desc: "[整付+終身入息雙選項,退休傳承雙引擎];針對準退休高端客戶"
     },
     {
       prod_id: "P010", ins_id: "INS02", ins_name: "中國太平洋人壽",
@@ -130,7 +130,7 @@ const productData = {
     { prod_id: "P006", influencer_point: "USD25,000起|4種繳費期選擇|IRR20約6.2%|回本6年|受6.5%上限", scene_desc: "[最高IRR產品,4種繳費期靈活選擇];針對追求高回報的儲蓄客戶" },
     { prod_id: "P007", influencer_point: "USD30,000起|3年保證回報|保證IRR|回本7年", scene_desc: "[保證回報零分紅,穩健首選];針對保守型投資者" },
     { prod_id: "P008", influencer_point: "USD12,500起3年繳|回本5年|IRR20約4.2%|小額入場", scene_desc: "[低門檻享5年回本+終身分紅];針對年輕儲蓄客戶" },
-    { prod_id: "P009", influencer_point: "USD60,000起|整付/6年繳|終身年金入息|退休規劃|資產傳承", scene_desc: "[整付+終身入息両選項,退休傳承両引擎];針對準退休高端客戶" },
+    { prod_id: "P009", influencer_point: "USD60,000起|整付/6年繳|終身年金入息|退休規劃|資產傳承", scene_desc: "[整付+終身入息雙選項,退休傳承雙引擎];針對準退休高端客戶" },
     { prod_id: "P010", influencer_point: "USD3000起|5/10年繳|90歲TIRR約4.18%|延期年金", scene_desc: "[延期年金規劃,鎖定未來退休現金流];針對中長期退休規劃" }
   ],
 
@@ -150,7 +150,6 @@ const productData = {
   ]
 };
 
-// ====== 財務配置 finConfig（兼容舊版保費融資/融資計算）======
 const finConfig = {
   version: "v1.0-launch",
   base_currency: "USD",
@@ -187,7 +186,6 @@ const finConfig = {
   }
 };
 
-// ====== 圖表配置 chartConfig（兼容舊版ECharts配置）======
 const chartConfig = {
   version: "v1.0-launch",
   theme: {
