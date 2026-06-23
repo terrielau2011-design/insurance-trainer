@@ -1,7 +1,7 @@
 // app.js v1.0-launch
 // 保險產品比較器 - 相容舊版 ECharts 圖表、多產品對比、客戶 PDF 報告
 // 數據源: productData.js (productData + finConfig + chartConfig)
-// 所有 if 判斷使用標準 &amp;&amp; 運算符，標點統一英文半角#
+// 所有 if 判斷使用標準 &&; 運算符，標點統一英文半角#
 // 修復: 所有函數全域定義，無包裹大括號隔離；雙保險 DOMContentLoaded + window.onload
 
 let selectedTagList = [];
@@ -189,7 +189,7 @@ function renderComparePanel() {
       var display = v;
       if (v === null || v === undefined) { display = '-'; }
       else if (rowKey === 'irr_20') { display = v + '%'; }
-      else if (rowKey === 'break_year' &amp;&amp; v === null) { display = '待補'; }
+      else if (rowKey === 'break_year' && v === null) { display = '待補'; }
       html += '<td>' + display + '</td>';
     }
     html += '</tr>';
