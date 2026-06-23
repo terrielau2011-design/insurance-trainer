@@ -3,11 +3,13 @@
 // 數據源:productData.js(productData + finConfig + chartConfig)
 // 修復:所有 &amp;&amp; 為標準 JS 運算符,確保多產品對比表格正常渲染
 
+// ====== 全局變量 ======
 let selectedTagList = [];
 let comparedProductIds = [];
 let reportItems = [];
 let currentChart = null;
 
+// ====== 數據載入(從 productData.js 同步讀取)======
 function loadProductData() {
   if (typeof productData === 'undefined') {
     document.getElementById('productContainer').innerHTML =
@@ -18,6 +20,7 @@ function loadProductData() {
   initApp();
 }
 
+// ====== 標籤面板渲染 ======
 function renderTagPanel() {
   const container = document.getElementById('tagContainer');
   if (!container) return;
@@ -40,6 +43,7 @@ function onTagChange() {
   updateFilterStats();
 }
 
+// ====== 產品列表渲染 ======
 function filterProducts() {
   if (!selectedTagList || selectedTagList.length === 0) return productData.products;
   return productData.products.filter(function(p) {
@@ -111,6 +115,7 @@ function updateFilterStats() {
   if (statFilter) statFilter.textContent = selectedTagList.length === 0 ? '未啟用篩選' : '已選 ' + selectedTagList.length + ' 個標籤:' + selectedTagList.join('、');
 }
 
+// ====== 多產品對比邏輯(沿用舊版)======
 function onCompareToggle(prodId) {
   const idx = comparedProductIds.indexOf(prodId);
   if (idx === -1) {
@@ -159,7 +164,11 @@ function renderComparePanel() {
       let v = p[r];
       let display = v;
       if (v === null || v === undefined) display = '—';
-      if (r === 'irr_20' &amp;&amp; v !== null &amp;&amp; v !== undefined) display = v + '%';
+      if (r === 'irr_20') {
+        if (v !== null &amp;&amp; v !== undefined) {
+          display = v + '%';
+        }
+      }
       if (r === 'break_year' &amp;&amp; v === null) display = '待補';
       html += '<td>' + display + '</td>';
     });
@@ -183,6 +192,7 @@ function clearCompare() {
   renderComparePanel();
 }
 
+// ====== ECharts 收益曲線圖(單產品)======
 function showIncomeChart(prodId) {
   const product = productData.products.find(function(p) { return p.prod_id === prodId; });
   if (!product) return;
@@ -216,6 +226,7 @@ function showIncomeChart(prodId) {
   window.addEventListener('resize', function() { if (currentChart) currentChart.resize(); });
 }
 
+// ====== ECharts IRR對比圖(單產品 vs 行業均值)======
 function showIRRChart(prodId) {
   const product = productData.products.find(function(p) { return p.prod_id === prodId; });
   if (!product) return;
@@ -247,6 +258,7 @@ function showIRRChart(prodId) {
   window.addEventListener('resize', function() { if (currentChart) currentChart.resize(); });
 }
 
+// ====== ECharts 多產品 IRR 對比圖(多選後)======
 function showMultiProductChart() {
   if (comparedProductIds.length === 0) { alert('請先勾選產品'); return; }
   const products = comparedProductIds.map(function(id) {
@@ -286,6 +298,7 @@ function closeChartModal() {
   if (currentChart) { currentChart.dispose(); currentChart = null; }
 }
 
+// ====== 客戶 PDF 報告導出(沿用舊版邏輯)======
 function addToReport(prodId) {
   if (reportItems.indexOf(prodId) === -1) {
     reportItems.push(prodId);
@@ -375,6 +388,7 @@ function generateClientReport() {
   }, 500);
 }
 
+// ====== 初始化 ======
 function initApp() {
   renderTagPanel();
   renderProductList();
