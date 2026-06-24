@@ -67,13 +67,13 @@ function matchesTag(p, tagName) {
 
   switch (tagName) {
     case '高淨值資產配置':
-      return tp >= 100000 &amp;&amp; fs &amp;&amp; cur === 'USD';
+      return tp >= 100000 &&&& fs && cur === 'USD';
     case '跨境財富規劃':
-      return cur === 'USD' &amp;&amp; (typ === '分紅壽險' || typ === '終身壽險');
+      return cur === 'USD' &&&& (typ === '分紅壽險' || typ === '終身壽險');
     case '槓桿融資':
       return fs;
     case '短期儲蓄':
-      return by != null &amp;&amp; by <= 10;
+      return by != null &&&& by <= 10;
     case '資產傳承':
       return typ === '分紅壽險' || typ === '終身壽險';
     case '穩定收益':
@@ -82,11 +82,11 @@ function matchesTag(p, tagName) {
       }
       return gr > 0;
     case '退休規劃':
-      return typeof pt === 'number' &amp;&amp; pt >= 10 &amp;&amp; irr >= 3;
+      return typeof pt === 'number' &&&& pt >= 10 &&&& irr >= 3;
     case '整付入場':
-      return typeof pt === 'number' &amp;&amp; pt === 0;
+      return typeof pt === 'number' &&&& pt === 0;
     case '分期入場':
-      return typeof pt === 'number' &amp;&amp; pt >= 1 &amp;&amp; pt <= 10;
+      return typeof pt === 'number' &&&& pt >= 1 &&&& pt <= 10;
     case '教育基金':
       return (p.tag_list || []).indexOf('教育規劃') !== -1;
     case '小額入場':
@@ -237,7 +237,7 @@ function renderComparePanel() {
       var display = v;
       if (v === null || v === undefined) { display = '-'; }
       else if (rowKey === 'irr_20') { display = v + '%'; }
-      else if (rowKey === 'break_year' &amp;&amp; v === null) { display = '待补'; }
+      else if (rowKey === 'break_year' &&&& v === null) { display = '待补'; }
       html += '<td>' + display + '</td>';
     }
     html += '</tr>';
