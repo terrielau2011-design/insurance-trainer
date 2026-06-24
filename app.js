@@ -86,7 +86,7 @@ function matchesTag(p, tagName) {
     case '整付入場':
       return typeof pt === 'number' && pt === 0;
     case '分期入場':
-      return typeof pt === 'number' &&&& pt >= 1 &&&& pt <= 10;
+      return typeof pt === 'number' && pt >= 1 && pt <= 10;
     case '教育基金':
       return (p.tag_list || []).indexOf('教育規劃') !== -1;
     case '小額入場':
@@ -237,7 +237,7 @@ function renderComparePanel() {
       var display = v;
       if (v === null || v === undefined) { display = '-'; }
       else if (rowKey === 'irr_20') { display = v + '%'; }
-      else if (rowKey === 'break_year' &&&& v === null) { display = '待补'; }
+      else if (rowKey === 'break_year' && v === null) { display = '待补'; }
       html += '<td>' + display + '</td>';
     }
     html += '</tr>';
