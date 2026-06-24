@@ -473,4 +473,4 @@ function generateClientReport() {
     reportHtml += '<p><strong>保險公司:</strong> ' + p.ins_name + '</p>';
     reportHtml += '<p><strong>繳費年期:</strong> ' + p.pay_term + '</p>';
     reportHtml += '<p><strong>最低保費:</strong> USD' + p.min_prem + '</p>';
-    reportHtml += '<p><strong>回本年:</strong> ' + (p.break_year || '待補')
+    reportHtml += '<p><strong>回本年:</strong> ' + (p.break_year || '待補') + '</p>';
