@@ -1,463 +1,561 @@
-// app.js v1.0-launch
-// 保險產品比較器 - 相容舊版 ECharts 圖表、多產品對比、客戶 PDF 報告
-// 數據源: productData.js (productData + finConfig + chartConfig)
-// 所有 if 判斷使用標準 &&; 運算符，標點統一英文半角#
-// 修復: 所有函數全域定義，無包裹大括號隔離；雙保險 DOMContentLoaded + window.onload
+// app.js v1.0-full 全量功能版
+// 保險產品比較器 - 完整業務邏輯 | 融資演算 | 動態圖表 | PDF報告
+// 全局變量
+let selectedTags = [];
+let selectedProducts = [];
+let financeParams = {
+    loan_amount: 0,
+    loan_term: 20,
+    rate_type: "base",
+    processing_fee: 0.01
+};
 
-let selectedTagList = [];
-let comparedProductIds = [];
-let reportItems = [];
-let currentChart = null;
+// 頁面初始化 - 雙重保證DOM載入
+document.addEventListener('DOMContentLoaded', bootstrap);
+window.onload = bootstrap;
 
-// ===== 數據載入(從 productData.js 同步讀取) =====#
+// 主初始化函數
+function bootstrap() {
+    console.log("✅ 頁面初始化開始，DOM已完全載入");
+    loadProductData();
+    renderTagPanel();
+    renderProductList();
+    initFinanceCalculator();
+    initCharts();
+    initPDFExport();
+    console.log("✅ 全量功能初始化完成");
+}
+
+// 1. 數據載入
 function loadProductData() {
-  console.log('[v1.0-launch] loadProductData() called');
-  if (typeof productData === 'undefined') {
-    console.error('productData.js not loaded');
-    var el = document.getElementById('productContainer');
-    if (el) el.innerHTML = '<div class="no-result">productData.js 載入失敗，請確認檔案路徑正確</div>';
-    return;
-  }
-  console.log('[v1.0-launch] productData loaded:', productData.products.length, 'products,', productData.tags.length, 'tags');
-  initApp();
+    console.log("📦 載入產品數據，共" + productData.products.length + "款產品");
+    // 初始化標籤
+    const allTags = new Set();
+    productData.products.forEach(p => {
+        p.tags.forEach(tag => allTags.add(tag));
+    });
+    window.allTags = Array.from(allTags);
 }
 
-// ===== 標籤面板渲染 =====#
+// 2. 標籤面板渲染
 function renderTagPanel() {
-  console.log('renderTagPanel() called');
-  var container = document.getElementById('tagContainer');
-  if (!container) { console.warn('tagContainer not found'); return; }
-  var html = '';
-  for (var i = 0; i < productData.tags.length; i++) {
-    var t = productData.tags[i];
-    html += '<label class="tag-label">';
-    html += '<input type="checkbox" value="' + t.tag_name + '" onchange="onTagChange()">';
-    html += '<span>' + t.tag_name + '</span>';
-    html += '</label>';
-    html += '<div class="tag-rule">' + t.篩選規則 + '</div>';
-  }
-  container.innerHTML = html;
+    const tagContainer = document.getElementById('tagContainer');
+    if (!tagContainer) return;
+    
+    tagContainer.innerHTML = '';
+    window.allTags.forEach(tag => {
+        const tagBtn = document.createElement('button');
+        tagBtn.className = 'tag-btn';
+        tagBtn.textContent = tag;
+        tagBtn.dataset.tag = tag;
+        tagBtn.onclick = () => toggleTag(tag);
+        if (selectedTags.includes(tag)) {
+            tagBtn.classList.add('active');
+        }
+        tagContainer.appendChild(tagBtn);
+    });
+    console.log("🏷️ 標籤面板渲染完成，共" + window.allTags.length + "個標籤");
 }
 
-function getSelectedTags() {
-  var inputs = document.querySelectorAll('.tag-label input:checked');
-  var result = [];
-  for (var i = 0; i < inputs.length; i++) { result.push(inputs[i].value); }
-  return result;
+// 標籤切換
+function toggleTag(tag) {
+    if (selectedTags.includes(tag)) {
+        selectedTags = selectedTags.filter(t => t !== tag);
+    } else {
+        selectedTags.push(tag);
+    }
+    renderTagPanel();
+    renderProductList();
+    updateCharts();
 }
 
-function onTagChange() {
-  console.log('onTagChange() called');
-  selectedTagList = getSelectedTags();
-  renderProductList();
-  updateFilterStats();
-}
-
-// ===== 產品列表渲染 =====#
-function filterProducts() {
-  if (!selectedTagList || selectedTagList.length === 0) return productData.products;
-  return productData.products.filter(function(p) {
-    return selectedTagList.every(function(t) { return p.tag_list.indexOf(t) !== -1; });
-  });
-}
-
-function formatVal(v, suffix) {
-  if (v === null || v === undefined || v === '待補') return '<span class="metric-value tbd">待補</span>';
-  return '<span class="metric-value">' + v + (suffix || '') + '</span>';
-}
-
+// 3. 產品列表渲染
 function renderProductList() {
-  console.log('renderProductList() called');
-  var list = filterProducts();
-  var container = document.getElementById('productContainer');
-  var header = document.getElementById('resultHeader');
-  if (!container) { console.warn('productContainer not found'); return; }
-
-  if (list.length === 0) {
-    container.innerHTML = '<div class="no-result">無符合條件的產品，請調整標籤組合</div>';
-    if (header) header.textContent = '顯示 0 款產品';
-    return;
-  }
-
-  var html = '';
-  for (var i = 0; i < list.length; i++) {
-    var p = list[i];
-    var chips = '';
-    for (var j = 0; j < (p.tag_list || []).length; j++) {
-      chips += '<span class="tag-chip">' + p.tag_list[j] + '</span>';
+    const productContainer = document.getElementById('productContainer');
+    if (!productContainer) return;
+    
+    // 過濾產品
+    let filteredProducts = productData.products;
+    if (selectedTags.length > 0) {
+        filteredProducts = filteredProducts.filter(p => 
+            selectedTags.every(tag => p.tags.includes(tag))
+        );
     }
-    var financeClass = p.finance_support === '是' ? '' : 'no';
-    var isChecked = comparedProductIds.indexOf(p.prod_id) !== -1 ? 'checked' : '';
-    html += '<div class="product-card" data-prod-id="' + p.prod_id + '">';
-    html += '<div class="card-head">';
-    html += '<div style="flex:1">';
-    html += '<div class="prod-title">' + p.prod_name + '</div>';
-    html += '<div class="prod-meta">' + p.ins_name + ' | ' + p.prod_id + '</div>';
-    html += '</div>';
-    html += '<label class="compare-toggle">';
-    html += '<input type="checkbox" value="' + p.prod_id + '" onchange="onCompareToggle(this.value)" ' + isChecked + '> 加入對比';
-    html += '</label>';
-    html += '<div class="finance-tag ' + financeClass + '">保費融資</div>';
-    html += '</div>';
-    html += '<div class="metrics">';
-    html += '<div class="metric"><div class="metric-label">最低保費</div>' + formatVal(p.min_prem) + '</div>';
-    html += '<div class="metric"><div class="metric-label">繳費年期</div>' + formatVal(p.pay_term) + '</div>';
-    html += '<div class="metric"><div class="metric-label">回本年</div>' + formatVal(p.break_year) + '</div>';
-    html += '<div class="metric"><div class="metric-label">IRR 20年</div>' + formatVal(p.irr_20, '%') + '</div>';
-    html += '</div>';
-    html += '<div class="tag-list">' + chips + '</div>';
-    html += '<div class="feature-text">' + p.feature_short + '</div>';
-    html += '<div class="influencer-block">';
-    html += '<div class="point">★ ' + p.influencer_point + '</div>';
-    html += '<div class="scene">' + p.scene_desc + '</div>';
-    html += '</div>';
-    html += '<div class="card-actions">';
-    html += '<button class="btn btn-ghost" onclick="showIncomeChart(\'' + p.prod_id + '\')">收益曲線</button>';
-    html += '<button class="btn btn-ghost" onclick="showIRRChart(\'' + p.prod_id + '\')">IRR對比</button>';
-    html += '<button class="btn btn-primary" onclick="addToReport(\'' + p.prod_id + '\')">加入報告</button>';
-    html += '</div>';
-    html += '</div>';
-  }
-  container.innerHTML = html;
-
-  if (header) header.textContent = '顯示 ' + list.length + ' 款產品';
-  updateCompareBadge();
+    
+    productContainer.innerHTML = '';
+    filteredProducts.forEach(p => {
+        const productCard = document.createElement('div');
+        productCard.className = 'product-card';
+        productCard.innerHTML = `
+            <div class="card-header">
+                <h3>${p.name}</h3>
+                <span class="company-badge">${p.company}</span>
+                <span class="currency-badge">${p.currency}</span>
+            </div>
+            <div class="card-body">
+                <div class="highlight"><strong>★ 網紅亮點:</strong> ${p.influencer_point}</div>
+                <div class="highlight"><em>${p.scene_desc}</em></div>
+                <div class="param-grid">
+                    <div class="param-item">
+                        <span class="label">繳費年期</span>
+                        <span class="value">${p.premium_term}年</span>
+                    </div>
+                    <div class="param-item">
+                        <span class="label">保證回報率</span>
+                        <span class="value">${(p.guaranteed_return * 100).toFixed(2)}%</span>
+                    </div>
+                    <div class="param-item">
+                        <span class="label">總IRR</span>
+                        <span class="value">${(p.irr * 100).toFixed(2)}%</span>
+                    </div>
+                    <div class="param-item">
+                        <span class="label">回本年期</span>
+                        <span class="value">${p.break_year}年</span>
+                    </div>
+                    <div class="param-item">
+                        <span class="label">風險等級</span>
+                        <span class="value risk-${p.risk_level}">${p.risk_level}</span>
+                    </div>
+                    <div class="param-item">
+                        <span class="label">流動性</span>
+                        <span class="value">${p.liquidity}</span>
+                    </div>
+                </div>
+                <div class="feature-list">
+                    ${p.features.map(f => `<span class="feature-tag">${f}</span>`).join('')}
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-primary" onclick="addToCompare('${p.id}')">加入對比</button>
+                    ${p.finance_support ? `<button class="btn btn-secondary" onclick="showFinanceCalculator('${p.id}')">融資演算</button>` : ''}
+                    <button class="btn btn-outline" onclick="showIncomeChart('${p.id}')">收益圖表</button>
+                </div>
+            </div>
+        `;
+        productContainer.appendChild(productCard);
+    });
+    console.log("📦 產品列表渲染完成，共" + filteredProducts.length + "款產品");
 }
 
-function updateFilterStats() {
-  var list = filterProducts();
-  var statShown = document.getElementById('stat-shown');
-  var statFilter = document.getElementById('stat-filter');
-  if (statShown) statShown.textContent = list.length === productData.products.length ? '顯示全部' : '篩選後 ' + list.length + ' 款';
-  if (statFilter) statFilter.textContent = selectedTagList.length === 0 ? '未啟用篩選' : '已選 ' + selectedTagList.length + ' 個標籤: ' + selectedTagList.join('、');
-}
-
-// ===== 多產品對比邏輯 =====#
-function onCompareToggle(prodId) {
-  console.log('onCompareToggle() called', prodId);
-  var idx = comparedProductIds.indexOf(prodId);
-  if (idx === -1) {
-    if (comparedProductIds.length >= 4) {
-      alert('最多同時對比 4 款產品');
-      var cb = document.querySelector('input[value="' + prodId + '"]');
-      if (cb) cb.checked = false;
-      return;
+// 4. 產品對比功能
+function addToCompare(productId) {
+    if (selectedProducts.length >= 4) {
+        alert("最多只能選擇4款產品對比");
+        return;
     }
-    comparedProductIds.push(prodId);
-  } else {
-    comparedProductIds.splice(idx, 1);
-  }
-  updateCompareBadge();
-  renderComparePanel();
-}
-
-function updateCompareBadge() {
-  var badge = document.getElementById('compareBadge');
-  if (badge) badge.textContent = comparedProductIds.length;
-}
-
-function renderComparePanel() {
-  console.log('renderComparePanel() called');
-  var panel = document.getElementById('comparePanel');
-  if (!panel) { console.warn('comparePanel not found'); return; }
-  if (comparedProductIds.length === 0) { panel.style.display = 'none'; return; }
-  panel.style.display = 'block';
-
-  var products = [];
-  for (var i = 0; i < comparedProductIds.length; i++) {
-    var found = productData.products.find(function(p) { return p.prod_id === comparedProductIds[i]; });
-    if (found) products.push(found);
-  }
-
-  var rows = ['prod_name', 'ins_name', 'min_prem', 'pay_term', 'break_year', 'irr_20', 'guarantee', 'life_type', 'finance_support'];
-  var labels = {
-    prod_name: '產品名稱', ins_name: '保險公司', min_prem: '最低保費(USD)',
-    pay_term: '繳費年期', break_year: '回本年', irr_20: 'IRR 20年(%)',
-    guarantee: '保證回報', life_type: '產品類型', finance_support: '保費融資'
-  };
-
-  var html = '<table class="compare-table"><thead><tr><th>比較項</th>';
-  for (var i = 0; i < products.length; i++) { html += '<th>' + products[i].prod_name + '</th>'; }
-  html += '</tr></thead><tbody>';
-
-  for (var r = 0; r < rows.length; r++) {
-    var rowKey = rows[r];
-    html += '<tr><td><strong>' + labels[rowKey] + '</strong></td>';
-    for (var i = 0; i < products.length; i++) {
-      var p = products[i];
-      var v = p[rowKey];
-      var display = v;
-      if (v === null || v === undefined) { display = '-'; }
-      else if (rowKey === 'irr_20') { display = v + '%'; }
-      else if (rowKey === 'break_year' && v === null) { display = '待補'; }
-      html += '<td>' + display + '</td>';
+    if (!selectedProducts.includes(productId)) {
+        selectedProducts.push(productId);
+        renderCompareTable();
+        updateCharts();
     }
-    html += '</tr>';
-  }
+}
 
-  html += '</tbody></table>';
-  panel.innerHTML = '<div class="compare-header">' +
-    '<h3>產品對比(' + products.length + '款)</h3>' +
-    '<div>' +
-    '<button class="btn btn-ghost" onclick="showMultiProductChart()">多產品圖表</button> ' +
-    '<button class="btn btn-ghost" onclick="clearCompare()">清空</button>' +
-    '</div>' +
-    '</div>' + html;
+function renderCompareTable() {
+    const compareContainer = document.getElementById('compareContainer');
+    if (!compareContainer) return;
+    
+    if (selectedProducts.length < 2) {
+        compareContainer.innerHTML = '<p class="empty-tip">請選擇至少2款產品進行對比</p>';
+        return;
+    }
+    
+    const products = selectedProducts.map(id => productData.products.find(p => p.id === id));
+    const compareRows = [
+        { key: 'name', label: '產品名稱' },
+        { key: 'company', label: '發行公司' },
+        { key: 'currency', label: '計價貨幣' },
+        { key: 'premium_term', label: '繳費年期' },
+        { key: 'guaranteed_return', label: '保證回報率', format: v => `${(v * 100).toFixed(2)}%` },
+        { key: 'irr', label: '總IRR', format: v => `${(v * 100).toFixed(2)}%` },
+        { key: 'break_year', label: '回本年期', format: v => v === null ? '待補' : `${v}年` },
+        { key: 'risk_level', label: '風險等級' },
+        { key: 'liquidity', label: '流動性' },
+        { key: 'finance_support', label: '融資支持', format: v => v ? '✅ 支持' : '❌ 不支持' }
+    ];
+    
+    let tableHtml = `
+        <table class="compare-table">
+            <thead>
+                <tr>
+                    <th>對比維度</th>
+                    ${products.map(p => `<th>${p.name}</th>`).join('')}
+                </tr>
+            </thead>
+            <tbody>
+    `;
+    
+    compareRows.forEach(row => {
+        tableHtml += `<tr><td>${row.label}</td>`;
+        products.forEach(p => {
+            let display = p[row.key];
+            if (row.format) display = row.format(display);
+            // 高亮優勢產品
+            let highlight = '';
+            if (row.key === 'irr' || row.key === 'guaranteed_return') {
+                const maxVal = Math.max(...products.map(pp => pp[row.key]));
+                if (p[row.key] === maxVal) highlight = 'class="highlight-row"';
+            }
+            if (row.key === 'break_year') {
+                const minVal = Math.min(...products.map(pp => pp[row.key]));
+                if (p[row.key] === minVal) highlight = 'class="highlight-row"';
+            }
+            tableHtml += `<td ${highlight}>${display}</td>`;
+        });
+        tableHtml += `</tr>`;
+    });
+    
+    tableHtml += `
+            </tbody>
+        </table>
+        <button class="btn btn-danger" onclick="clearCompare()">清空對比</button>
+    `;
+    
+    compareContainer.innerHTML = tableHtml;
+    console.log("📊 產品對比表格渲染完成");
 }
 
 function clearCompare() {
-  comparedProductIds = [];
-  var inputs = document.querySelectorAll('.compare-toggle input');
-  for (var i = 0; i < inputs.length; i++) { inputs[i].checked = false; }
-  updateCompareBadge();
-  renderComparePanel();
+    selectedProducts = [];
+    renderCompareTable();
+    updateCharts();
 }
 
-// ===== ECharts 收益曲線圖(單產品) =====#
-function showIncomeChart(prodId) {
-  console.log('showIncomeChart() called', prodId);
-  var product = productData.products.find(function(p) { return p.prod_id === prodId; });
-  if (!product) return;
-  var modal = document.getElementById('chartModal');
-  var title = document.getElementById('chartTitle');
-  if (title) title.textContent = product.prod_name + ' | ' + chartConfig.income_chart.title;
-  if (modal) modal.style.display = 'block';
-
-  if (currentChart) currentChart.dispose();
-  currentChart = echarts.init(document.getElementById('chartContainer'));
-
-  var cfg = chartConfig.income_chart;
-  var initial = parseFloat(product.min_prem) || 10000;
-  var irr = parseFloat(product.irr_20) || 0;
-  var guaranteedSeries = cfg.years.map(function(y) { return Math.round(initial * Math.pow(1 + finConfig.irr_params.guarantee_rate_low, y)); });
-  var projectedSeries = cfg.years.map(function(y) { return Math.round(initial * Math.pow(1 + irr / 100, y)); });
-
-  var option = {
-    backgroundColor: chartConfig.theme.backgroundColor,
-    title: { text: product.prod_name, subtext: product.ins_name, left: 'center', textStyle: chartConfig.theme.title },
-    tooltip: cfg.tooltip,
-    legend: { data: [cfg.series_names.guaranteed, cfg.series_names.projected], top: cfg.legend_position.top, textStyle: chartConfig.theme.legend.textStyle },
-    xAxis: { type: 'category', data: cfg.years.map(function(y) { return '第' + y + '年'; }) },
-    yAxis: { type: 'value', name: cfg.y_axis_name },
-    series: [
-      { name: cfg.series_names.guaranteed, type: 'line', data: guaranteedSeries, smooth: cfg.smooth, itemStyle: { color: cfg.colors.guaranteed }, animation: cfg.animation },
-      { name: cfg.series_names.projected, type: 'line', data: projectedSeries, smooth: cfg.smooth, itemStyle: { color: cfg.colors.projected }, animation: cfg.animation }
-    ]
-  };
-  currentChart.setOption(option);
-  window.addEventListener('resize', function() { if (currentChart) currentChart.resize(); });
-}
-
-// ===== ECharts IRR對比圖(單產品 vs 行業均值) =====#
-function showIRRChart(prodId) {
-  console.log('showIRRChart() called', prodId);
-  var product = productData.products.find(function(p) { return p.prod_id === prodId; });
-  if (!product) return;
-  var modal = document.getElementById('chartModal');
-  var title = document.getElementById('chartTitle');
-  if (title) title.textContent = product.prod_name + ' | ' + chartConfig.irr_compare_chart.title;
-  if (modal) modal.style.display = 'block';
-
-  if (currentChart) currentChart.dispose();
-  currentChart = echarts.init(document.getElementById('chartContainer'));
-
-  var cfg = chartConfig.irr_compare_chart;
-  var irr = parseFloat(product.irr_20) || 0;
-  var avgIRR = 4.5;
-  var option = {
-    backgroundColor: chartConfig.theme.backgroundColor,
-    title: { text: cfg.title, subtext: product.prod_name, left: 'center', textStyle: chartConfig.theme.title },
-    tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: [product.prod_name, '行業平均'] },
-    yAxis: { type: 'value', name: 'IRR %', min: cfg.y_axis_min, max: cfg.y_axis_max },
-    series: [{
-      name: '20年IRR',
-      type: cfg.type,
-      data: [{ value: irr, itemStyle: { color: cfg.color } }, { value: avgIRR, itemStyle: { color: '#7a8a99' } }],
-      label: { show: true, position: 'top', formatter: '{c}%' }
-    }]
-  };
-  currentChart.setOption(option);
-  window.addEventListener('resize', function() { if (currentChart) currentChart.resize(); });
-}
-
-// ===== ECharts 多產品 IRR 對比圖(多選後) =====#
-function showMultiProductChart() {
-  console.log('showMultiProductChart() called');
-  if (comparedProductIds.length === 0) { alert('請先勾選產品'); return; }
-  var products = [];
-  for (var i = 0; i < comparedProductIds.length; i++) {
-    var found = productData.products.find(function(p) { return p.prod_id === comparedProductIds[i]; });
-    if (found) products.push(found);
-  }
-
-  var modal = document.getElementById('chartModal');
-  var title = document.getElementById('chartTitle');
-  if (title) title.textContent = '多產品IRR對比(' + products.length + '款)';
-  if (modal) modal.style.display = 'block';
-
-  if (currentChart) currentChart.dispose();
-  currentChart = echarts.init(document.getElementById('chartContainer'));
-
-  var option = {
-    backgroundColor: chartConfig.theme.backgroundColor,
-    title: { text: '20年IRR多產品對比', left: 'center', textStyle: chartConfig.theme.title },
-    tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: products.map(function(p) { return p.prod_name; }) },
-    yAxis: { type: 'value', name: 'IRR %' },
-    series: [{
-      name: '20年IRR',
-      type: 'bar',
-      data: products.map(function(p) {
-        return { value: parseFloat(p.irr_20) || 0, itemStyle: { color: '#1e3a5f' } };
-      }),
-      label: { show: true, position: 'top', formatter: '{c}%' }
-    }]
-  };
-  currentChart.setOption(option);
-  window.addEventListener('resize', function() { if (currentChart) currentChart.resize(); });
-}
-
-function closeChartModal() {
-  var modal = document.getElementById('chartModal');
-  if (modal) modal.style.display = 'none';
-  if (currentChart) { currentChart.dispose(); currentChart = null; }
-}
-
-// ===== 客戶 PDF 報告導出 =====#
-function addToReport(prodId) {
-  console.log('addToReport() called', prodId);
-  if (reportItems.indexOf(prodId) === -1) {
-    reportItems.push(prodId);
-    updateReportBadge();
-    alert('已加入客戶報告');
-  } else {
-    alert('該產品已在報告中');
-  }
-}
-
-function updateReportBadge() {
-  var badge = document.getElementById('reportBadge');
-  if (badge) badge.textContent = reportItems.length;
-}
-
-function generateClientReport() {
-  console.log('generateClientReport() called');
-  if (reportItems.length === 0) {
-    alert('請先加入至少一款產品到報告');
-    return;
-  }
-  var products = [];
-  for (var i = 0; i < reportItems.length; i++) {
-    var found = productData.products.find(function(p) { return p.prod_id === reportItems[i]; });
-    if (found) products.push(found);
-  }
-
-  var reportHtml = '<html><head><meta charset="UTF-8"><title>客戶比較報告</title>' +
-    '<style>body{font-family:"Microsoft JhengHei";padding:30px;color:#2c3e50;}' +
-    'h1{color:#1e3a5f;border-bottom:3px solid #1e3a5f;padding-bottom:10px;}' +
-    'h2{color:#2c5282;margin-top:30px;}' +
-    'table{width:100%;border-collapse:collapse;margin:20px 0;}' +
-    'th,td{border:1px solid #ddd;padding:10px;text-align:left;}' +
-    'th{background:#1e3a5f;color:#fff;}' +
-    '.product-section{margin:30px 0;padding:20px;background:#f7f9fc;border-radius:8px;border-left:4px solid #1e3a5f;}' +
-    '.highlight{background:#fffbf0;padding:10px;border-radius:4px;border-left:3px solid #d4af37;margin:10px 0;}' +
-    '.footer{margin-top:40px;padding-top:20px;border-top:1px solid #ddd;color:#7a8a99;font-size:12px;}' +
-    '</style></head><body>';
-  reportHtml += '<h1>保險產品比較報告</h1>';
-  reportHtml += '<p>報告日期: ' + new Date().toLocaleDateString('zh-HK') + '</p>';
-  reportHtml += '<p>顧問: ' + finConfig.report.contact + ' | ' + finConfig.report.company_name + '</p>';
-  reportHtml += '<p>產品數量: ' + products.length + ' 款</p>';
-  reportHtml += '<h2>產品對比總覽</h2><table><tr><th>產品</th><th>保司</th><th>最低保費</th><th>回本年</th><th>IRR 20年</th><th>保證回報</th><th>保費融資</th></tr>';
-  for (var i = 0; i < products.length; i++) {
-    var p = products[i];
-    reportHtml += '<tr><td>' + p.prod_name + '</td><td>' + p.ins_name + '</td><td>USD' + p.min_prem + '</td><td>' + (p.break_year || '待補') + '</td><td>' + (p.irr_20 || '待補') + '%</td><td>' + p.guarantee + '</td><td>' + p.finance_support + '</td></tr>';
-  }
-  reportHtml += '</table>';
-  for (var i = 0; i < products.length; i++) {
-    var p = products[i];
-    reportHtml += '<div class="product-section">';
-    reportHtml += '<h2>' + p.prod_name + '(' + p.prod_id + ')</h2>';
-    reportHtml += '<p><strong>保險公司:</strong> ' + p.ins_name + '</p>';
-    reportHtml += '<p><strong>繳費年期:</strong> ' + p.pay_term + '</p>';
-    reportHtml += '<p><strong>最低保費:</strong> USD' + p.min_prem + '</p>';
-    reportHtml += '<p><strong>回本年:</strong> ' + (p.break_year || '待補') + '</p>';
-    reportHtml += '<p><strong>IRR 20年:</strong> ' + (p.irr_20 || '待補') + '%</p>';
-    reportHtml += '<p><strong>產品類型:</strong> ' + p.life_type + ' | <strong>保證回報:</strong> ' + p.guarantee + '</p>';
-    reportHtml += '<p><strong>產品特色:</strong> ' + p.feature_short + '</p>';
-    reportHtml += '<div class="highlight"><strong>★ 網紅亮點:</strong> ' + p.influencer_point + '</strong>'
-+ '<em>' + p.scene_desc + '</em></div>';
-    reportHtml += '<p><strong>標籤:</strong> ' + (p.tag_list || []).join('、') + '</p>';
-    if (p.finance_support === '是') {
-      reportHtml += '<p><strong>保費融資:</strong>支持(最低融資額 USD' + finConfig.finance_terms.INS01.min_finance_amount + ',LTV ' + (finConfig.finance_terms.INS01.loan_to_value * 100) + '%,利率 ' + (finConfig.finance_terms.INS01.interest_rate * 100) + '%)</p>';
-    }
-    reportHtml += '</div>';
-  }
-  reportHtml += '<div class="footer">';
-  reportHtml += '<p>本報告由 ' + finConfig.report.company_name + ' 提供 | 數據版本 ' + productData.version + ' | ' + productData.generated_at + '</p>';
-  reportHtml += '<p>本報告僅供參考，最終保單條款以保險公司正式保單文件為準。</p>';
-  reportHtml += '</div></body></html>';
-
-  var w = window.open('', '_blank');
-  if (!w) { alert('請允許彈出視窗'); return; }
-  w.document.write(reportHtml);
-  w.document.close();
-
-  setTimeout(function() {
-    var btn = w.document.createElement('button');
-    btn.textContent = '導出PDF';
-    btn.style.cssText = 'position:fixed;top:20px;right:20px;padding:10px 20px;background:#1e3a5f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;z-index:9999;';
-    btn.onclick = function() {
-      w.html2pdf().set({
-        margin: 10,
-        filename: 'insurance_report_' + Date.now() + '.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      }).from(w.document.body).save();
+// 5. 融資演算器
+function initFinanceCalculator() {
+    const financeModal = document.getElementById('financeModal');
+    if (!financeModal) return;
+    
+    // 初始化融資參數
+    financeParams.loan_amount = productData.products[0].total_premium * 0.95;
+    document.getElementById('loanAmount').value = financeParams.loan_amount;
+    document.getElementById('loanTerm').value = financeParams.loan_term;
+    document.getElementById('rateType').value = financeParams.rate_type;
+    document.getElementById('processingFee').value = financeParams.processing_fee;
+    
+    // 綁定事件
+    document.getElementById('calculateFinanceBtn').onclick = calculateFinance;
+    document.getElementById('closeFinanceModal').onclick = () => {
+        financeModal.style.display = 'none';
     };
-    w.document.body.appendChild(btn);
-  }, 500);
 }
 
-// ===== 初始化 =====#
-function initApp() {
-  console.log('initApp() called');
-  renderTagPanel();
-  renderProductList();
-  updateFilterStats();
-  var clearBtn = document.getElementById('clearBtn');
-  if (clearBtn) {
-    clearBtn.addEventListener('click', function() {
-      var inputs = document.querySelectorAll('.tag-label input');
-      for (var i = 0; i < inputs.length; i++) { inputs[i].checked = false; }
-      selectedTagList = [];
-      renderProductList();
-      updateFilterStats();
+function showFinanceCalculator(productId) {
+    const product = productData.products.find(p => p.id === productId);
+    if (!product || !product.finance_support) return;
+    
+    const financeConfig = productData.finance_terms[product.company];
+    financeParams.loan_amount = product.total_premium * financeConfig.loan_to_value;
+    financeParams.loan_term = financeConfig.max_loan_term;
+    financeParams.processing_fee = financeConfig.processing_fee;
+    financeParams.base_rate = financeConfig.base_rate;
+    
+    // 更新表單
+    document.getElementById('selectedProductName').textContent = product.name;
+    document.getElementById('loanAmount').value = financeParams.loan_amount;
+    document.getElementById('loanTerm').value = financeParams.loan_term;
+    document.getElementById('rateType').value = "base";
+    document.getElementById('processingFee').value = financeParams.processing_fee;
+    
+    // 顯示模態框
+    document.getElementById('financeModal').style.display = 'block';
+    calculateFinance();
+}
+
+function calculateFinance() {
+    // 獲取參數
+    const loanAmount = parseFloat(document.getElementById('loanAmount').value);
+    const loanTerm = parseInt(document.getElementById('loanTerm').value);
+    const rateType = document.getElementById('rateType').value;
+    const processingFee = parseFloat(document.getElementById('processingFee').value);
+    
+    // 計算貸款利率
+    let annualRate = financeParams.base_rate;
+    if (rateType === "prime") annualRate += 0.005;
+    if (rateType === "preferential") annualRate -= 0.002;
+    
+    // 計算手續費
+    const feeAmount = loanAmount * processingFee;
+    const actualLoan = loanAmount - feeAmount;
+    
+    // 計算月供（年金公式）
+    const monthlyRate = annualRate / 12;
+    const totalMonths = loanTerm * 12;
+    const monthlyPayment = loanAmount * monthlyRate * Math.pow(1 + monthlyRate, totalMonths) / (Math.pow(1 + monthlyRate, totalMonths) - 1);
+    
+    // 計算融資後IRR
+    const product = productData.products.find(p => p.name === document.getElementById('selectedProductName').textContent);
+    const financeIrr = ((product.irr * product.total_premium) - (monthlyPayment * 12 * loanTerm / loanAmount)) / product.total_premium;
+    
+    // 顯示結果
+    document.getElementById('financeResult').innerHTML = `
+        <div class="result-grid">
+            <div class="result-item">
+                <span class="label">貸款金額</span>
+                <span class="value">${loanAmount.toLocaleString()} ${product.currency}</span>
+            </div>
+            <div class="result-item">
+                <span class="label">實際到賬金額</span>
+                <span class="value">${actualLoan.toLocaleString()} ${product.currency}</span>
+            </div>
+            <div class="result-item">
+                <span class="label">手續費</span>
+                <span class="value">${feeAmount.toLocaleString()} ${product.currency}</span>
+            </div>
+            <div class="result-item">
+                <span class="label">貸款年期</span>
+                <span class="value">${loanTerm}年</span>
+            </div>
+            <div class="result-item">
+                <span class="label">年利率</span>
+                <span class="value">${(annualRate * 100).toFixed(2)}%</span>
+            </div>
+            <div class="result-item">
+                <span class="label">每月供款</span>
+                <span class="value">${monthlyPayment.toFixed(2)} ${product.currency}</span>
+            </div>
+            <div class="result-item highlight">
+                <span class="label">融資後IRR</span>
+                <span class="value">${(financeIrr * 100).toFixed(2)}%</span>
+            </div>
+        </div>
+    `;
+    console.log("💰 融資演算完成");
+}
+
+// 6. 動態圖表初始化
+let incomeChart, pieChart, opportunityChart, riskChart;
+function initCharts() {
+    // 收益曲線圖
+    incomeChart = echarts.init(document.getElementById('incomeChart'));
+    // 繳費結構餅圖
+    pieChart = echarts.init(document.getElementById('pieChart'));
+    // 機會成本柱狀圖
+    opportunityChart = echarts.init(document.getElementById('opportunityChart'));
+    // 風險對比雷達圖
+    riskChart = echarts.init(document.getElementById('riskChart'));
+    
+    // 初始化圖表
+    updateCharts();
+    // 窗口大小改變時自適應
+    window.onresize = () => {
+        incomeChart.resize();
+        pieChart.resize();
+        opportunityChart.resize();
+        riskChart.resize();
+    };
+    console.log("📈 所有動態圖表初始化完成");
+}
+
+function updateCharts() {
+    updateIncomeChart();
+    updatePieChart();
+    updateOpportunityChart();
+    updateRiskChart();
+}
+
+// 收益曲線圖
+function updateIncomeChart() {
+    if (!incomeChart) return;
+    const products = selectedProducts.length > 0 
+        ? selectedProducts.map(id => productData.products.find(p => p.id === id))
+        : productData.products.slice(0, 3);
+    
+    const years = Array.from({length: 31}, (_, i) => i);
+    const series = products.map(p => {
+        const values = years.map(year => {
+            if (year < p.premium_term) return -p.total_premium / p.premium_term * year;
+            const holdYears = year - p.premium_term;
+            return p.total_premium * Math.pow(1 + p.irr, holdYears);
+        });
+        return {
+            name: p.name,
+            data: values,
+            type: 'line',
+            smooth: true
+        };
     });
-  }
-  var reportBtn = document.getElementById('generateReportBtn');
-  if (reportBtn) reportBtn.addEventListener('click', generateClientReport);
+    
+    incomeChart.setOption({
+        title: { text: '產品收益曲線對比', left: 'center' },
+        tooltip: { trigger: 'axis' },
+        legend: { top: 30 },
+        xAxis: { type: 'category', data: years, name: '持有年期' },
+        yAxis: { type: 'value', name: '資產價值', axisLabel: { formatter: '{value}' } },
+        series: series,
+        markLine: {
+            data: [{ yAxis: 0, name: '回本線', lineStyle: { color: 'red' } }]
+        }
+    });
 }
 
-// ===== 雙重保險: DOMContentLoaded + window.onload =====#
-function bootstrap() {
-  console.log('bootstrap() called');
-  if (typeof loadProductData === 'function') {
-    loadProductData();
-  } else {
-    console.error('loadProductData is not a function!');
-  }
+// 繳費結構餅圖
+function updatePieChart() {
+    if (!pieChart) return;
+    const product = selectedProducts.length > 0 
+        ? productData.products.find(p => p.id === selectedProducts[0])
+        : productData.products[0];
+    
+    pieChart.setOption({
+        title: { text: `${product.name} 繳費結構`, left: 'center' },
+        tooltip: { trigger: 'item' },
+        series: [
+            {
+                name: '繳費結構',
+                type: 'pie',
+                radius: '50%',
+                data: [
+                    { value: product.total_premium, name: '已繳保費' },
+                    { value: product.total_premium * (1 + product.guaranteed_return * 10), name: '保證收益' },
+                    { value: product.total_premium * (1 + product.non_guaranteed_return * 10), name: '非保證收益' }
+                ]
+            }
+        ]
+    });
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', bootstrap);
-} else {
-  bootstrap();
+// 機會成本柱狀圖
+function updateOpportunityChart() {
+    if (!opportunityChart) return;
+    const product = selectedProducts.length > 0 
+        ? productData.products.find(p => p.id === selectedProducts[0])
+        : productData.products[0];
+    
+    const tools = productData.investment_tools;
+    opportunityChart.setOption({
+        title: { text: '跨資產機會成本對比', left: 'center' },
+        tooltip: { trigger: 'axis' },
+        xAxis: { type: 'category', data: tools.map(t => t.name) },
+        yAxis: { type: 'value', name: '年化回報率', axisLabel: { formatter: '{value}%' } },
+        series: [
+            {
+                name: '年化回報率',
+                type: 'bar',
+                data: tools.map(t => t.return_rate * 100),
+                itemStyle: {
+                    color: (params) => params.name === product.name ? '#1890ff' : '#ccc'
+                }
+            }
+        ]
+    });
 }
 
-if (window.addEventListener) {
-  window.addEventListener('load', bootstrap);
-} else if (window.attachEvent) {
-  window.attachEvent('onload', bootstrap);
+// 風險對比雷達圖
+function updateRiskChart() {
+    if (!riskChart) return;
+    const products = selectedProducts.length > 0 
+        ? selectedProducts.map(id => productData.products.find(p => p.id === id))
+        : productData.products.slice(0, 3);
+    
+    const riskScores = {
+        "極低": 10,
+        "低": 30,
+        "中低": 50,
+        "中": 70,
+        "中高": 85,
+        "高": 100
+    };
+    
+    const liquidityScores = {
+        "極高": 100,
+        "高": 80,
+        "中": 60,
+        "低": 40,
+        "極低": 20
+    };
+    
+    riskChart.setOption({
+        title: { text: '產品風險&流動性對比', left: 'center' },
+        tooltip: { trigger: 'item' },
+        radar: {
+            indicator: [
+                { name: '風險等級', max: 100 },
+                { name: '流動性', max: 100 },
+                { name: '回本速度', max: 100 },
+                { name: '保證回報', max: 100 },
+                { name: '融資靈活性', max: 100 }
+            ]
+        },
+        series: products.map(p => ({
+            name: p.name,
+            type: 'radar',
+            data: [
+                { value: riskScores[p.risk_level], name: '風險等級' },
+                { value: liquidityScores[p.liquidity], name: '流動性' },
+                { value: 100 / p.break_year * 10, name: '回本速度' },
+                { value: p.guaranteed_return * 1000, name: '保證回報' },
+                { value: p.finance_support ? 100 : 0, name: '融資靈活性' }
+            ]
+        }))
+    });
 }
+
+// 7. PDF報告導出
+function initPDFExport() {
+    document.getElementById('exportPDFBtn').onclick = exportPDFReport;
+}
+
+function exportPDFReport() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // 報告標題
+    doc.setFontSize(20);
+    doc.text('保險產品客戶報告', 105, 20, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text(`生成時間：${new Date().toLocaleString('zh-HK')}`, 105, 30, { align: 'center' });
+    
+    // 產品清單
+    let y = 40;
+    const products = selectedProducts.length > 0 
+        ? selectedProducts.map(id => productData.products.find(p => p.id === id))
+        : productData.products.slice(0, 5);
+    
+    doc.setFontSize(14);
+    doc.text('產品清單', 20, y);
+    y += 10;
+    doc.setFontSize(10);
+    products.forEach(p => {
+        doc.text(`${p.name} | ${p.company} | 保證回報率：${(p.guaranteed_return * 100).toFixed(2)}% | IRR：${(p.irr * 100).toFixed(2)}%`, 20, y);
+        y += 8;
+    });
+    
+    // 融資壓力測試
+    if (selectedProducts.some(id => productData.products.find(p => p.id === id).finance_support)) {
+        y += 10;
+        doc.setFontSize(14);
+        doc.text('融資壓力測試', 20, y);
+        y += 10;
+        doc.setFontSize(10);
+        selectedProducts.forEach(id => {
+            const p = productData.products.find(p => p.id === id);
+            if (p.finance_support) {
+                const financeConfig = productData.finance_terms[p.company];
+                doc.text(`${p.name} | 最高貸款額度：${(p.total_premium * financeConfig.loan_to_value).toLocaleString()} ${p.currency} | 基準利率：${(financeConfig.base_rate * 100).toFixed(2)}%`, 20, y);
+                y += 8;
+            }
+        });
+    }
+    
+    // 保存PDF
+    doc.save(`保險產品報告_${new Date().toLocaleDateString('zh-HK')}.pdf`);
+    console.log("📄 PDF報告導出完成");
+}
+
+// 輔助函數：顯示單個產品收益圖表
+function showIncomeChart(productId) {
+    selectedProducts = [productId];
+    updateCharts();
+    document.getElementById('chartModal').style.display = 'block';
+}
+
+// 清空標籤
+function clearTags() {
+    selectedTags = [];
+    renderTagPanel();
+    renderProductList();
+    updateCharts();
+}
+
+// 頁面加載完成後綁定清空標籤事件
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('clearTagsBtn').onclick = clearTags;
+});
