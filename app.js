@@ -460,7 +460,7 @@ function generateClientReport() {
   reportHtml += '<p>報告日期: ' + new Date().toLocaleDateString('zh-HK') + '</p>';
   reportHtml += '<p>顧問: ' + finConfig.report.contact + ' | ' + finConfig.report.company_name + '</p>';
   reportHtml += '<p>產品數量: ' + products.length + ' 款</p>';
-  reportHtml += '<h2>產品對比總覽</h2><table><tr><th>產品</th><th>保司</th><th>最低保費</th><th>回本年</th><th>IRR 20年</th><th>保證回報</th><th>保費融資</th></tr>';
+  reportHtml += '<h2>產品對比總覽</h2><table><tr><th>產品</th><th>保司</th><th>最低保費</th><th>回本</th><th>IRR 20年</th><th>保證回報</th><th>保費融資</th></tr>';
   for (var i = 0; i < products.length; i++) {
     var p = products[i];
     reportHtml += '<tr><td>' + p.prod_name + '</td><td>' + p.ins_name + '</td><td>USD' + p.min_prem + '</td><td>' + (p.break_year || '待補') + '</td><td>' + (p.irr_20 || '待補') + '%</td><td>' + p.guarantee + '</td><td>' + p.finance_support + '</td></tr>';
@@ -469,8 +469,45 @@ function generateClientReport() {
   for (var i = 0; i < products.length; i++) {
     var p = products[i];
     reportHtml += '<div class="product-section">';
-    reportHtml += '<h2>' + p.prod_name + '(' + p.prod_id + ')</h2>';
+    reportHtml += '<h2>' + p.prod_name + ' (' + p.prod_id + ')</h2>';
     reportHtml += '<p><strong>保險公司:</strong> ' + p.ins_name + '</p>';
     reportHtml += '<p><strong>繳費年期:</strong> ' + p.pay_term + '</p>';
     reportHtml += '<p><strong>最低保費:</strong> USD' + p.min_prem + '</p>';
-    reportHtml += '<p><strong>回本年:</strong> ' + (p.break_year || '待補') + '</p>';
+    reportHtml += '<p><strong>回本:</strong> ' + (p.break_year || '待補') + '</p>';
+    reportHtml += '<p><strong>IRR 20年:</strong> ' + (p.irr_20 || '待補') + '%</p>';
+    reportHtml += '<p><strong>產品類型:</strong> ' + p.life_type + ' | <strong>保證回報:</strong> ' + p.guarantee + '</p>';
+    reportHtml += '<p><strong>產品特色:</strong> ' + p.feature_short + '</p>';
+    reportHtml += '<div class="highlight"><strong>★ 網紅亮點:</strong> ' + p.influencer_point + '
+<em>' + p.scene_desc + '</em></div>';
+    reportHtml += '<p><strong>標籤:</strong> ' + (p.tag_list || []).join('、') + '</p>';
+    if (p.finance_support === '是') {
+      reportHtml += '<p><strong>保費融資:</strong>支持(最低融資額 USD' + finConfig.finance_terms.INS01.min_finance_amount + ',LTV ' + (finConfig.finance_terms.INS01.loan_to_value * 100) + '%, 利率 ' + (finConfig.finance_terms.INS01.interest_rate * 100) + '%)</p>';
+    }
+    reportHtml += '</div>';
+  }
+  reportHtml += '<div class="footer">';
+  reportHtml += '<p>本報告由 ' + finConfig.report.company_name + ' 提供 | 數據版本 ' + productData.version + ' | ' + productData.generated_at + '</p>';
+  reportHtml += '<p>本報告僅供參考, 最終保單條款以保險公司正式保單文件為準.</p>';
+  reportHtml += '</div></body></html>';
+
+  var w = window.open('', '_blank');
+  if (!w) { alert('請允許彈出視窗'); return; }
+  w.document.write(reportHtml);
+  w.document.close();
+
+  setTimeout(function() {
+    var btn = w.document.createElement('button');
+    btn.textContent = '導出PDF';
+    btn.style.cssText = 'position:fixed;top:20px;right:20px;padding:10px 20px;background:#1e3a5f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;z-index:9999;';
+    btn.onclick = function() {
+      w.html2pdf().set({
+        margin: 10,
+        filename: 'insurance_report_' + Date.now() + '.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      }).from(w.document.body).save();
+    };
+    w.document.body.appendChild(btn);
+  }, 500);
+} 
