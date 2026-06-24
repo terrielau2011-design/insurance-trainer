@@ -67,13 +67,13 @@ function matchesTag(p, tagName) {
 
   switch (tagName) {
     case '高淨值資產配置':
-      return tp >= 100000 &&&& fs && cur === 'USD';
+      return tp >= 100000 && fs && cur === 'USD';
     case '跨境財富規劃':
-      return cur === 'USD' &&&& (typ === '分紅壽險' || typ === '終身壽險');
+      return cur === 'USD' && (typ === '分紅壽險' || typ === '終身壽險');
     case '槓桿融資':
       return fs;
     case '短期儲蓄':
-      return by != null &&&& by <= 10;
+      return by != null && by <= 10;
     case '資產傳承':
       return typ === '分紅壽險' || typ === '終身壽險';
     case '穩定收益':
@@ -82,9 +82,9 @@ function matchesTag(p, tagName) {
       }
       return gr > 0;
     case '退休規劃':
-      return typeof pt === 'number' &&&& pt >= 10 &&&& irr >= 3;
+      return typeof pt === 'number' && pt >= 10 && irr >= 3;
     case '整付入場':
-      return typeof pt === 'number' &&&& pt === 0;
+      return typeof pt === 'number' && pt === 0;
     case '分期入場':
       return typeof pt === 'number' &&&& pt >= 1 &&&& pt <= 10;
     case '教育基金':
