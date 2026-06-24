@@ -412,5 +412,5 @@ function generateClientReport() {
     '.highlight{background:#fffbf0;padding:10px;border-radius:4px;border-left:3px solid #d4af37;margin:10px 0;}' +
     '.footer{margin-top:40px;padding-top:20px;border-top:1px solid #ddd;color:#7a8a99;font-size:12px;}' +
     '</style></head><body>';
-  reportHtml += '<h1>保险产品比较报告</h1>';
-  reportHtml += '<p>报告日期: ' + new Date().toLocaleDateString('zh-HK') + '</p>';
+reportHtml += '<h1>保险产品比较报告</h1>';
+reportHtml += '<p>报告日期: ' + new Date().toLocaleDateString('zh-HK') + '</p>';
