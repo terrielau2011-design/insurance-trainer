@@ -281,7 +281,7 @@ function renderComparePanel() {
       var display = v;
       if (v === null || v === undefined) { display = '-'; }
       else if (rowKey === 'irr_20') { display = v + '%'; }
-      else if (rowKey === 'break_year' &amp;&amp; v === null) { display = '待補'; }
+      else if (rowKey === 'break_year' && v === null) { display = '待補'; }
       html += '<td>' + display + '</td>';
     }
     html += '</tr>';
