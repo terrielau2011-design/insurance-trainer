@@ -3,6 +3,23 @@
 // 包含 productData、finConfig、chartConfig
 // v1.0-launch 數據範圍:INS01+INS02 共10款產品
 // v1.1 增量修改: 新增12標籤、擴展產品欄位、部分產品新增"教育規劃"tag
+(function(){
+  const productData = {
+    // 原有產品數據
+  };
+  const finConfig = {
+    // 原有融資配置
+  };
+  const chartConfig = {
+    // 原有圖表配置
+  };
+  // 只在全域不存在時才掛載，避免重複宣告
+  if(!window.productData){
+    window.productData = productData;
+    window.finConfig = finConfig;
+    window.chartConfig = chartConfig;
+  }
+})();
 
 const productData = {
   version: "v1.1-tags",
