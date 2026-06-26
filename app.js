@@ -1,512 +1,880 @@
-// app.js v1.1-final
-// 保險產品比較器 - 兼容舊版 ECharts 圖表、多產品對比、客戶 PDF 報告
-// 數據源: productData.js (productData + finConfig + chartConfig)
-// v1.1 增量修改: 12標籤 OR 篩選邏輯 + 12條規則
-// 原有所有功能 100% 保留不動#
-// 最終修復: 徹底移除所有 &amp; 字符, 用嵌套 if/else 替代 &amp;&amp; 和 ||#
+/**
+ * app.js v3.0 — ECharts + 需求標籤 + 7款產品 + 動態圖表
+ */
+'use strict';
 
-let selectedTagList = [];
-let comparedProductIds = [];
-let reportItems = [];
-let currentChart = null;
+const state = {
+  primaryProduct: null, compareProducts: [], activeScene: 1,
+  s1Results: {}, s2Results: {}, advisorTags: [], financeEnabled: true,
+  displayCurrency: null, needTags: []
+};
 
-// ===== 數據載入(從 productData.js 同步讀取) =====//
-function loadProductData() {
-  console.log('[v1.1-final] loadProductData() called');
-  if (typeof productData === 'undefined') {
-    console.error('productData.js not loaded');
-    var el = document.getElementById('productContainer');
-    if (el) el.innerHTML = '<div class="no-result">productData.js 載入失敗, 請確認檔案路徑正確</div>';
-    return;
-  }
-  console.log('[v1.1-final] productData loaded:', productData.products.length, 'products,', productData.tags.length, 'tags');
-  initApp();
+let echartsInstances = {};
+
+/* ═══ 初始化 ═══ */
+document.addEventListener('DOMContentLoaded', async () => {
+  initClock();
+  if (typeof initSync === 'function') initSync();
+  if (typeof initData === 'function') await initData();
+  onDataReady();
+});
+
+function onDataReady() {
+  console.log('🛡 Insurance Trainer v3.2.1 | 7 products loaded');
+  initNeedTags();
+  initProductList();
+  initBankList();
+  initCharts();
+  calcScene1();
+  calcScene2();
+  updateOpportunityTable();
+  updateBrochureForProduct();
 }
 
-// ===== 標籤面板渲染 =====//
-function renderTagPanel() {
-  console.log('renderTagPanel() called');
-  var container = document.getElementById('tagContainer');
-  if (!container) { console.warn('tagContainer not found'); return; }
-  var html = '';
-  for (var i = 0; i < productData.tags.length; i++) {
-    var t = productData.tags[i];
-    html += '<label class="tag-label">';
-    html += '<input type="checkbox" value="' + t.tag_name + '" onchange="onTagChange()">';
-    html += '<span>' + t.tag_name + '</span>';
-    html += '</label>';
-    html += '<div class="tag-rule">' + t.篩選規則 + '</div>';
-  }
-  container.innerHTML = html;
+function refreshAllUI() { onDataReady(); }
+
+function initClock() {
+  const el = document.getElementById('current-time');
+  if (!el) return;
+  const tick = () => { el.textContent = new Date().toLocaleString('zh-HK', { hour12: false }); };
+  tick(); setInterval(tick, 1000);
 }
 
-function getSelectedTags() {
-  var inputs = document.querySelectorAll('.tag-label input:checked');
-  var result = [];
-  for (var i = 0; i < inputs.length; i++) { result.push(inputs[i].value); }
-  return result;
-}
-
-function onTagChange() {
-  console.log('onTagChange() called');
-  selectedTagList = getSelectedTags();
-  renderProductList();
-  updateFilterStats();
-}
-
-// ===== 產品過濾篩選核心邏輯 (v1.1: OR 並集邏輯 + 12條規則) =====//
-function matchesTag(p, tagName) {
-  // 欄位別名#
-  var tp = p.total_premium != null ? p.total_premium : p.min_prem;
-  var pt = p.premium_term;
-  var cur = p.currency || 'USD';
-  var typ = p.type || '';
-  var gr = p.guaranteed_return != null ? p.guaranteed_return : 0;
-  var fs = p.finance_support === '是';
-  var by = p.break_year;
-  var irr = p.irr_20 != null ? p.irr_20 : 0;
-
-  if (tagName === '高淨值資產配置') {
-    if (tp >= 100000) {
-      if (fs) {
-        if (cur === 'USD') return true;
-      }
-    }
-    return false;
-  }
-  if (tagName === '跨境財富規劃') {
-    if (cur === 'USD') {
-      if (typ === '分紅壽險' || typ === '終身壽險') return true;
-    }
-    return false;
-  }
-  if (tagName === '槓桿融資') {
-    return fs;
-  }
-  if (tagName === '短期儲蓄') {
-    if (by != null) {
-      if (by <= 10) return true;
-    }
-    return false;
-  }
-  if (tagName === '資產傳承') {
-    if (typ === '分紅壽險' || typ === '終身壽險') return true;
-    return false;
-  }
-  if (tagName === '穩定收益') {
-    if (typ === '年金計劃') {
-      if (gr > 0) return true;
-    } else {
-      if (gr > 0) return true;
-    }
-    return false;
-  }
-  if (tagName === '退休規劃') {
-    if (typeof pt === 'number') {
-      if (pt >= 10) {
-        if (irr >= 3) return true;
-      }
-    }
-    return false;
-  }
-  if (tagName === '整付入場') {
-    if (typeof pt === 'number') {
-      if (pt === 0) return true;
-    }
-    return false;
-  }
-  if (tagName === '分期入場') {
-    if (typeof pt === 'number') {
-      if (pt >= 1) {
-        if (pt <= 10) return true;
-      }
-    }
-    return false;
-  }
-  if (tagName === '教育基金') {
-    return (p.tag_list || []).indexOf('教育規劃') !== -1;
-  }
-  if (tagName === '小額入場') {
-    return tp < 20000;
-  }
-  if (tagName === '非美元資產配置') {
-    return cur !== 'USD';
-  }
-  // 兜底: 舊有 tag_list 字串比對#
-  return (p.tag_list || []).indexOf(tagName) !== -1;
-}
-
-function filterProducts() {
-  if (!selectedTagList || selectedTagList.length === 0) return productData.products;
-  // OR 並集: 符合任意一個勾選標籤即顯示#
-  return productData.products.filter(function(p) {
-    var found = false;
-    for (var i = 0; i < selectedTagList.length; i++) {
-      if (matchesTag(p, selectedTagList[i])) {
-        found = true;
-        break;
-      }
-    }
-    return found;
+/* ═══ 需求標籤 ═══ */
+function initNeedTags() {
+  const container = document.getElementById('need-tags');
+  if (!container) return;
+  const tags = (typeof appConfig !== 'undefined' && appConfig.needTags) || ['教育金','退休','家族傳承','保費融資','財富增值'];
+  container.innerHTML = '';
+  tags.forEach(tag => {
+    const chip = document.createElement('label');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `<input type="checkbox" value="${tag}" onchange="onNeedTagChange()"> ${tag}`;
+    container.appendChild(chip);
   });
 }
 
-function formatVal(v, suffix) {
-  if (v === null || v === undefined || v === '待補') return '<span class="metric-value tbd">待補</span>';
-  return '<span class="metric-value">' + v + (suffix || '') + '</span>';
+function onNeedTagChange() {
+  const checked = document.querySelectorAll('#need-tags input:checked');
+  state.needTags = Array.from(checked).map(cb => cb.value);
+  updateProductMatching();
+  updateComparisonSection();  /* 第五步：標籤變化時自動更新同類對比 */
 }
 
-function renderProductList() {
-  console.log('renderProductList() called');
-  var list = filterProducts();
-  var container = document.getElementById('productContainer');
-  var header = document.getElementById('resultHeader');
-  if (!container) { console.warn('productContainer not found'); return; }
+function updateProductMatching() {
+  const container = document.getElementById('product-list');
+  if (!container) return;
 
-  if (list.length === 0) {
-    container.innerHTML = '<div class="no-result">無符合條件的產品, 請調整標籤組合</div>';
-    if (header) header.textContent = '顯示 0 款產品';
+  if (state.needTags.length === 0) {
+    /* 清除匹配狀態，恢復原始排序 */
+    document.querySelectorAll('.product-item').forEach(item => {
+      item.classList.remove('need-match', 'need-partial');
+      const badge = item.querySelector('.match-badge');
+      if (badge) badge.remove();
+      const tip = item.querySelector('.finance-tip');
+      if (tip) tip.remove();
+      item.style.display = '';
+    });
+    /* 恢復原始排序 */
+    productList.forEach(prod => {
+      const item = document.getElementById(`prod-item-${prod.id}`);
+      if (item) container.appendChild(item);
+    });
     return;
   }
 
-  var html = '';
-  for (var i = 0; i < list.length; i++) {
-    var p = list[i];
-    var chips = '';
-    for (var j = 0; j < (p.tag_list || []).length; j++) {
-      chips += '<span class="tag-chip">' + p.tag_list[j] + '</span>';
-    }
-    var financeClass = p.finance_support === '是' ? '' : 'no';
-    var isChecked = comparedProductIds.indexOf(p.prod_id) !== -1 ? 'checked' : '';
-    html += '<div class="product-card" data-prod-id="' + p.prod_id + '">';
-    html += '<div class="card-head">';
-    html += '<div style="flex:1">';
-    html += '<div class="prod-title">' + p.prod_name + '</div>';
-    html += '<div class="prod-meta">' + p.ins_name + ' | ' + p.prod_id + '</div>';
-    html += '</div>';
-    html += '<label class="compare-toggle">';
-    html += '<input type="checkbox" value="' + p.prod_id + '" onchange="onCompareToggle(this.value)" ' + isChecked + '> 加入對比';
-    html += '</label>';
-    html += '<div class="finance-tag ' + financeClass + '">保費融資</div>';
-    html += '</div>';
-    html += '<div class="metrics">';
-    html += '<div class="metric"><div class="metric-label">最低保費</div>' + formatVal(p.min_prem) + '</div>';
-    html += '<div class="metric"><div class="metric-label">繳費年期</div>' + formatVal(p.pay_term) + '</div>';
-    html += '<div class="metric"><div class="metric-label">回本年</div>' + formatVal(p.break_year) + '</div>';
-    html += '<div class="metric"><div class="metric-label">IRR 20年</div>' + formatVal(p.irr_20, '%') + '</div>';
-    html += '</div>';
-    html += '<div class="tag-list">' + chips + '</div>';
-    html += '<div class="feature-text">' + p.feature_short + '</div>';
-    html += '<div class="influencer-block">';
-    html += '<div class="point">★ ' + p.influencer_point + '</div>';
-    html += '<div class="scene">' + p.scene_desc + '</div>';
-    html += '</div>';
-    html += '<div class="card-actions">';
-    html += '<button class="btn btn-ghost" onclick="showIncomeChart(' + p.prod_id + ')">收益曲線</button>';
-    html += '<button class="btn btn-ghost" onclick="showIRRChart(' + p.prod_id + ')">IRR對比</button>';
-    html += '<button class="btn btn-primary" onclick="addToReport(' + p.prod_id + ')">加入報告</button>';
-    html += '</div>';
-    html += '</div>';
-  }
-  container.innerHTML = html;
+  /* 第一步：排序置頂 + 標記 */
+  const matched = [];
+  const unmatched = [];
 
-  if (header) header.textContent = '顯示 ' + list.length + ' 款產品';
-  updateCompareBadge();
+  productList.forEach(prod => {
+    const item = document.getElementById(`prod-item-${prod.id}`);
+    if (!item) return;
+    const matchCount = state.needTags.filter(t => prod.needTags.includes(t)).length;
+    const old = item.querySelector('.match-badge');
+    if (old) old.remove();
+    const oldTip = item.querySelector('.finance-tip');
+    if (oldTip) oldTip.remove();
+
+    if (matchCount > 0) {
+      item.classList.add('need-match');
+      item.classList.remove('need-partial');
+      item.style.display = '';
+      const badge = document.createElement('span');
+      badge.className = 'match-badge';
+      badge.textContent = '⭐推薦';
+      item.appendChild(badge);
+      matched.push({ prod, item, matchCount });
+    } else {
+      item.classList.remove('need-match');
+      /* 保費融資標籤特殊處理 */
+      if (state.needTags.includes('保費融資')) {
+        item.classList.add('need-partial');
+        const tip = document.createElement('div');
+        tip.className = 'finance-tip';
+        tip.style.cssText = 'font-size:.65rem;color:var(--text-muted);width:100%;';
+        tip.textContent = '僅豐饒傳承III支持保費融資';
+        item.appendChild(tip);
+      } else {
+        item.classList.add('need-partial');
+      }
+      unmatched.push({ prod, item });
+    }
+  });
+
+  /* 匹配的按匹配數排序後置頂 */
+  matched.sort((a, b) => b.matchCount - a.matchCount);
+  matched.forEach(m => container.appendChild(m.item));
+  unmatched.forEach(u => container.appendChild(u.item));
 }
 
-function updateFilterStats() {
-  var list = filterProducts();
-  var statShown = document.getElementById('stat-shown');
-  var statFilter = document.getElementById('stat-filter');
-  if (statShown) statShown.textContent = list.length === productData.products.length ? '顯示全部' : '篩選後 ' + list.length + ' 款';
-  if (statFilter) statFilter.textContent = selectedTagList.length === 0
-    ? '未啟用篩選'
-    : '已選 ' + selectedTagList.length + ' 個標籤: ' + selectedTagList.join('、');
+/* ═══ 產品列表 ═══ */
+function initProductList() {
+  const container = document.getElementById('product-list');
+  if (!container) return;
+  container.innerHTML = '';
+  productList.forEach((prod, idx) => {
+    const item = document.createElement('div');
+    item.className = 'product-item';
+    item.id = `prod-item-${prod.id}`;
+    item.innerHTML = `
+      <input type="checkbox" id="chk-${prod.id}" value="${prod.id}" onchange="handleProductSelect(event, '${prod.id}')" />
+      <div style="flex:1">
+        <div class="prod-name">${prod.name}</div>
+        <div class="prod-type">${prod.company} · ${prod.currency}${prod.isFinanceable ? ' · 可融資' : ''}</div>
+      </div>`;
+    container.appendChild(item);
+    if (idx === 0 && !state.primaryProduct) {
+      item.querySelector('input').checked = true;
+      handleProductSelect({ target: item.querySelector('input') }, prod.id);
+    }
+  });
 }
 
-// ===== 多產品對比邏輯 =====//
-function onCompareToggle(prodId) {
-  console.log('onCompareToggle() called', prodId);
-  var idx = comparedProductIds.indexOf(prodId);
-  if (idx === -1) {
-    if (comparedProductIds.length >= 4) {
-      alert('最多同時對比 4 款產品');
-      var cb = document.querySelector('input[value="' + prodId + '"]');
-      if (cb) cb.checked = false;
-      return;
-    }
-    comparedProductIds.push(prodId);
+function initBankList() {
+  const sel = document.getElementById('s2-bank');
+  if (!sel) return;
+  sel.innerHTML = '';
+  bankList.forEach(b => {
+    const opt = document.createElement('option');
+    opt.value = b.id; opt.textContent = `${b.name}（最高${b.maxLTV}% LTV）`;
+    sel.appendChild(opt);
+  });
+}
+
+function handleProductSelect(evt, prodId) {
+  const checked = evt.target.checked;
+  if (checked) {
+    if (!state.primaryProduct) state.primaryProduct = prodId;
+    else if (!state.compareProducts.includes(prodId)) state.compareProducts.push(prodId);
   } else {
-    comparedProductIds.splice(idx, 1);
+    if (state.primaryProduct === prodId) {
+      state.primaryProduct = state.compareProducts.shift() || null;
+    } else state.compareProducts = state.compareProducts.filter(id => id !== prodId);
   }
-  updateCompareBadge();
-  renderComparePanel();
+  updateProductItemStyles();
+  renderHighlights();
+  updateProductCurrencyHints();
+  updatePayTermOptions();
+  updateComparisonSection();
+  updateBrochureForProduct();
+  calcScene1();
+  calcScene2();
 }
 
-function updateCompareBadge() {
-  var badge = document.getElementById('compareBadge');
-  if (badge) badge.textContent = comparedProductIds.length;
+function updateProductItemStyles() {
+  productList.forEach(p => {
+    const item = document.getElementById(`prod-item-${p.id}`);
+    if (!item) return;
+    item.classList.remove('primary-selected', 'compare-selected');
+    if (p.id === state.primaryProduct) item.classList.add('primary-selected');
+    else if (state.compareProducts.includes(p.id)) item.classList.add('compare-selected');
+  });
 }
 
-function renderComparePanel() {
-  console.log('renderComparePanel() called');
-  var panel = document.getElementById('comparePanel');
-  if (!panel) { console.warn('comparePanel not found'); return; }
-  if (comparedProductIds.length === 0) { panel.style.display = 'none'; return; }
-  panel.style.display = 'block';
+function renderHighlights() {
+  const area = document.getElementById('highlights-area');
+  if (!state.primaryProduct) { area.innerHTML = '<div class="highlight-placeholder"><span class="ph-icon">👈</span><p>請先選擇產品</p></div>'; return; }
+  const prod = getProductById(state.primaryProduct);
+  if (!prod) return;
+  area.innerHTML = `<div class="highlights-list">${prod.highlights.map((h, i) => `
+    <div class="highlight-card">
+      <div class="highlight-num">${i+1}</div>
+      <div class="highlight-content">
+        <h4>${h.icon} ${h.title} <span class="need-badge">${prod.mainTag || (prod.needTags||[]).join(' · ')}</span></h4>
+        <p>${h.desc}</p>
+        ${prod.subTag ? `<p style="font-size:.72rem;color:var(--text-muted);margin-top:2px;">${prod.subTag}</p>` : ''}
+      </div>
+    </div>`).join('')}</div>`;
+}
 
-  var products = [];
-  for (var i = 0; i < comparedProductIds.length; i++) {
-    var found = productData.products.find(function(p) { return p.prod_id === comparedProductIds[i]; });
-    if (found) products.push(found);
+function updateProductCurrencyHints() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod) return;
+  const sel = document.getElementById('currency-selector');
+  if (sel) {
+    const curs = prod.supportedCurrencies || [prod.currency];
+    sel.innerHTML = '';
+    curs.forEach(c => { const o = document.createElement('option'); o.value = c; o.textContent = c; sel.appendChild(o); });
+    state.displayCurrency = prod.currency;
   }
+  const cur = state.displayCurrency || prod.currency;
+  const sym = (appConfig.currencySymbols||{})[cur] || '';
+  const h1 = document.getElementById('s1-currency-hint'); if (h1) h1.textContent = `(${sym})`;
+  const h2 = document.getElementById('s2-currency-hint'); if (h2) h2.textContent = `(${sym})`;
+  const ht = document.getElementById('s1-payterm-hint'); if (ht) ht.textContent = `· ${cur}`;
+  const hg = document.getElementById('s1-target-hint'); if (hg) hg.textContent = `(${sym})`;
+}
 
-  var rows = ['prod_name', 'ins_name', 'min_prem', 'pay_term', 'break_year', 'irr_20', 'guarantee', 'life_type', 'finance_support'];
-  var labels = {
-    prod_name: '產品名稱', ins_name: '保險公司', min_prem: '最低保費(USD)',
-    pay_term: '繳費年期', break_year: '回本年', irr_20: 'IRR 20年(%)',
-    guarantee: '保證回報', life_type: '產品類型', finance_support: '保費融資'
-  };
+function onCurrencyChange() {
+  const sel = document.getElementById('currency-selector');
+  if (sel) state.displayCurrency = sel.value;
+  updateProductCurrencyHints();
+  calcScene1(); calcScene2(); updateOpportunityTable();
+}
 
-  var html = '<table class="compare-table"><thead><tr><th>比較項</th>';
-  for (var i = 0; i < products.length; i++) { html += '<th>' + products[i].prod_name + '</th>'; }
-  html += '</tr></thead><tbody>';
-
-  for (var r = 0; r < rows.length; r++) {
-    var rowKey = rows[r];
-    html += '<tr><td><strong>' + labels[rowKey] + '</strong></td>';
-    for (var i = 0; i < products.length; i++) {
-      var p = products[i];
-      var v = p[rowKey];
-      var display = v;
-      if (v === null || v === undefined) { display = '-'; }
-      else if (rowKey === 'irr_20') { display = v + '%'; }
-      else if (rowKey === 'break_year' && v === null) { display = '待補'; }
-      html += '<td>' + display + '</td>';
-    }
-    html += '</tr>';
+function updatePayTermOptions() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod) return;
+  const c = document.getElementById('s1-pay-term');
+  if (!c) return;
+  c.innerHTML = '';
+  prod.payTerms.forEach((t, i) => {
+    const lab = document.createElement('label');
+    const r = document.createElement('input');
+    r.type='radio'; r.name='s1pt'; r.value=t; r.onchange=calcScene1;
+    if (i===0) r.checked=true;
+    const txt = (prod.payTermLabels||{})[String(t)] || `${t}年`;
+    lab.appendChild(r); lab.appendChild(document.createTextNode(` ${txt}`));
+    c.appendChild(lab);
+  });
+  /* v3.2.1: 切換產品時更新保費輸入框為標準保費 */
+  const premInput = document.getElementById('s1-premium');
+  if (premInput && prod.standardPremium) {
+    premInput.value = prod.standardPremium;
   }
-
-  html += '</tbody></table>';
-  panel.innerHTML = '<div class="compare-header">' +
-    '<h3>產品對比(' + products.length + '款)</h3>' +
-    '<div>' +
-    '<button class="btn btn-ghost" onclick="showMultiProductChart()">多產品圖表</button> ' +
-    '<button class="btn btn-ghost" onclick="clearCompare()">清空</button>' +
-    '</div>' +
-    '</div>' + html;
 }
 
-function clearCompare() {
-  comparedProductIds = [];
-  var inputs = document.querySelectorAll('.compare-toggle input');
-  for (var i = 0; i < inputs.length; i++) { inputs[i].checked = false; }
-  updateCompareBadge();
-  renderComparePanel();
+/* ═══ 場景切換 ═══ */
+function switchScene(n) {
+  state.activeScene = n;
+  document.getElementById('scene1').classList.toggle('active', n===1);
+  document.getElementById('scene2').classList.toggle('active', n===2);
+  document.getElementById('btn-scene1').classList.toggle('active', n===1);
+  document.getElementById('btn-scene2').classList.toggle('active', n===2);
+  if (n===1) calcScene1(); else calcScene2();
 }
 
-// ===== ECharts 收益曲線圖(單產品) =====//
-function showIncomeChart(prodId) {
-  console.log('showIncomeChart() called', prodId);
-  var product = productData.products.find(function(p) { return p.prod_id === prodId; });
-  if (!product) return;
-  var modal = document.getElementById('chartModal');
-  var title = document.getElementById('chartTitle');
-  if (title) title.textContent = product.prod_name + ' | ' + chartConfig.income_chart.title;
-  if (modal) modal.style.display = 'block';
+/* ═══ 場景一計算 ═══ */
+function calcScene1() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod) return;
+  const base = parseFloat(document.getElementById('s1-premium').value) || prod.standardPremium || prod.annualPremium;
+  const payTerm = parseInt(document.querySelector('input[name="s1pt"]:checked')?.value || prod.payTerms[0]);
+  const discY1 = (parseFloat(document.getElementById('s1-discount-y1').value)||0)/100;
+  const prepay = (parseFloat(document.getElementById('s1-prepay').value)||0)/100;
+  const premY1 = base * (1-discY1);
+  const remaining = Math.max(0, payTerm-1);
+  const totalBefore = premY1 + base * remaining;
+  const prepayDisc = totalBefore * prepay * (payTerm/2)/12;
+  const netTotal = Math.max(0, totalBefore - prepayDisc);
+  state.s1Results = { base, payTerm, discY1, prepay, premY1, totalBefore, prepayDisc, netTotal };
+  const sym = (appConfig.currencySymbols||{})[state.displayCurrency||prod.currency] || '';
+  document.getElementById('s1-net-total').textContent = `${sym} ${fmt(netTotal)}`;
+  document.getElementById('s1-net-breakdown').textContent = `原始 ${sym}${fmt(totalBefore)}，預繳折讓 ${sym}${fmt(prepayDisc)}`;
+  document.getElementById('s1-y1-net').textContent = `${sym} ${fmt(premY1)}`;
+  updatePrivilegesWall(base * payTerm);
+  updateWealthChart();
+  updatePremiumPie();
+  updateOppChart();
+}
 
-  if (currentChart) currentChart.dispose();
-  currentChart = echarts.init(document.getElementById('chartContainer'));
+function setVal(id, v) { document.getElementById(id).value = v; }
 
-  var cfg = chartConfig.income_chart;
-  var initial = parseFloat(product.min_prem) || 10000;
-  var irr = parseFloat(product.irr_20) || 0;
-  var guaranteedSeries = cfg.years.map(function(y) { return Math.round(initial * Math.pow(1 + finConfig.irr_params.guarantee_rate_low, y)); });
-  var projectedSeries = cfg.years.map(function(y) { return Math.round(initial * Math.pow(1 + irr / 100, y)); });
+/* ═══ 場景二計算（修正：使用實付總保費，非原始總保費）═══ */
+function calcScene2() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod || !prod.isFinanceable) return;
+  const totalPrem = parseFloat(document.getElementById('s2-total-premium').value) || 0;
+  const ltv = (parseFloat(document.getElementById('s2-ltv').value)||95)/100;
+  const rate = (parseFloat(document.getElementById('s2-rate').value)||3.275)/100;
+  const cap = (parseFloat(document.getElementById('s2-cap-rate').value)||3.9)/100;
+  const feeRate = (parseFloat(document.getElementById('s2-loan-fee').value)||2)/100;
+  const term = Math.min(10, parseInt(document.getElementById('s2-loan-term').value)||9);
+  const sym = (appConfig.currencySymbols||{})[state.displayCurrency||prod.currency] || '';
 
-  var option = {
-    backgroundColor: chartConfig.theme.backgroundColor,
-    title: { text: product.prod_name, subtext: product.ins_name, left: 'center', textStyle: chartConfig.theme.title },
-    tooltip: cfg.tooltip,
-    legend: { data: [cfg.series_names.guaranteed, cfg.series_names.projected], top: cfg.legend_position.top, textStyle: chartConfig.theme.legend.textStyle },
-    xAxis: { type: 'category', data: cfg.years.map(function(y) { return '第' + y + '年'; }) },
-    yAxis: { type: 'value', name: cfg.y_axis_name },
+  /* 任務一修正：首日現價用固定比例，實際貸款取整 */
+  const fdCV = totalPrem * (prod.firstDayCVRatio||0.7869);
+  const loan = Math.round(fdCV * ltv);  /* 取整，如 448,000 */
+  const fee = loan * feeRate;
+
+  /* 任務一修正：實付總保費 = 原始總保費 × (1 - 首年折扣率) */
+  const discPct = ((prod.discounts?.firstYear?.defaultPercent)||12.5)/100;
+  const paidTotal = totalPrem * (1 - discPct);  /* 524,769.51 */
+
+  /* ① 實際本金 = 實付總保費 - 實際貸款金額 */
+  const principal = paidTotal - loan;
+
+  /* ④ 客戶總出資成本 = 實際本金 + 手續費 */
+  const cost = principal + fee;
+
+  /* 退出金額 = (保證退出金額 + 分紅實現率 × 預期部分) × 縮放係數 */
+  const fin = prod.financing || {};
+  const standardPrem = prod.standardPremium || 200000;
+  const scalingFactor = totalPrem / 600000;  /* Excel 基準是 600,000 */
+  const guaranteedExit = (fin.guaranteedExit || 562800) * scalingFactor;
+  const expectedBonus = (fin.expectedBonus || 248784) * scalingFactor;
+  const policyVal = guaranteedExit + expectedBonus;
+
+  /* ⑤ NAV = 退出金額 - 貸款 - 手續費 - 利息（手續費在這裡扣一次） */
+  const intCurr = loan * rate * term;
+  const intCap = loan * cap * term;
+  const navCurr = policyVal - loan - fee - intCurr;
+  const navCap = policyVal - loan - fee - intCap;
+
+  /* ⑥ 淨收益 = NAV - 實際本金（不再扣手續費，因為 NAV 已扣過）*/
+  const netCurr = navCurr - principal;
+  const netCap = navCap - principal;
+
+  /* ⑦ 年化單利 = 淨收益 / 客戶總出資成本 / 年期 */
+  const roiCurr = cost > 0 ? (netCurr / cost) * 100 : 0;
+  const roiCap = cost > 0 ? (netCap / cost) * 100 : 0;
+  const annCurr = term > 0 ? roiCurr / term : 0;
+  const annCap = term > 0 ? roiCap / term : 0;
+
+  state.s2Results = { totalPrem, ltv, rate, cap, feeRate, term, fdCV, loan, fee, paidTotal, principal, cost, policyVal, intCurr, intCap, netCurr, netCap, roiCurr, roiCap, annCurr, annCap };
+
+  document.getElementById('s2-first-day-cv').textContent = `${sym} ${fmt(fdCV)}`;
+  document.getElementById('s2-loan-amount').textContent = `${sym} ${fmt(loan)}`;
+  document.getElementById('s2-loan-fee-amount').textContent = `${sym} ${fmt(fee)}`;
+  document.getElementById('s2-actual-principal').textContent = `${sym} ${fmt(principal)}`;
+  document.getElementById('s2-client-total-cost').textContent = `${sym} ${fmt(cost)}`;
+  document.getElementById('s2-roi-current').textContent = `${roiCurr.toFixed(1)}%`;
+  document.getElementById('s2-annual-current').textContent = `${annCurr.toFixed(2)}%`;
+  document.getElementById('s2-roi-cap').textContent = `${roiCap.toFixed(1)}%`;
+  document.getElementById('s2-annual-cap').textContent = `${annCap.toFixed(2)}%`;
+  const cp = totalPrem>0 ? (cost/totalPrem)*100 : 0;
+  const bp = totalPrem>0 ? (loan/totalPrem)*100 : 0;
+  document.getElementById('leverage-client-bar').style.width = `${Math.min(cp,100)}%`;
+  document.getElementById('leverage-bank-bar').style.width = `${Math.min(bp,100)}%`;
+  document.getElementById('leverage-client-label').textContent = `客戶 ${cp.toFixed(1)}%`;
+  document.getElementById('leverage-bank-label').textContent = `銀行 ${bp.toFixed(1)}%`;
+  updateDualReturnChart();
+}
+
+/* ═══ ECharts 圖表 ═══ */
+function initCharts() {
+  echartsInstances.wealth = echarts.init(document.getElementById('chart-wealth-river'));
+  echartsInstances.premiumPie = echarts.init(document.getElementById('chart-premium-pie'));
+  echartsInstances.opp = echarts.init(document.getElementById('chart-opp-cost'));
+  echartsInstances.dual = echarts.init(document.getElementById('chart-dual-return'));
+  echartsInstances.comparison = echarts.init(document.getElementById('chart-comparison'));
+  window.addEventListener('resize', () => Object.values(echartsInstances).forEach(c => c && c.resize()));
+}
+
+function updateWealthChart() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod || !echartsInstances.wealth) return;
+  const userPremium = parseFloat(document.getElementById('s1-premium').value) || prod.standardPremium || prod.annualPremium;
+  const target = parseFloat(document.getElementById('s1-target-amount').value) || 0;
+  const dataPoints = prod.unitData || prod.policyData || [];
+  const years = dataPoints.map(d => `第${d.year}年`);
+
+  /* v3.2：用 unitData 縮放 */
+  const guaranteed = dataPoints.map(d => {
+    if (d.unitGuaranteed !== undefined) return Math.round(d.unitGuaranteed * userPremium);
+    return Math.round((d.guaranteedCV || 0) * (userPremium / getBasePremiumUnit(prod)));
+  });
+  const bonus = dataPoints.map(d => {
+    if (d.unitBonus !== undefined) return Math.round(d.unitBonus * userPremium);
+    return Math.round((d.nonGuaranteedBonus || 0) * (userPremium / getBasePremiumUnit(prod)));
+  });
+  const total = guaranteed.map((g,i) => g + bonus[i]);
+  const targetLine = dataPoints.map(() => target);
+
+  let targetYear = null;
+  for (let i = 0; i < total.length; i++) {
+    if (total[i] >= target) { targetYear = dataPoints[i].year; break; }
+  }
+  const hintEl = document.getElementById('s1-target-year-hint');
+  if (hintEl) hintEl.textContent = targetYear ? `✅ 預計第 ${targetYear} 年達成目標` : '⚠️ 目前參數下未能在展示期內達成目標';
+
+  echartsInstances.wealth.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['保證現金價值','非保證紅利','總價值','目標金額'], top: 0 },
+    xAxis: { type: 'category', data: years },
+    yAxis: { type: 'value', name: '價值', axisLabel: { formatter: v => fmtShort(v) } },
     series: [
-      { name: cfg.series_names.guaranteed, type: 'line', data: guaranteedSeries, smooth: cfg.smooth, itemStyle: { color: cfg.colors.guaranteed }, animation: cfg.animation },
-      { name: cfg.series_names.projected, type: 'line', data: projectedSeries, smooth: cfg.smooth, itemStyle: { color: cfg.colors.projected }, animation: cfg.animation }
+      { name: '保證現金價值', type: 'bar', stack: 'wealth', data: guaranteed, itemStyle: { color: '#1a5fb4' } },
+      { name: '非保證紅利', type: 'bar', stack: 'wealth', data: bonus, itemStyle: { color: '#999' } },
+      { name: '總價值', type: 'line', data: total, itemStyle: { color: '#26a269' }, lineStyle: { width: 2 } },
+      { name: '目標金額', type: 'line', data: targetLine, itemStyle: { color: '#c01c28' }, lineStyle: { type: 'dashed', width: 2 }, symbol: 'none' }
     ]
-  };
-  currentChart.setOption(option);
-  window.addEventListener('resize', function() { if (currentChart) currentChart.resize(); });
+  }, true);
 }
 
-// ===== ECharts IRR對比圖(單產品 vs 行業均值) =====//
-function showIRRChart(prodId) {
-  console.log('showIRRChart() called', prodId);
-  var product = productData.products.find(function(p) { return p.prod_id === prodId; });
-  if (!product) return;
-  var modal = document.getElementById('chartModal');
-  var title = document.getElementById('chartTitle');
-  if (title) title.textContent = product.prod_name + ' | ' + chartConfig.irr_compare_chart.title;
-  if (modal) modal.style.display = 'block';
+/* 任務三：繳費構成餅圖（融資模式下隱藏） */
+function updatePremiumPie() {
+  if (!echartsInstances.premiumPie) return;
+  const s1 = state.s1Results;
+  if (!s1 || !s1.base) return;
 
-  if (currentChart) currentChart.dispose();
-  currentChart = echarts.init(document.getElementById('chartContainer'));
-
-  var cfg = chartConfig.irr_compare_chart;
-  var irr = parseFloat(product.irr_20) || 0;
-  var avgIRR = 4.5;
-  var option = {
-    backgroundColor: chartConfig.theme.backgroundColor,
-    title: { text: cfg.title, subtext: product.prod_name, left: 'center', textStyle: chartConfig.theme.title },
-    tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: [product.prod_name, '行業平均'] },
-    yAxis: { type: 'value', name: 'IRR %', min: cfg.y_axis_min, max: cfg.y_axis_max },
-    series: [{
-      name: '20年IRR',
-      type: cfg.type,
-      data: [{ value: irr, itemStyle: { color: cfg.color } }, { value: avgIRR, itemStyle: { color: '#7a8a99' } }],
-      label: { show: true, position: 'top', formatter: '{c}%' }
-    }]
-  };
-  currentChart.setOption(option);
-  window.addEventListener('resize', function() { if (currentChart) currentChart.resize(); });
-}
-
-// ===== ECharts 多產品 IRR 對比圖(多選後) =====//
-function showMultiProductChart() {
-  console.log('showMultiProductChart() called');
-  if (comparedProductIds.length === 0) { alert('請先勾選產品'); return; }
-  var products = [];
-  for (var i = 0; i < comparedProductIds.length; i++) {
-    var found = productData.products.find(function(p) { return p.prod_id === comparedProductIds[i]; });
-    if (found) products.push(found);
-  }
-
-  var modal = document.getElementById('chartModal');
-  var title = document.getElementById('chartTitle');
-  if (title) title.textContent = '多產品IRR對比(' + products.length + '款)';
-  if (modal) modal.style.display = 'block';
-
-  if (currentChart) currentChart.dispose();
-  currentChart = echarts.init(document.getElementById('chartContainer'));
-
-  var option = {
-    backgroundColor: chartConfig.theme.backgroundColor,
-    title: { text: '20年IRR多產品對比', left: 'center', textStyle: chartConfig.theme.title },
-    tooltip: { trigger: 'axis' },
-    xAxis: { type: 'category', data: products.map(function(p) { return p.prod_name; }) },
-    yAxis: { type: 'value', name: 'IRR %' },
-    series: [{
-      name: '20年IRR',
-      type: 'bar',
-      data: products.map(function(p) {
-        return { value: parseFloat(p.irr_20) || 0, itemStyle: { color: '#1e3a5f' } };
-      }),
-      label: { show: true, position: 'top', formatter: '{c}%' }
-    }]
-  };
-  currentChart.setOption(option);
-  window.addEventListener('resize', function() { if (currentChart) currentChart.resize(); });
-}
-
-function closeChartModal() {
-  var modal = document.getElementById('chartModal');
-  if (modal) modal.style.display = 'none';
-  if (currentChart) { currentChart.dispose(); currentChart = null; }
-}
-
-// ===== 客戶 PDF 報告導出 =====//
-function addToReport(prodId) {
-  console.log('addToReport() called', prodId);
-  if (reportItems.indexOf(prodId) === -1) {
-    reportItems.push(prodId);
-    updateReportBadge();
-    alert('已加入客戶報告');
-  } else {
-    alert('該產品已在報告中');
-  }
-}
-
-function updateReportBadge() {
-  var badge = document.getElementById('reportBadge');
-  if (badge) badge.textContent = reportItems.length;
-}
-
-function generateClientReport() {
-  console.log('generateClientReport() called');
-  if (reportItems.length === 0) {
-    alert('請先加入至少一款產品到報告');
+  /* 融資模式下隱藏餅圖 */
+  const pieContainer = document.getElementById('chart-premium-pie');
+  if (!pieContainer) return;
+  const pieWrapper = pieContainer.closest('.chart-mini-wrapper');
+  if (state.activeScene === 2 || (state.financeEnabled && getProductById(state.primaryProduct)?.isFinanceable && state.activeScene === 2)) {
+    if (pieWrapper) pieWrapper.style.display = 'none';
     return;
   }
-  var products = [];
-  for (var i = 0; i < reportItems.length; i++) {
-    var found = productData.products.find(function(p) { return p.prod_id === reportItems[i]; });
-    if (found) products.push(found);
+  if (pieWrapper) pieWrapper.style.display = '';
+
+  /* 儲蓄險模式：4項分解 */
+  const clientPay = s1.premY1 + (s1.base * Math.max(0, s1.payTerm - 1));
+  const prepayDisc = s1.prepayDisc;
+  const firstDisc = s1.base * s1.discY1;
+  const renewalDisc = s1.base * 0; /* 續期折扣（如有，僅第二年，目前預設0） */
+
+  echartsInstances.premiumPie.setOption({
+    tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+    series: [{
+      type: 'pie', radius: ['40%','70%'],
+      label: { formatter: '{b}\n{d}%', fontSize: 11 },
+      data: [
+        { name: '客戶實際出資', value: Math.round(clientPay), itemStyle: { color: '#1a5fb4' } },
+        { name: '預繳保費利息', value: Math.round(prepayDisc), itemStyle: { color: '#26a269' } },
+        { name: '首年保費折扣', value: Math.round(firstDisc), itemStyle: { color: '#f5a623' } },
+        { name: '續期保費折扣', value: Math.round(renewalDisc), itemStyle: { color: '#999' } }
+      ].filter(d => d.value > 0) /* 只顯示大於0的項 */
+    }]
+  }, true);
+}
+
+/* 第四步：客戶期望收益 vs 本計劃單利對比（不要 IRR）*/
+function updateOppChart() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod || !echartsInstances.opp) return;
+  const customRate = parseFloat(document.getElementById('opp-custom-rate').value) || 5;
+  const base = parseFloat(document.getElementById('s1-premium').value) || prod.standardPremium || prod.annualPremium;
+  const ratio = base / getBasePremiumUnit(prod);
+  const years = [5, 10, 15, 20].filter(y => prod.policyData.some(d => d.year <= y));
+  /* 本計劃平均年度單利 */
+  const simpleData = years.map(y => {
+    const d = getPolicyDataAtYear(prod, y);
+    if (!d) return 0;
+    const total = (d.guaranteedCV + d.nonGuaranteedBonus) * ratio;
+    const paid = (d.premiumPaid ?? d.principal ?? 0) * ratio;
+    return paid > 0 ? +((total - paid) / paid / y * 100).toFixed(2) : 0;
+  });
+  /* 客戶期望收益率（水平基準線） */
+  const customData = years.map(() => customRate);
+
+  echartsInstances.opp.setOption({
+    tooltip: { trigger: 'axis', formatter: p => p.map(i => `${i.seriesName}: ${i.value}%`).join('<br/>') },
+    legend: { data: ['本計劃平均年度單利', '客戶期望收益率'], top: 0 },
+    xAxis: { type: 'category', data: years.map(y => `第${y}年`) },
+    yAxis: { type: 'value', name: '%', axisLabel: { formatter: '{value}%' } },
+    series: [
+      { name: '本計劃平均年度單利', type: 'bar', data: simpleData, itemStyle: { color: '#1a5fb4' }, label: { show: true, formatter: '{c}%', fontSize: 10 } },
+      { name: '客戶期望收益率', type: 'line', data: customData, itemStyle: { color: '#f5a623' }, lineStyle: { width: 2, type: 'dashed' }, symbol: 'diamond', symbolSize: 8, label: { show: true, formatter: '{c}%', fontSize: 10 } }
+    ]
+  }, true);
+  updateOpportunityTable();
+}
+
+function updateDualReturnChart() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod || !prod.isFinanceable || !echartsInstances.dual) return;
+  const totalPrem = parseFloat(document.getElementById('s2-total-premium').value) || 0;
+  const ltv = (parseFloat(document.getElementById('s2-ltv').value)||95)/100;
+  const rate = (parseFloat(document.getElementById('s2-rate').value)||3.275)/100;
+  const cap = (parseFloat(document.getElementById('s2-cap-rate').value)||3.9)/100;
+  const feeRate = (parseFloat(document.getElementById('s2-loan-fee').value)||2)/100;
+  const exitY = Math.min(10, parseInt(document.getElementById('s2-loan-term').value)||9);
+  const fdCV = totalPrem * (prod.firstDayCVRatio||0.95);
+  const loan = fdCV * ltv;
+  const fee = loan * feeRate;
+  const ratio = totalPrem / getBasePremiumUnit(prod);
+  const years = Array.from({length:10}, (_,i)=>i+1);
+  const navCurr = years.map(y => {
+    const d = getPolicyDataAtYear(prod, y);
+    if (!d) return null;
+    return Math.round(((d.guaranteedCV + d.nonGuaranteedBonus) * ratio) - loan - (loan * rate * y) - fee);
+  });
+  const navCap = years.map(y => {
+    const d = getPolicyDataAtYear(prod, y);
+    if (!d) return null;
+    return Math.round(((d.guaranteedCV + d.nonGuaranteedBonus) * ratio) - loan - (loan * cap * y) - fee);
+  });
+  const anchor = years.map((y,i) => y === exitY ? navCurr[i] : null);
+  echartsInstances.dual.setOption({
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['正常環境NAV','最壞環境NAV','黃金退出點'], top: 0 },
+    xAxis: { type: 'category', data: years.map(y=>`第${y}年`) },
+    yAxis: { type: 'value', name: 'NAV', axisLabel: { formatter: v => fmtShort(v) } },
+    series: [
+      { name: '正常環境NAV', type: 'line', data: navCurr, smooth: true, itemStyle: { color: '#1a5fb4' }, areaStyle: { opacity: 0.1 } },
+      { name: '最壞環境NAV', type: 'line', data: navCap, smooth: true, itemStyle: { color: '#c01c28' }, lineStyle: { type: 'dashed' } },
+      { name: '黃金退出點', type: 'scatter', data: anchor, symbolSize: 20, itemStyle: { color: '#f5a623' }, label: { show: true, formatter: '⭐', fontSize: 16, position: 'top' } }
+    ]
+  }, true);
+}
+
+function updateComparisonChart() {
+  if (!echartsInstances.comparison) return;
+  const ids = [state.primaryProduct, ...state.compareProducts].filter(Boolean);
+  if (ids.length < 2) return;
+  const years = [1,5,10,15,20,25,30];
+  const series = [];
+
+  ids.forEach((pid) => {
+    const prod = getProductById(pid);
+    if (!prod) return;
+    const isPrimary = pid === state.primaryProduct;
+    const dataPoints = prod.unitData || prod.policyData || [];
+
+    /* 用 unitData 計算總價值倍數（×100%顯示）*/
+    const dataValues = years.map(y => {
+      const d = getPolicyDataAtYear(prod, y);
+      if (!d) return null;
+      const ug = d.unitGuaranteed !== undefined ? d.unitGuaranteed : 0;
+      const ub = d.unitBonus !== undefined ? d.unitBonus : 0;
+      return +((ug + ub) * 100).toFixed(1);
+    });
+
+    series.push({
+      name: prod.name, type: 'line', smooth: true,
+      data: dataValues,
+      itemStyle: { color: isPrimary ? '#1a5fb4' : '#b0bec5' },
+      lineStyle: { width: isPrimary ? 3 : 1.5, opacity: isPrimary ? 1 : 0.6 },
+      markLine: isPrimary ? {
+        symbol: 'none',
+        data: (() => {
+          const be = calcBreakEvenYear(prod, prod.standardPremium || prod.standardPremium || prod.annualPremium || 1);
+          const lines = [];
+          if (be?.breakEvenYear) lines.push({ xAxis: `第${be.breakEvenYear}年`, label: { formatter: `回本\n${be.ratio}倍`, color: '#26a269', fontSize: 9 }, lineStyle: { color: '#26a269', type: 'dashed' } });
+          if (be?.guaranteedBreakEven) lines.push({ xAxis: `第${be.guaranteedBreakEven}年`, label: { formatter: '保證\n回本', color: '#1a5fb4', fontSize: 9 }, lineStyle: { color: '#1a5fb4', type: 'dotted' } });
+          return lines;
+        })()
+      } : undefined
+    });
+  });
+
+  echartsInstances.comparison.setOption({
+    tooltip: { trigger: 'axis', formatter: p => { let s = p[0].axisValue + '<br/>'; p.forEach(i => { if (i.value != null) s += `${i.marker}${i.seriesName}: ${i.value}%<br/>`; }); return s; } },
+    legend: { top: 0, textStyle: { fontSize: 10 } },
+    grid: { left: '8%', right: '5%', bottom: '10%' },
+    xAxis: { type: 'category', data: years.map(y=>`第${y}年`), axisLabel: { interval: 0 } },
+    yAxis: { type: 'value', name: '總資產(×保費%)', axisLabel: { formatter: '{value}%' }, scale: true },
+    series
+  }, true);
+  updateComparisonTable(ids);
+}
+
+/* ═══ 對比表 ═══ */
+/* 第五步：按需求標籤自動拉入同類產品對比 */
+function updateComparisonSection() {
+  const sec = document.getElementById('comparison-section');
+  const prod = getProductById(state.primaryProduct);
+  if (!prod || !sec) return;
+
+  /* 根據需求標籤自動篩選同類產品 */
+  let compareIds = [];
+  if (state.needTags.length > 0) {
+    /* 找出與當前產品共享至少一個需求標籤的其他產品 */
+    compareIds = productList
+      .filter(p => p.id !== state.primaryProduct && p.needTags.some(t => prod.needTags.includes(t)))
+      .map(p => p.id);
   }
 
-  var reportHtml = '<html><head><meta charset="UTF-8"><title>客戶比較報告</title>' +
-    '<style>body{font-family:"Microsoft JhengHei";padding:30px;color:#2c3e50;}' +
-    'h1{color:#1e3a5f;border-bottom:3px solid #1e3a5f;padding-bottom:10px;}' +
-    'h2{color:#2c5282;margin-top:30px;}' +
-    'table{width:100%;border-collapse:collapse;margin:20px 0;}' +
-    'th,td{border:1px solid #ddd;padding:10px;text-align:left;}' +
-    'th{background:#1e3a5f;color:#fff;}' +
-    '.product-section{margin:30px 0;padding:20px;background:#f7f9fc;border-radius:8px;border-left:4px solid #1e3a5f;}' +
-    '.highlight{background:#fffbf0;padding:10px;border-radius:4px;border-left:3px solid #d4af37;margin:10px 0;}' +
-    '.footer{margin-top:40px;padding-top:20px;border-top:1px solid #ddd;color:#7a8a99;font-size:12px;}' +
-    '</style></head><body>';
-  reportHtml += '<h1>保險產品比較報告</h1>';
-  reportHtml += '<p>報告日期: ' + new Date().toLocaleDateString('zh-HK') + '</p>';
-  reportHtml += '<p>顧問: ' + finConfig.report.contact + ' | ' + finConfig.report.company_name + '</p>';
-  reportHtml += '<p>產品數量: ' + products.length + ' 款</p>';
-  reportHtml += '<h2>產品對比總覽</h2><table><tr><th>產品</th><th>保司</th><th>最低保費</th><th>回本</th><th>IRR 20年</th><th>保證回報</th><th>保費融資</th></tr>';
-  for (var i = 0; i < products.length; i++) {
-    var p = products[i];
-    reportHtml += '<tr><td>' + p.prod_name + '</td><td>' + p.ins_name + '</td><td>USD' + p.min_prem + '</td><td>' + (p.break_year || '待補') + '</td><td>' + (p.irr_20 || '待補') + '%</td><td>' + p.guarantee + '</td><td>' + p.finance_support + '</td></tr>';
+  /* 如果沒有需求標籤，但有手動勾選的對比產品，用手動的 */
+  if (compareIds.length === 0 && state.compareProducts.length > 0) {
+    compareIds = [...state.compareProducts];
   }
-  reportHtml += '</table>';
-  for (var i = 0; i < products.length; i++) {
-    var p = products[i];
-    reportHtml += '<div class="product-section">';
-    reportHtml += '<h2>' + p.prod_name + ' (' + p.prod_id + ')</h2>';
-    reportHtml += '<p><strong>保險公司:</strong> ' + p.ins_name + '</p>';
-    reportHtml += '<p><strong>繳費年期:</strong> ' + p.pay_term + '</p>';
-    reportHtml += '<p><strong>最低保費:</strong> USD' + p.min_prem + '</p>';
-    reportHtml += '<p><strong>回本:</strong> ' + (p.break_year || '待補') + '</p>';
-    reportHtml += '<p><strong>IRR 20年:</strong> ' + (p.irr_20 || '待補') + '%</p>';
-    reportHtml += '<p><strong>產品類型:</strong> ' + p.life_type + ' | <strong>保證回報:</strong> ' + p.guarantee + '</p>';
-    reportHtml += '<p><strong>產品特色:</strong> ' + p.feature_short + '</p>';
-    reportHtml += '<div class="highlight"><strong>★ 網紅亮點:</strong> ' + p.influencer_point + '<em>' + p.scene_desc + '</em></div>';
-    reportHtml += '<p><strong>標籤:</strong> ' + (p.tag_list || []).join('、') + '</p>';
-    if (p.finance_support === '是') {
-      reportHtml += '<p><strong>保費融資:</strong>支持(最低融資額 USD' + finConfig.finance_terms.INS01.min_finance_amount + ',LTV ' + (finConfig.finance_terms.INS01.loan_to_value * 100) + '%, 利率 ' + (finConfig.finance_terms.INS01.interest_rate * 100) + '%)</p>';
+
+  const total = 1 + compareIds.length; /* 當前產品 + 同類 */
+
+  if (total >= 2) {
+    sec.classList.remove('comparison-hidden');
+    /* 臨時設置 compareProducts 用於圖表渲染 */
+    const originalCompare = [...state.compareProducts];
+    state.compareProducts = compareIds;
+    updateComparisonChart();
+    state.compareProducts = originalCompare;
+
+    /* 顯示提示 */
+    let banner = document.getElementById('multi-product-banner');
+    if (!banner) {
+      banner = document.createElement('div');
+      banner.id = 'multi-product-banner';
+      banner.style.cssText = 'background:#e8f0ff;padding:.75rem 1rem;border-radius:8px;margin-bottom:1rem;font-size:.85rem;color:var(--primary);font-weight:600;';
+      sec.insertBefore(banner, sec.firstChild);
     }
-    reportHtml += '</div>';
+    const tagLabel = state.needTags.length > 0 ? `（按需求標籤：${state.needTags.join('、')}）` : '';
+    banner.textContent = `已選 ${total} 個同類產品對比${tagLabel}`;
+  } else {
+    sec.classList.add('comparison-hidden');
+    const banner = document.getElementById('multi-product-banner');
+    if (banner) banner.remove();
   }
-  reportHtml += '<div class="footer">';
-  reportHtml += '<p>本報告由 ' + finConfig.report.company_name + ' 提供 | 數據版本 ' + productData.version + ' | ' + productData.generated_at + '</p>';
-  reportHtml += '<p>本報告僅供參考, 最終保單條款以保險公司正式保單文件為準.</p>';
-  reportHtml += '</div></body></html>';
+}
 
-  var w = window.open('', '_blank');
-  if (!w) { alert('請允許彈出視窗'); return; }
-  w.document.write(reportHtml);
-  w.document.close();
+function updateComparisonTable(ids) {
+  const t = document.getElementById('comparison-table');
+  const thead = t.querySelector('thead tr');
+  const tbody = t.querySelector('tbody');
+  thead.innerHTML = '<th>對比維度</th>';
+  ids.forEach(id => { const p = getProductById(id); if (p) { const th = document.createElement('th'); th.textContent = p.name; thead.appendChild(th); } });
+  tbody.innerHTML = '';
+  const rows = [
+    { label: '公司', fn: p => p.company },
+    { label: '貨幣', fn: p => p.currency },
+    { label: '繳費年期', fn: p => p.payTerms.map(t => (p.payTermLabels||{})[String(t)]||`${t}年`).join('/') },
+    { label: '保證回報率(第20年)', fn: p => { const d = getPolicyDataAtYear(p,20); const b = getBasePremiumUnit(p); return d ? `${(d.guaranteedCV/b*100).toFixed(1)}%` : '—'; } },
+    { label: '預期總回報率(第20年)', fn: p => { const d = getPolicyDataAtYear(p,20); const b = getBasePremiumUnit(p); return d ? `${((d.guaranteedCV+d.nonGuaranteedBonus)/b*100).toFixed(1)}%` : '—'; } },
+    { label: '回本年份', fn: p => { const b = getBasePremiumUnit(p); for (const d of p.policyData) { if (d.guaranteedCV >= b) return `第${d.year}年`; } return '長期'; } },
+    { label: '可融資', fn: p => p.isFinanceable ? '✅' : '❌' },
+    { label: '融資後IRR(第10年)', fn: p => p.isFinanceable ? '18.9%' : '—' }
+  ];
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    const td = document.createElement('td'); td.textContent = r.label; td.style.fontWeight='600'; tr.appendChild(td);
+    ids.forEach(id => { const p = getProductById(id); const td2 = document.createElement('td'); td2.textContent = p ? r.fn(p) : '—'; tr.appendChild(td2); });
+    tbody.appendChild(tr);
+  });
+}
 
-  setTimeout(function() {
-    var btn = w.document.createElement('button');
-    btn.textContent = '導出PDF';
-    btn.style.cssText = 'position:fixed;top:20px;right:20px;padding:10px 20px;background:#1e3a5f;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:14px;z-index:9999;';
-    btn.onclick = function() {
-      w.html2pdf().set({
-        margin: 10,
-        filename: 'insurance_report_' + Date.now() + '.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2 },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-      }).from(w.document.body).save();
-    };
-    w.document.body.appendChild(btn);
-  }, 500);
-} 
+/* ═══ 權益牆 ═══ */
+function updatePrivilegesWall(totalPremium) {
+  const prod = getProductById(state.primaryProduct);
+  const wall = document.getElementById('privileges-wall');
+  if (!prod || !wall) return;
+  if (!prod.privileges || prod.privileges.length === 0) { wall.innerHTML = '<span style="font-size:.8rem;color:var(--text-muted)">此產品暫無權益配置</span>'; return; }
+  wall.innerHTML = prod.privileges.map(pv => {
+    const ok = totalPremium >= pv.threshold;
+    return `<div class="privilege-chip ${ok?'unlocked':'locked'}" title="門檻：${fmt(pv.threshold)}">${pv.icon}<span>${pv.name}</span>${ok?'<span style="font-size:.7rem;margin-left:3px">✓</span>':''}</div>`;
+  }).join('');
+}
+
+/* ═══ 跨資產機會成本表 ═══ */
+/* 第六步：投資工具對比表（6項 + 入場門檻 + 核心差異）*/
+function updateOpportunityTable() {
+  const prod = getProductById(state.primaryProduct);
+  if (!prod) return;
+  const obsYear = 20;
+  const userPremium = parseFloat(document.getElementById('s1-premium').value) || prod.standardPremium || prod.annualPremium || prod.standardPremium;
+  const sym = (appConfig.currencySymbols||{})[state.displayCurrency||prod.currency] || '';
+
+  /* v3.2：用 unitData 計算本方案平均年度單利 */
+  const d = getPolicyDataAtYear(prod, obsYear);
+  let irr = 0;
+  if (d) {
+    const ug = d.unitGuaranteed !== undefined ? d.unitGuaranteed : 0;
+    const ub = d.unitBonus !== undefined ? d.unitBonus : 0;
+    const totalValue = (ug + ub) * userPremium;
+    /* 折扣後總保費 */
+    const discPct = ((prod.discounts?.firstYear?.defaultPercent)||0)/100;
+    const payTerm = prod.payTerms?.[0] || 1;
+    const paidTotal = userPremium * (1 - discPct) * payTerm;
+    irr = paidTotal > 0 ? ((totalValue - paidTotal) / paidTotal / obsYear * 100) : 0;
+  }
+
+  const rows = [
+    { tool: '🏠 本儲蓄保險方案', ret: `<span class="return-positive">${irr.toFixed(2)}% 單利</span>`, threshold: `${sym}${fmt(state.s1Results.netTotal||userPremium)}`, liq: '低', risk: '早期退保虧損、非保證分紅波動', diff: '—', hl: true },
+    { tool: '🇺🇸 美國長期國債ETF（TLT/VGLT）', ret: '4.0%-4.7%', threshold: '約25-150美元（1股）', liq: '高', risk: '利率風險、匯率風險、30%利息預扣稅', diff: '收益隨利率波動，ETF無固定到期保本', hl: false },
+    { tool: '🏦 銀行定期存款', ret: '1.5%-3.5%', threshold: '約1,000美元起', liq: '高', risk: '利率下行風險、再投資風險', diff: '收益確定但較低，受存款保障（最高80萬港元）', hl: false },
+    { tool: '📊 高股息ETF（如00900等）', ret: '約7.6%（非保證）', threshold: '約數萬港元', liq: '高', risk: '價格波動風險、股息不穩定', diff: '收益非保證，需承擔市場波動，無保本機制', hl: false },
+    { tool: '💰 穩健型銀行理財（固收+）', ret: '3.45%-7.51%', threshold: '約1萬元人民幣起', liq: '中高', risk: '淨值波動風險（資管新規後不保本）', diff: '收益浮動，淨值可能下跌，無保險保障', hl: false },
+    { tool: '🏠 物業收租', ret: '2.5%-3.0%', threshold: '約300,000美元', liq: '極低', risk: '管理費、空置期、樓價跌、印花稅', diff: '流動性最差，持有成本高，受經濟周期影響大', hl: false }
+  ];
+  const tbody = document.getElementById('opp-table-body');
+  if (!tbody) return;
+  tbody.innerHTML = rows.map(r => `<tr class="${r.hl?'opp-highlight':''}"><td>${r.tool}</td><td>${r.ret}</td><td>${r.threshold}</td><td>${r.liq}</td><td>${r.risk}</td><td>${r.diff}</td></tr>`).join('');
+}
+
+/* ═══ 報告 ═══ */
+function updateAdvisorTags() {
+  state.advisorTags = Array.from(document.querySelectorAll('#advisor-tags input:checked')).map(cb => cb.value);
+}
+function onFinanceToggle() {
+  const t = document.getElementById('finance-toggle');
+  const l = document.getElementById('finance-toggle-label');
+  state.financeEnabled = t.checked;
+  l.textContent = t.checked ? '已啟用 — 報告含融資壓力測試頁（共三頁）' : '已關閉 — 報告僅含兩頁';
+  l.style.color = t.checked ? 'var(--success)' : 'var(--text-muted)';
+}
+
+function generateReport() {
+  const s1 = state.s1Results, s2 = state.s2Results;
+  const prod = getProductById(state.primaryProduct);
+  if (!prod) return;
+  const sym = (appConfig.currencySymbols||{})[state.displayCurrency||prod.currency] || '';
+  const now = new Date().toLocaleString('zh-HK');
+  const ver = document.getElementById('report-version').value;
+  const isClient = ver === 'client';
+  const intro = state.advisorTags.length > 0
+    ? state.advisorTags.map(t => ({ '財富傳承':'針對財富傳承需求，透過長線複利增值實現跨代傳承。','資產配置與投資':'作為防守型資產，與進攻型資產互補降低組合波動。','儲蓄退休規劃':'為退休提供穩健被動收入，鎖定長線回報。','子女教育基金':'為子女教育提前儲備，複利效應最大化。','高額人壽保障':'結合高額保障與儲蓄增值，一張保單雙重需求。' }[t] || '')).join(' ')
+    : `本報告基於${prod.name}的保證與非保證利益，提供客觀數據供參考。`;
+  const irrLabel = isClient ? '平均每年複利回報' : 'IRR';
+  const container = document.getElementById('report-output');
+  let p1 = `<div class="pdf-page"><div class="pdf-page-title">📋 客戶專屬資產配置摘要</div>
+    <div class="report-row"><span>產品名稱</span><span>${prod.name}</span></div>
+    <div class="report-row"><span>產品編碼</span><span>${prod.code}</span></div>
+    <div class="report-row"><span>保險公司</span><span>${prod.company}</span></div>
+    <div class="report-row"><span>顧問標籤</span><span>${state.advisorTags.join('、')||'未指定'}</span></div>
+    <div class="report-row"><span>生成日期</span><span>${now}</span></div>
+    <div class="pdf-intro">${intro}</div>
+    <div class="report-section-title">💰 儲蓄方案分析</div>
+    <div class="report-row"><span>年保費</span><span>${sym} ${fmt(s1.base)}</span></div>
+    <div class="report-row"><span>繳費年期</span><span>${s1.payTerm} 年</span></div>
+    <div class="report-row"><span>首年折扣</span><span>${(s1.discY1*100).toFixed(0)}%</span></div>
+    <div class="report-row"><span>📌 實際淨出資</span><span style="color:var(--accent);font-weight:700">${sym} ${fmt(s1.netTotal)}</span></div></div>`;
+  let p2 = `<div class="pdf-page"><div class="pdf-page-title">⚖️ 跨資產機會成本對比（第20年）</div>
+    <table class="comparison-table opp-table" style="width:100%;font-size:.82rem;"><thead><tr><th>投資工具</th><th>預期年化收益</th><th>流動性</th><th>風險</th></tr></thead><tbody>${document.getElementById('opp-table-body').innerHTML}</tbody></table>
+    <p style="margin-top:1rem;font-size:.78rem;color:var(--text-muted);">⚠️ 以上對比基於第20週年數據，僅供參考。</p></div>`;
+  let p3 = '';
+  if (state.financeEnabled && s2 && s2.totalPrem > 0) {
+    p3 = `<div class="pdf-page"><div class="pdf-page-title">🏦 保費融資雙極限壓力測試</div>
+      <div class="report-section-title">客戶總出資成本明細</div>
+      <div class="report-row"><span>① 實際貸款金額</span><span>${sym} ${fmt(s2.loan)}</span></div>
+      <div class="report-row"><span>② 貸款手續費</span><span>${sym} ${fmt(s2.fee)}</span></div>
+      <div class="report-row"><span>④ 客戶總出資成本</span><span style="color:var(--accent);font-weight:700">${sym} ${fmt(s2.cost)}</span></div>
+      <div class="report-section-title">雙極限回報（第${s2.term}年退出）</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.75rem;margin:.75rem 0;">
+        <div class="result-card success" style="text-align:center;"><div class="rc-label">✅ 正常環境</div><div class="rc-value">${s2.roiCurr.toFixed(1)}%</div><div class="rc-sub">${isClient?'平均年回報':irrLabel} <strong>${s2.annCurr.toFixed(2)}%</strong></div></div>
+        <div class="result-card warning" style="text-align:center;"><div class="rc-label">⚠️ 最壞環境</div><div class="rc-value">${s2.roiCap.toFixed(1)}%</div><div class="rc-sub">${isClient?'平均年回報':irrLabel} <strong>${s2.annCap.toFixed(2)}%</strong></div></div>
+      </div>
+      <div class="pdf-signature"><div><p>客戶簽名：</p><div class="pdf-signature-line"></div></div><div style="text-align:right;"><p>顧問簽署：</p><div class="pdf-signature-line"></div></div></div></div>`;
+  }
+  container.innerHTML = p1 + p2 + p3 + `<div style="font-size:.75rem;color:var(--text-muted);line-height:1.8;margin-top:1rem;padding:.75rem;background:var(--surface-3);border-radius:var(--radius-sm);">⚠️ 重要聲明：終期紅利、融資預計回報屬非保證演示數據。所有數字以正式計劃書為準。</div>`;
+  document.getElementById('btn-whatsapp').disabled = false;
+  document.getElementById('btn-pdf').disabled = false;
+  showToast('✅ 報告已生成！');
+}
+
+function copyWhatsApp() {
+  const s1 = state.s1Results, s2 = state.s2Results;
+  const prod = getProductById(state.primaryProduct);
+  const sym = (appConfig.currencySymbols||{})[state.displayCurrency||prod.currency] || '';
+  let t = `🛡 *${prod.name} — 客戶投保分析摘要*\n\n💰 *儲蓄方案*\n• 年保費：${sym}${fmt(s1.base)}｜繳費 ${s1.payTerm} 年\n• 淨出資：${sym}${fmt(s1.netTotal)}\n`;
+  if (state.financeEnabled && s2 && s2.totalPrem > 0) {
+    t += `\n🏦 *保費融資*\n• 總保費：${sym}${fmt(s2.totalPrem)}｜LTV ${(s2.ltv*100).toFixed(0)}%\n• 客戶出資：${sym}${fmt(s2.cost)}\n• 第${s2.term}年退出：✅正常${s2.roiCurr.toFixed(1)}%（年${s2.annCurr.toFixed(2)}%）⚠️封頂${s2.roiCap.toFixed(1)}%（年${s2.annCap.toFixed(2)}%）\n`;
+  }
+  if (state.advisorTags.length > 0) t += `\n🏷 *顧問觀點*：${state.advisorTags.join('、')}\n`;
+  t += `\n⚠️ 數據僅供參考，以正式計劃書為準。`;
+  navigator.clipboard.writeText(t).then(() => showToast('💬 WhatsApp 摘要已複製！'));
+}
+
+function downloadPDF() {
+  const el = document.getElementById('report-output');
+  const prod = getProductById(state.primaryProduct);
+  showToast('📄 正在生成 PDF...');
+  html2pdf().set({ margin:[10,10,10,10], filename:`${prod.name}_報告.pdf`, image:{type:'jpeg',quality:0.95}, html2canvas:{scale:2,useCORS:true}, jsPDF:{unit:'mm',format:'a4',orientation:'portrait'}, pagebreak:{mode:['css','legacy'],before:'.pdf-page'} }).from(el).save().then(()=>showToast('✅ PDF 已下載！')).catch(()=>showToast('❌ PDF 生成失敗'));
+}
+
+/* ═══ Brochures ═══ */
+function updateBrochureForProduct() {
+  const prod = getProductById(state.primaryProduct);
+  const c = document.getElementById('brochures-list');
+  const h = document.getElementById('brochures-hint');
+  if (!c || !prod) return;
+  const cached = localStorage.getItem('it_brochures_index');
+  let files = []; try { files = JSON.parse(cached) || []; } catch {}
+  const expected = prod.brochureFile || `${prod.id}.pdf`;
+  const matched = files.find(f => f.name === expected);
+  if (matched) {
+    h.textContent = `當前產品：${prod.name}`;
+    c.innerHTML = `<div class="brochure-card" onclick="openBrochure('${matched.url}','${matched.name}')"><span class="brochure-icon">📄</span><span class="brochure-name">${prod.name}</span><span class="brochure-size">${(matched.size/1024).toFixed(0)} KB</span><span style="font-size:.72rem;color:var(--primary);">點擊查閱 →</span></div>`;
+  } else {
+    h.textContent = `當前產品：${prod.name} — 檔名：${expected}`;
+    c.innerHTML = `<div class="brochure-card" style="cursor:default;border-style:dashed;"><span class="brochure-icon">📄</span><span class="brochure-name">${prod.name}</span><span style="font-size:.72rem;color:var(--text-muted);">尚未同步</span></div>`;
+  }
+}
+
+async function loadBrochuresList() {
+  const c = document.getElementById('brochures-list');
+  const token = typeof getToken === 'function' ? getToken() : '';
+  const cached = localStorage.getItem('it_brochures_index');
+  if (cached) { try { const f = JSON.parse(cached); if (f.length > 0) { renderBrochures(f); return; } } catch {} }
+  c.innerHTML = '<p class="hint-text">🔄 載入中...</p>';
+  try {
+    const resp = await fetch('https://api.github.com/repos/terrielau2011-design/insurance-trainer/contents/brochures', { headers: { 'Accept':'application/vnd.github.v3+json', ...(token?{'Authorization':`Bearer ${token}`}:{}) } });
+    if (!resp.ok) { updateBrochureForProduct(); return; }
+    const files = (await resp.json()).filter(f => f.name.endsWith('.pdf')).map(f => ({ name:f.name, url:f.download_url, size:f.size }));
+    localStorage.setItem('it_brochures_index', JSON.stringify(files));
+    renderBrochures(files);
+  } catch { updateBrochureForProduct(); }
+}
+
+function renderBrochures(files) { document.getElementById('brochures-list').innerHTML = files.map(f => `<div class="brochure-card" onclick="openBrochure('${f.url}','${f.name}')"><span class="brochure-icon">📄</span><span class="brochure-name">${f.name}</span><span class="brochure-size">${(f.size/1024).toFixed(0)} KB</span><span style="font-size:.72rem;color:var(--primary);">查閱 →</span></div>`).join(''); }
+function openBrochure(url, name) { window.open(url, '_blank'); }
+
+function showToast(msg) {
+  const old = document.getElementById('toast'); if (old) old.remove();
+  const t = document.createElement('div'); t.id='toast'; t.style.cssText='position:fixed;bottom:2rem;left:50%;transform:translateX(-50%);background:#1a5fb4;color:#fff;padding:.75rem 1.5rem;border-radius:8px;font-size:.88rem;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.25);';
+  t.textContent = msg; document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
+}
+
+/* ═══ 工具函數（v3.2：unitData 縮放算法 + 回本期計算）═══ */
+function getProductById(id) { return productList.find(p => p.id === id) || null; }
+
+function getBasePremiumUnit(prod) {
+  return prod?.standardPremium || prod?.annualPremium || 1;
+}
+
+/* v3.2：用單位利益數據獲取任意年度價值 */
+function getPolicyDataAtYear(prod, yr) {
+  if (!prod) return null;
+
+  /* 優先使用 unitData */
+  if (prod.unitData && prod.unitData.length > 0) {
+    const sorted = [...prod.unitData].sort((a, b) => a.year - b.year);
+    const exact = sorted.find(d => d.year === yr);
+    if (exact) return { year: yr, unitGuaranteed: exact.unitGuaranteed, unitBonus: exact.unitBonus, guaranteedCV: exact.unitGuaranteed * (prod.standardPremium||1), nonGuaranteedBonus: exact.unitBonus * (prod.standardPremium||1) };
+    if (yr < sorted[0].year) return { year: yr, unitGuaranteed: sorted[0].unitGuaranteed, unitBonus: sorted[0].unitBonus, guaranteedCV: sorted[0].unitGuaranteed * (prod.standardPremium||1), nonGuaranteedBonus: sorted[0].unitBonus * (prod.standardPremium||1) };
+    if (yr > sorted[sorted.length-1].year) return { year: yr, unitGuaranteed: sorted[sorted.length-1].unitGuaranteed, unitBonus: sorted[sorted.length-1].unitBonus, guaranteedCV: sorted[sorted.length-1].unitGuaranteed * (prod.standardPremium||1), nonGuaranteedBonus: sorted[sorted.length-1].unitBonus * (prod.standardPremium||1) };
+    const before = sorted.filter(d => d.year < yr).pop();
+    const after = sorted.find(d => d.year > yr);
+    if (!before || !after) return null;
+    const t = (yr - before.year) / (after.year - before.year);
+    const ug = lerp(before.unitGuaranteed, after.unitGuaranteed, t);
+    const ub = lerp(before.unitBonus, after.unitBonus, t);
+    return { year: yr, unitGuaranteed: ug, unitBonus: ub, guaranteedCV: ug * (prod.standardPremium||1), nonGuaranteedBonus: ub * (prod.standardPremium||1) };
+  }
+
+  /* 向後兼容舊 policyData */
+  if (!prod.policyData || prod.policyData.length === 0) return null;
+  const s = [...prod.policyData].sort((a,b)=>a.year-b.year);
+  const ex = s.find(d => d.year === yr); if (ex) return ex;
+  if (yr < s[0].year) return s[0];
+  if (yr > s[s.length-1].year) return s[s.length-1];
+  const before = s.filter(d => d.year < yr).pop();
+  const after = s.find(d => d.year > yr);
+  if (!before || !after) return null;
+  const t = (yr - before.year) / (after.year - before.year);
+  return { year: yr, premiumPaid: lerp(before.premiumPaid||before.principal||0, after.premiumPaid||after.principal||0, t), guaranteedCV: lerp(before.guaranteedCV, after.guaranteedCV, t), nonGuaranteedBonus: lerp(before.nonGuaranteedBonus, after.nonGuaranteedBonus, t) };
+}
+
+/* v3.2：計算回本年份 */
+function calcBreakEvenYear(prod, userPremium) {
+  if (!prod || !prod.unitData) return null;
+  const discPct = ((prod.discounts?.firstYear?.defaultPercent)||0)/100;
+  const paidTotal = userPremium * (1 - discPct) * (prod.payTerms?.[0] || 1);
+  const sorted = [...prod.unitData].sort((a,b) => a.year - b.year);
+  let breakEvenYear = null, guaranteedBreakEven = null, ratio = null;
+  for (const d of sorted) {
+    const totalValue = (d.unitGuaranteed + d.unitBonus) * userPremium;
+    if (totalValue >= paidTotal && !breakEvenYear) {
+      breakEvenYear = d.year;
+      ratio = (paidTotal / totalValue).toFixed(2);
+    }
+    if (d.unitGuaranteed * userPremium >= paidTotal && !guaranteedBreakEven) {
+      guaranteedBreakEven = d.year;
+    }
+  }
+  return { breakEvenYear, guaranteedBreakEven, ratio };
+}
+
+function lerp(a,b,t) { return a + (b-a)*t; }
+function fmt(n) { return (n===null||n===undefined||isNaN(n)) ? '—' : Math.round(n).toLocaleString('zh-HK'); }
+function fmtShort(n) { if (Math.abs(n)>=1e8) return (n/1e8).toFixed(1)+'億'; if (Math.abs(n)>=1e4) return (n/1e4).toFixed(1)+'萬'; return Math.round(n).toString(); }
