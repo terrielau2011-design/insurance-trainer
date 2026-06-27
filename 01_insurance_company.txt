@@ -1,0 +1,7 @@
+```
+ins_id,ins_name,currency,coop_status
+INS01,中國人壽海外,HKD/USD/CNY,啟用
+INS02,中國太平洋人壽,HKD/USD/CNY,啟用
+INS03,立橋人壽,HKD/USD/CNY,啟用
+INS04,萬通保險,HKD/USD/CNY,啟用
+```

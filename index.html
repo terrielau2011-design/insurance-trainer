@@ -1,399 +1,280 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-HK">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>保險銷售視覺化培訓系統 v3.2.1</title>
-  <!-- 快取清除：每次載入加隨機參數 -->
-  <script src="https://cdn.jsdelivr.net/npm/echarts@5.5.0/dist/echarts.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.2/dist/html2pdf.bundle.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#1a5fb4" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="保險培訓" />
-  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-  <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png" />
-  <link rel="stylesheet" href="style.css?v=321" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>保險產品比較器｜INS01+INS02 精選10款</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Microsoft JhengHei", "PingFang TC", sans-serif; background: #f5f6f8; color: #2c3e50; padding: 20px; }
+header { background: linear-gradient(135deg, #1e3a5f 0%, #2c5282 100%); color: #fff; padding: 24px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+h1 { font-size: 24px; margin-bottom: 8px; }
+.subtitle { font-size: 14px; opacity: 0.85; }
+.stats { display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap; }
+.stat-badge { background: rgba(255,255,255,0.2); padding: 6px 14px; border-radius: 20px; font-size: 13px; }
+.layout { display: grid; grid-template-columns: 280px 1fr; gap: 20px; }
+@media (max-width: 768px) { .layout { grid-template-columns: 1fr; } }
+.sidebar { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); height: fit-content; position: sticky; top: 20px; }
+.sidebar h3 { font-size: 15px; margin-bottom: 12px; color: #1e3a5f; }
+.tag-group { margin-bottom: 16px; }
+.tag-label { display: flex; align-items: center; padding: 8px 10px; border-radius: 6px; cursor: pointer; font-size: 13px; transition: background 0.15s; }
+.tag-label:hover { background: #f0f4f8; }
+.tag-label input { margin-right: 8px; cursor: pointer; }
+.tag-rule { font-size: 11px; color: #7a8a99; margin: 2px 0 6px 26px; }
+.action-row { display: flex; gap: 8px; margin-top: 12px; }
+.btn { flex: 1; padding: 8px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.btn-primary { background: #1e3a5f; color: #fff; }
+.btn-primary:hover { background: #2c5282; }
+.btn-ghost { background: #e8ecf0; color: #2c3e50; }
+.btn-ghost:hover { background: #d4dae0; }
+.main { display: flex; flex-direction: column; gap: 16px; }
+.result-header { background: #fff; padding: 12px 20px; border-radius: 10px; font-size: 14px; color: #1e3a5f; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.04); }
+.product-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); transition: transform 0.2s, box-shadow 0.2s; }
+.product-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.card-head { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+.prod-title { font-size: 17px; font-weight: 700; color: #1e3a5f; margin-bottom: 4px; }
+.prod-meta { font-size: 12px; color: #7a8a99; }
+.finance-tag { background: #d4af37; color: #fff; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.finance-tag.no { display: none; }
+.metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0; }
+@media (max-width: 600px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+.metric { background: #f7f9fc; padding: 8px 10px; border-radius: 6px; }
+.metric-label { font-size: 11px; color: #7a8a99; margin-bottom: 2px; }
+.metric-value { font-size: 14px; font-weight: 700; color: #1e3a5f; }
+.metric-value.tbd { color: #b0b8c0; font-weight: 400; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+.tag-chip { background: #e8f0fe; color: #1e3a5f; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; }
+.feature-text { font-size: 13px; line-height: 1.6; color: #4a5568; margin: 8px 0; padding: 10px; background: #fafbfc; border-left: 3px solid #1e3a5f; border-radius: 4px; }
+.influencer-block { margin-top: 12px; padding: 12px; background: #fffbf0; border-radius: 8px; border: 1px solid #ffe0a0; }
+.influencer-block .point { font-size: 13px; font-weight: 700; color: #c47a1e; margin-bottom: 6px; }
+.influencer-block .scene { font-size: 12px; color: #6b5a3e; line-height: 1.5; font-style: italic; }
+.no-result { background: #fff; padding: 40px; text-align: center; border-radius: 12px; color: #7a8a99; }
+footer { text-align: center; margin-top: 30px; color: #7a8a99; font-size: 12px; }
+</style>
 </head>
 <body>
 
-<!-- v3.2.1 版本浮層：確認是否運行最新版 -->
-<div id="version-badge" style="position:fixed;bottom:10px;right:10px;background:#1a5fb4;color:#fff;padding:3px 10px;border-radius:12px;font-size:0.7rem;z-index:9998;opacity:0.8;">v3.2.1</div>
-
-<!-- 強制刷新舊快取檢測 -->
-<script>
-  (function() {
-    var CURRENT_VERSION = '3.2.1';
-    var stored = localStorage.getItem('app_version');
-    if (stored && stored !== CURRENT_VERSION) {
-      // 版本不同，清除所有快取並刷新
-      if ('caches' in window) {
-        caches.keys().then(function(names) { names.forEach(function(n) { caches.delete(n); }); });
-      }
-      localStorage.setItem('app_version', CURRENT_VERSION);
-      if (navigator.serviceWorker) {
-        navigator.serviceWorker.getRegistrations().then(function(regs) { regs.forEach(function(r) { r.unregister(); }); });
-      }
-      location.reload(true);
-    } else {
-      localStorage.setItem('app_version', CURRENT_VERSION);
-    }
-  })();
-</script>
-
-<header class="app-header">
-  <div class="header-inner">
-    <div class="brand">
-      <span class="brand-icon">🛡</span>
-      <div>
-        <h1>保險銷售培訓系統</h1>
-        <p>Insurance Sales Tool <span class="version-tag">v3.2.1</span></p>
-      </div>
-    </div>
-    <div class="header-meta">
-      <span id="current-time" class="time-display"></span>
-      <div class="sync-panel">
-        <span class="sync-status" id="sync-status">v<span id="sync-version">--</span></span>
-        <button class="btn-sync" id="btn-sync" onclick="syncData()" title="同步">🔄</button>
-        <button class="btn-token" id="btn-token" onclick="openTokenModal()" title="Token">⚙️</button>
-      </div>
-    </div>
+<header>
+  <h1>保險產品比較器</h1>
+  <div class="subtitle">v1.0-launch｜INS01 中國人壽海外 + INS02 中國太平洋人壽｜共10款精選產品</div>
+  <div class="stats">
+    <span class="stat-badge" id="stat-total">10 款產品</span>
+    <span class="stat-badge" id="stat-shown">顯示全部</span>
+    <span class="stat-badge" id="stat-filter">未啟用篩選</span>
   </div>
 </header>
 
-<!-- ⚠️ 強制合規免責欄 -->
-<div class="disclaimer-bar">
-  ⚠️ 終期紅利、融資預計回報屬非保證演示數據，視保險公司分紅表現、市場息口波動而定；保單早期退保會產生本金虧損，融資產品存在利率上行、匯兌風險。
+<div class="layout">
+  <aside class="sidebar">
+    <h3>標籤篩選（可多選）</h3>
+    <div class="tag-group" id="tagContainer"></div>
+    <div class="action-row">
+      <button class="btn btn-primary" id="clearBtn">清除全部</button>
+    </div>
+  </aside>
+  <main class="main">
+    <div class="result-header" id="resultHeader">顯示 10 款產品</div>
+    <div id="productContainer"></div>
+  </main>
 </div>
 
-<main class="app-main">
+<footer>保險產品比較器｜數據版本 v1.0-launch｜2026-06-23</footer>
 
-  <!-- ═══ 區塊 A：客戶需求畫像 + 產品選擇 ═══ -->
-  <section class="section-card" id="section-hook">
-    <div class="section-header">
-      <span class="section-badge">A</span>
-      <h2>客戶需求畫像與產品匹配</h2>
-      <span class="section-tag">The Hook</span>
-    </div>
-
-    <!-- 需求標籤 -->
-    <div class="need-tags-section">
-      <h4 class="sub-title">🏷 客戶需求標籤（多選，自動匹配產品）</h4>
-      <div class="need-tags" id="need-tags"></div>
-    </div>
-
-    <div class="hook-grid">
-      <!-- 產品選擇區 -->
-      <div class="product-selector-area">
-        <label class="field-label">選擇產品（勾選≥2個啟動對比）</label>
-        <div class="product-list" id="product-list"></div>
-        <div class="input-group" style="margin-top:0.75rem;">
-          <label class="field-label">顯示貨幣</label>
-          <select id="currency-selector" class="select-field" onchange="onCurrencyChange()"></select>
-        </div>
-      </div>
-
-      <!-- 亮點區 -->
-      <div class="highlights-area" id="highlights-area">
-        <div class="highlight-placeholder">
-          <span class="ph-icon">👈</span>
-          <p>請先選擇產品以查看核心銷售亮點</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ 區塊 B：動態財務決策分析 ═══ -->
-  <section class="section-card" id="section-presentation">
-    <div class="section-header">
-      <span class="section-badge">B</span>
-      <h2>動態財務決策分析</h2>
-      <span class="section-tag">The Presentation</span>
-      <div class="scene-toggle">
-        <button class="toggle-btn active" id="btn-scene1" onclick="switchScene(1)">📈 儲蓄險</button>
-        <button class="toggle-btn" id="btn-scene2" onclick="switchScene(2)">🏦 保費融資</button>
-      </div>
-    </div>
-
-    <!-- 場景一：儲蓄險 -->
-    <div id="scene1" class="scene-panel active">
-      <div class="panel-grid two-col">
-        <div class="input-panel">
-          <h3 class="panel-title">⚙️ 計算參數</h3>
-          <div class="input-group">
-            <label class="field-label">每年保費 <span class="currency-hint" id="s1-currency-hint"></span></label>
-            <div class="dual-input-row">
-              <input type="number" id="s1-premium" class="input-field" value="200000" min="1000" step="1000" oninput="calcScene1()" />
-              <div class="quick-buttons" id="s1-quick-premium"></div>
-            </div>
-          </div>
-          <div class="input-group">
-            <label class="field-label">繳費年期 <span class="currency-hint" id="s1-payterm-hint"></span></label>
-            <div class="radio-group" id="s1-pay-term"></div>
-          </div>
-          <div class="input-group">
-            <label class="field-label">首年折扣率 (%)</label>
-            <div class="dual-input-row">
-              <input type="number" id="s1-discount-y1" class="input-field" value="0" min="0" max="30" step="0.5" oninput="calcScene1()" />
-              <div class="quick-buttons">
-                <button class="quick-btn" onclick="setVal('s1-discount-y1',0);calcScene1()">0%</button>
-                <button class="quick-btn" onclick="setVal('s1-discount-y1',10);calcScene1()">10%</button>
-                <button class="quick-btn" onclick="setVal('s1-discount-y1',25);calcScene1()">25%</button>
-              </div>
-            </div>
-          </div>
-          <div class="input-group">
-            <label class="field-label">預繳保費儲蓄率 (%)</label>
-            <div class="dual-input-row">
-              <input type="number" id="s1-prepay" class="input-field" value="0" min="0" max="5" step="0.1" oninput="calcScene1()" />
-              <div class="quick-buttons">
-                <button class="quick-btn" onclick="setVal('s1-prepay',0);calcScene1()">0%</button>
-                <button class="quick-btn" onclick="setVal('s1-prepay',3.5);calcScene1()">3.5%</button>
-                <button class="quick-btn" onclick="setVal('s1-prepay',4);calcScene1()">4.0%</button>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="output-panel">
-          <h3 class="panel-title">📊 計算結果</h3>
-          <div class="result-cards">
-            <div class="result-card accent">
-              <div class="rc-label">實際淨保費總額</div>
-              <div class="rc-value" id="s1-net-total">--</div>
-              <div class="rc-sub" id="s1-net-breakdown">計算中…</div>
-            </div>
-            <div class="result-card">
-              <div class="rc-label">首年折後保費</div>
-              <div class="rc-value" id="s1-y1-net">--</div>
-            </div>
-          </div>
-          <!-- 繳費構成餅圖 -->
-          <div class="chart-mini-wrapper">
-            <h4 class="sub-title">🥧 繳費構成分解</h4>
-            <div id="chart-premium-pie" style="width:100%;height:220px;"></div>
-          </div>
-          <div class="privileges-section">
-            <h4 class="sub-title">🎁 增值權益點亮牆</h4>
-            <div class="privileges-wall" id="privileges-wall"></div>
-          </div>
-        </div>
-      </div>
-      <!-- 財富消長河流圖 + 目標線 -->
-      <div class="chart-section">
-        <h3 class="panel-title">📈 財富消長河流圖</h3>
-        <div class="input-group" style="margin-bottom:0.5rem;">
-          <label class="field-label">目標儲蓄金額 <span class="currency-hint" id="s1-target-hint"></span></label>
-          <div class="dual-input-row">
-            <input type="number" id="s1-target-amount" class="input-field" value="2000000" min="0" step="100000" oninput="updateWealthChart()" />
-            <div class="quick-buttons">
-              <button class="quick-btn" onclick="setVal('s1-target-amount',1000000);updateWealthChart()">100萬</button>
-              <button class="quick-btn" onclick="setVal('s1-target-amount',2000000);updateWealthChart()">200萬</button>
-              <button class="quick-btn" onclick="setVal('s1-target-amount',5000000);updateWealthChart()">500萬</button>
-            </div>
-          </div>
-          <p class="hint-text" id="s1-target-year-hint"></p>
-        </div>
-        <div id="chart-wealth-river" style="width:100%;height:350px;"></div>
-      </div>
-      <!-- 跨資產機會成本柱狀圖 -->
-      <div class="chart-section">
-        <h3 class="panel-title">⚖️ 跨資產機會成本對比</h3>
-        <div class="input-group" style="margin-bottom:0.5rem;">
-          <label class="field-label">客戶寄望年度收益率 (%)</label>
-          <div class="dual-input-row">
-            <input type="number" id="opp-custom-rate" class="input-field" value="5" min="0" max="20" step="0.5" oninput="updateOppChart()" />
-            <div class="quick-buttons">
-              <button class="quick-btn" onclick="setVal('opp-custom-rate',3.5);updateOppChart()">3.5%</button>
-              <button class="quick-btn" onclick="setVal('opp-custom-rate',5);updateOppChart()">5%</button>
-              <button class="quick-btn" onclick="setVal('opp-custom-rate',8);updateOppChart()">8%</button>
-            </div>
-          </div>
-        </div>
-        <div id="chart-opp-cost" style="width:100%;height:300px;"></div>
-        <div class="comparison-table-wrapper">
-          <table class="comparison-table opp-table" id="opp-table">
-            <thead><tr><th>投資工具</th><th>預期年化收益(單利)</th><th>入場門檻</th><th>流動性</th><th>潛在風險</th><th>與保險對比的核心差異</th></tr></thead>
-            <tbody id="opp-table-body"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- 場景二：保費融資 -->
-    <div id="scene2" class="scene-panel">
-      <div class="panel-grid two-col">
-        <div class="input-panel">
-          <h3 class="panel-title">⚙️ 融資參數</h3>
-          <div class="input-group">
-            <label class="field-label">保單總保費 <span class="currency-hint" id="s2-currency-hint"></span></label>
-            <input type="number" id="s2-total-premium" class="input-field" value="600000" min="100000" step="50000" oninput="calcScene2()" />
-          </div>
-          <div class="input-group">
-            <label class="field-label">貸款銀行</label>
-            <select id="s2-bank" class="select-field" onchange="calcScene2()"></select>
-          </div>
-          <div class="input-group">
-            <label class="field-label">貸款成數 LTV (%)</label>
-            <div class="dual-input-row">
-              <input type="number" id="s2-ltv" class="input-field" value="95" min="50" max="95" step="5" oninput="calcScene2()" />
-              <div class="quick-buttons">
-                <button class="quick-btn" onclick="setVal('s2-ltv',80);calcScene2()">80%</button>
-                <button class="quick-btn" onclick="setVal('s2-ltv',90);calcScene2()">90%</button>
-                <button class="quick-btn" onclick="setVal('s2-ltv',95);calcScene2()">95%</button>
-              </div>
-            </div>
-            <p class="hint-text">首日現金價值：<strong id="s2-first-day-cv">--</strong></p>
-          </div>
-          <div class="input-group">
-            <label class="field-label">當前貸款利率 (%)</label>
-            <input type="number" id="s2-rate" class="input-field" value="3.275" min="0" max="20" step="0.025" oninput="calcScene2()" />
-          </div>
-          <div class="input-group">
-            <label class="field-label">封頂利率 Cap Rate (%)</label>
-            <input type="number" id="s2-cap-rate" class="input-field" value="3.9" min="0" max="20" step="0.1" oninput="calcScene2()" />
-          </div>
-          <div class="input-group">
-            <label class="field-label">貸款手續費率 (%)</label>
-            <input type="number" id="s2-loan-fee" class="input-field" value="2" min="0" max="5" step="0.5" oninput="calcScene2()" />
-          </div>
-          <div class="input-group">
-            <label class="field-label">預計貸款年期（上限10年）</label>
-            <input type="number" id="s2-loan-term" class="input-field" value="9" min="1" max="10" step="1" oninput="calcScene2()" />
-          </div>
-        </div>
-        <div class="output-panel">
-          <h3 class="panel-title">📊 融資精算結果</h3>
-          <div class="formula-chain">
-            <div class="formula-step"><span class="step-num">①</span><span class="step-label">實際貸款金額</span><span class="step-value" id="s2-loan-amount">--</span></div>
-            <div class="formula-step"><span class="step-num">②</span><span class="step-label">貸款手續費</span><span class="step-value" id="s2-loan-fee-amount">--</span></div>
-            <div class="formula-step"><span class="step-num">③</span><span class="step-label">實際本金</span><span class="step-value" id="s2-actual-principal">--</span></div>
-            <div class="formula-step highlight"><span class="step-num">④</span><span class="step-label">客戶總出資成本</span><span class="step-value" id="s2-client-total-cost">--</span></div>
-          </div>
-          <div class="result-cards">
-            <div class="result-card success">
-              <div class="rc-label">✅ 正常環境總回報率</div>
-              <div class="rc-value" id="s2-roi-current">-- %</div>
-              <div class="rc-sub">年單利 <strong id="s2-annual-current">-- %</strong></div>
-            </div>
-            <div class="result-card warning">
-              <div class="rc-label">⚠️ 最壞環境總回報率</div>
-              <div class="rc-value" id="s2-roi-cap">-- %</div>
-              <div class="rc-sub">年單利 <strong id="s2-annual-cap">-- %</strong></div>
-            </div>
-          </div>
-          <div class="leverage-bar-section">
-            <h4 class="sub-title">⚖️ 資金槓桿比例</h4>
-            <div class="leverage-bar-track">
-              <div class="leverage-bar-client" id="leverage-client-bar"><span id="leverage-client-label">--</span></div>
-              <div class="leverage-bar-bank" id="leverage-bank-bar"><span id="leverage-bank-label">--</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="chart-section">
-        <h3 class="panel-title">📉 10年期雙極限 NAV 分析</h3>
-        <p class="chart-hint">藍線=正常環境 NAV｜紅線=封頂利率最壞環境｜⭐=預計退出年份</p>
-        <div id="chart-dual-return" style="width:100%;height:350px;"></div>
-      </div>
-    </div>
-
-    <!-- 跨產品對比 -->
-    <div id="comparison-section" class="comparison-hidden">
-      <div class="section-divider"></div>
-      <h3 class="panel-title">⚖️ 跨產品對比分析</h3>
-      <div id="chart-comparison" style="width:100%;height:350px;"></div>
-      <div class="comparison-table-wrapper">
-        <table class="comparison-table" id="comparison-table">
-          <thead><tr><th>對比維度</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- ═══ 區塊 C：報告 ═══ -->
-  <section class="section-card" id="section-close">
-    <div class="section-header">
-      <span class="section-badge">C</span>
-      <h2>客戶投保明白備忘錄</h2>
-      <span class="section-tag">The Close</span>
-    </div>
-    <div class="advisor-tags-section">
-      <h4 class="sub-title">🏷 顧問核心觀點標籤</h4>
-      <div class="advisor-tags" id="advisor-tags">
-        <label class="tag-chip"><input type="checkbox" value="財富傳承" onchange="updateAdvisorTags()"> 🏛 財富傳承</label>
-        <label class="tag-chip"><input type="checkbox" value="資產配置與投資" onchange="updateAdvisorTags()"> 📊 資產配置</label>
-        <label class="tag-chip"><input type="checkbox" value="儲蓄退休規劃" onchange="updateAdvisorTags()"> 🏖 儲蓄退休</label>
-        <label class="tag-chip"><input type="checkbox" value="子女教育基金" onchange="updateAdvisorTags()"> 🎓 子女教育</label>
-        <label class="tag-chip"><input type="checkbox" value="高額人壽保障" onchange="updateAdvisorTags()"> 🛡 高額人壽</label>
-      </div>
-    </div>
-    <div class="finance-toggle-section">
-      <h4 class="sub-title">🏦 保費融資分析</h4>
-      <div class="toggle-switch-row">
-        <label class="toggle-switch"><input type="checkbox" id="finance-toggle" checked onchange="onFinanceToggle()"><span class="toggle-slider"></span></label>
-        <span id="finance-toggle-label" class="toggle-label">已啟用 — 報告含融資壓力測試頁（共三頁）</span>
-      </div>
-    </div>
-    <div class="close-toolbar">
-      <select id="report-version" class="select-field" style="width:auto;">
-        <option value="client">客戶簡報版</option>
-        <option value="professional">專業顧問版</option>
-      </select>
-      <button class="btn btn-primary" onclick="generateReport()">📋 生成報告</button>
-      <button class="btn btn-secondary" onclick="copyWhatsApp()" id="btn-whatsapp" disabled>💬 WhatsApp</button>
-      <button class="btn btn-secondary" onclick="downloadPDF()" id="btn-pdf" disabled>📄 PDF</button>
-    </div>
-    <div class="report-output" id="report-output">
-      <div class="report-placeholder"><span class="ph-icon">📄</span><p>調校好參數後，點擊「生成報告」</p></div>
-    </div>
-  </section>
-
-  <!-- 文件庫 -->
-  <section class="section-card" id="section-brochures">
-    <div class="section-header">
-      <span class="section-badge">📚</span>
-      <h2>官方計劃書文件庫</h2>
-      <span class="section-tag">Brochures</span>
-    </div>
-    <p class="chart-hint" id="brochures-hint">選擇產品後顯示對應官方 PDF 說明書。</p>
-    <div id="brochures-list" class="brochures-grid">
-      <p class="hint-text">📄 點擊下方按鈕從 GitHub 同步計劃書。</p>
-    </div>
-    <button class="btn btn-secondary" style="margin-top:0.75rem;" onclick="loadBrochuresList()" id="btn-load-brochures">🔄 載入全部計劃書</button>
-  </section>
-
-</main>
-
-<footer class="app-footer">
-  <p>⚠️ 本系統僅供持牌保險從業員內部培訓使用，所有數據計算僅供參考，不構成任何投保或財務建議。</p>
-  <p>Insurance Sales Training Tool v3.0 · 所有精算數據請以正式計劃書為準</p>
-</footer>
-
-<div class="modal-overlay" id="token-modal" style="display:none;">
-  <div class="modal-card">
-    <h3>🔑 設定 GitHub Access Token</h3>
-    <p class="modal-desc">輸入 Token 以同步最新產品數據。</p>
-    <input type="password" id="token-input" class="input-field" placeholder="ghp_xxxx..." />
-    <div class="modal-actions">
-      <button class="btn btn-secondary" onclick="closeTokenModal()">取消</button>
-      <button class="btn btn-primary" onclick="saveTokenAndSync()">儲存並同步</button>
-    </div>
-  </div>
-</div>
-
-<script src="sync.js?v=321"></script>
-<script src="data.js?v=321"></script>
-<script src="app.js?v=321"></script>
 <script>
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('./service-worker.js').then(reg => console.log('SW:', reg.scope)).catch(err => console.warn('SW:', err));
-    });
+const PRODUCTS = [
+  {
+    prod_id: "P001", ins_id: "INS01", ins_name: "中國人壽海外",
+    prod_name: "傲瓏盛世儲蓄保險計劃", pay_term: "0，2，5", min_prem: "8000",
+    break_year: "5", irr_20: "5.6", guarantee: "否", life_type: "終身儲蓄",
+    tag_list: ["整付入場", "分期入場"],
+    feature_short: "USD8000/HKD64000/CNY51200（整付/2/5年繳）；多幣種；IRR20約5.6-6.0%；回本5年",
+    finance_support: "否",
+    influencer_point: "USD8000起3種貨幣（USD/HKD/CNY）｜回本5年｜終身分紅",
+    scene_desc: "「一張保單，3種貨幣，資產全球配置」；主打小額入場+多幣種切換"
+  },
+  {
+    prod_id: "P002", ins_id: "INS01", ins_name: "中國人壽海外",
+    prod_name: "鑽逸傳承儲蓄保險計劃尊尚版", pay_term: "0", min_prem: "8000",
+    break_year: "4", irr_20: "5.4", guarantee: "否", life_type: "終身儲蓄",
+    tag_list: ["整付入場"],
+    feature_short: "USD8000/HKD64000（整付）；HKD回本4年；IRR20約5.0-5.4%",
+    finance_support: "否",
+    influencer_point: "USD8000整付門檻｜HKD回本4年最快｜終身傳承",
+    scene_desc: "「整付入場，4年回本，傳承利器」；針對高淨值客戶快速建立美元保單"
+  },
+  {
+    prod_id: "P003", ins_id: "INS01", ins_name: "中國人壽海外",
+    prod_name: "豐饒傳承儲蓄保險計劃III", pay_term: "5", min_prem: "200000",
+    break_year: "5", irr_20: "4.9", guarantee: "否", life_type: "終身儲蓄",
+    tag_list: ["分期入場", "高淨值資產配置", "槓桿融資"],
+    feature_short: "USD200000年繳（5年預繳）；總保費874683預繳；保費融資專用；回本5年；IRR20約4.9%",
+    finance_support: "是",
+    influencer_point: "USD200,000起，5年預繳｜保費融資專用｜回本5年｜總保費達1M",
+    scene_desc: "「保費融資最佳工具：5年回本+槓桿放大+預繳3.5%保證利率」；針對高淨值客戶資產傳承+融資套利"
+  },
+  {
+    prod_id: "P004", ins_id: "INS01", ins_name: "中國人壽海外",
+    prod_name: "智裕世代多元貨幣保險計劃卓越", pay_term: "5", min_prem: "8000",
+    break_year: "5", irr_20: "5.8", guarantee: "否", life_type: "終身儲蓄",
+    tag_list: ["分期入場", "跨境財富規劃"],
+    feature_short: "USD8000/HKD64000/CNY51200年繳（5年繳）；9種貨幣切換；回本5年；IRR20約5.7-6.0%",
+    finance_support: "否",
+    influencer_point: "USD8000起5年繳｜9種貨幣切換｜回本5年｜跨境財富規劃",
+    scene_desc: "「9種貨幣自由切換，留學移民海外資產配置首選」；針對跨境家庭"
+  },
+  {
+    prod_id: "P005", ins_id: "INS01", ins_name: "中國人壽海外",
+    prod_name: "優暇人生延期年金計劃II", pay_term: "5，10", min_prem: "2400",
+    break_year: "待補", irr_20: "待補", guarantee: "否", life_type: "定期儲蓄",
+    tag_list: ["分期入場", "退休規劃"],
+    feature_short: "USD2400/HKD18000年繳；5/10年繳；年金入息；90歲TIRR約4.0-4.2%（官方）",
+    finance_support: "否",
+    influencer_point: "USD2400起｜年金入息｜90歲TIRR約4.0%｜退休規劃",
+    scene_desc: "「穩定年金入息+意外身故保障，退休生活無憂」；針對準退休人士"
+  },
+  {
+    prod_id: "P006", ins_id: "INS02", ins_name: "中國太平洋人壽",
+    prod_name: "金如意儲蓄保險計劃星耀版", pay_term: "0，2，5，10", min_prem: "25000",
+    break_year: "6", irr_20: "6.2", guarantee: "否", life_type: "終身儲蓄",
+    tag_list: ["整付入場", "分期入場", "高淨值資產配置"],
+    feature_short: "USD25000整付/2/5/10年繳；IRR20約6.2-6.4%；受6.5%上限限制；回本6年（2年繳基準）",
+    finance_support: "否",
+    influencer_point: "USD25,000起｜4種繳費期選擇｜IRR20約6.2%｜回本6年｜受6.5%上限",
+    scene_desc: "「最高IRR產品，4種繳費期靈活選擇」；針對追求高回報的儲蓄客戶"
+  },
+  {
+    prod_id: "P007", ins_id: "INS02", ins_name: "中國太平洋人壽",
+    prod_name: "金安逸儲蓄保險計劃", pay_term: "3", min_prem: "30000",
+    break_year: "7", irr_20: "3.1", guarantee: "是", life_type: "終身儲蓄",
+    tag_list: ["分期入場", "穩定收益"],
+    feature_short: "USD30000/HKD240000年繳（3年繳）；保證回報；回本7年；IRR20約3.1-3.5%",
+    finance_support: "否",
+    influencer_point: "USD30,000起｜3年保證回報｜保證IRR｜回本7年",
+    scene_desc: "「保證回報零分紅，穩健首選」；針對保守型投資者"
+  },
+  {
+    prod_id: "P008", ins_id: "INS02", ins_name: "中國太平洋人壽",
+    prod_name: "世代臻享儲蓄壽險計劃榮耀版", pay_term: "3", min_prem: "12500",
+    break_year: "5", irr_20: "4.2", guarantee: "否", life_type: "終身儲蓄",
+    tag_list: ["分期入場", "小額入場"],
+    feature_short: "USD12500年繳（3年繳）；回本5年；IRR20約4.2%",
+    finance_support: "否",
+    influencer_point: "USD12,500起3年繳｜回本5年｜IRR20約4.2%｜小額入場",
+    scene_desc: "「低門檻享5年回本+終身分紅」；針對年輕儲蓄客戶"
+  },
+  {
+    prod_id: "P009", ins_id: "INS02", ins_name: "中國太平洋人壽",
+    prod_name: "金相伴終身入息保險計劃", pay_term: "0，6", min_prem: "60000",
+    break_year: "待補", irr_20: "1.5", guarantee: "否", life_type: "終身儲蓄",
+    tag_list: ["整付入場", "退休規劃", "資產傳承"],
+    feature_short: "USD60000/HKD480000整付/6年繳；終身年金入息；IRR20約1.4-2.0%；入息型無短期回本點",
+    finance_support: "否",
+    influencer_point: "USD60,000起｜整付/6年繳｜終身年金入息｜退休規劃｜資產傳承",
+    scene_desc: "「整付+終身入息雙選項，退休傳承雙引擎」；針對準退休高端客戶"
+  },
+  {
+    prod_id: "P010", ins_id: "INS02", ins_name: "中國太平洋人壽",
+    prod_name: "頤養天年延期年金計劃終身", pay_term: "5，10", min_prem: "3000",
+    break_year: "待補", irr_20: "2.8", guarantee: "否", life_type: "定期儲蓄",
+    tag_list: ["分期入場", "退休規劃"],
+    feature_short: "USD3000-6000年繳；5/10年繳；90歲TIRR約4.18%（官方）；IRR20約2.8-3.2%；年金類無標準回本期",
+    finance_support: "否",
+    influencer_point: "USD3000起｜5/10年繳｜90歲TIRR約4.18%｜延期年金",
+    scene_desc: "「延期年金規劃，鎖定未來退休現金流」；針對中長期退休規劃"
   }
+];
+
+const TAGS = [
+  { tag_name: "高淨值資產配置", 篩選規則: "min_prem ≥ 100000、支持保費融資、美元計價產品優先" },
+  { tag_name: "跨境財富規劃", 篩選規則: "幣種包含USD、可離岸資產配置、終身分紅壽險" },
+  { tag_name: "槓桿融資", 篩選規則: "finance_support = 是，支持保費融資計劃" },
+  { tag_name: "短期儲蓄", 篩選規則: "break_year ≤ 10，回本速度快" },
+  { tag_name: "資產傳承", 篩選規則: "life_type = 終身儲蓄，具備身故傳承價值" },
+  { tag_name: "穩定收益", 篩選規則: "guarantee = 是，保證回報佔比高" },
+  { tag_name: "退休規劃", 篩選規則: "長期持有價值高、20年期IRR表現優、適合長線持有" },
+  { tag_name: "整付入場", 篩選規則: "pay_term = 0（躉繳/整付）" },
+  { tag_name: "分期入場", 篩選規則: "pay_term ≥ 1 且 pay_term ≤ 10（分期繳費）" },
+  { tag_name: "教育基金", 篩選規則: "中期回本、彈性提取現金價值、適合10–20年規劃" },
+  { tag_name: "小額入場", 篩選規則: "min_prem ＜ 20000，低門檻投保" }
+];
+
+function filterProducts(selectedTags) {
+  if (!selectedTags || selectedTags.length === 0) return PRODUCTS;
+  return PRODUCTS.filter(p => selectedTags.every(t => p.tag_list.includes(t)));
+}
+
+function renderTags() {
+  const container = document.getElementById('tagContainer');
+  container.innerHTML = TAGS.map(t => `
+    <label class="tag-label">
+      <input type="checkbox" value="${t.tag_name}" onchange="onFilterChange()">
+      <span>${t.tag_name}</span>
+    </label>
+    <div class="tag-rule">${t.篩選規則}</div>
+  `).join('');
+}
+
+function getSelectedTags() {
+  return Array.from(document.querySelectorAll('.tag-label input:checked')).map(el => el.value);
+}
+
+function formatVal(v, suffix) {
+  if (!v || v === '待補') return '<span class="metric-value tbd">待補</span>';
+  return '<span class="metric-value">' + v + (suffix || '') + '</span>';
+}
+
+function renderProducts() {
+  const selected = getSelectedTags();
+  const list = filterProducts(selected);
+  const container = document.getElementById('productContainer');
+  const header = document.getElementById('resultHeader');
+  const statShown = document.getElementById('stat-shown');
+  const statFilter = document.getElementById('stat-filter');
+
+  if (list.length === 0) {
+    container.innerHTML = '<div class="no-result">無符合條件的產品，請調整標籤組合</div>';
+    header.textContent = '顯示 0 款產品';
+  } else {
+    container.innerHTML = list.map(p => {
+      const chips = p.tag_list.map(t => '<span class="tag-chip">' + t + '</span>').join('');
+      const financeClass = p.finance_support === '是' ? '' : 'no';
+      return '<div class="product-card">' +
+        '<div class="card-head">' +
+          '<div>' +
+            '<div class="prod-title">' + p.prod_name + '</div>' +
+            '<div class="prod-meta">' + p.ins_name + ' ｜ ' + p.prod_id + '</div>' +
+          '</div>' +
+          '<div class="finance-tag ' + financeClass + '">保費融資</div>' +
+        '</div>' +
+        '<div class="metrics">' +
+          '<div class="metric"><div class="metric-label">最低保費</div>' + formatVal(p.min_prem) + '</div>' +
+          '<div class="metric"><div class="metric-label">繳費年期</div>' + formatVal(p.pay_term) + '</div>' +
+          '<div class="metric"><div class="metric-label">回本年</div>' + formatVal(p.break_year) + '</div>' +
+          '<div class="metric"><div class="metric-label">IRR 20年</div>' + formatVal(p.irr_20, '%') + '</div>' +
+        '</div>' +
+        '<div class="tag-list">' + chips + '</div>' +
+        '<div class="feature-text">' + p.feature_short + '</div>' +
+        '<div class="influencer-block">' +
+          '<div class="point">★ ' + p.influencer_point + '</div>' +
+          '<div class="scene">' + p.scene_desc + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    header.textContent = '顯示 ' + list.length + ' 款產品';
+  }
+  statShown.textContent = list.length === PRODUCTS.length ? '顯示全部' : '篩選後 ' + list.length + ' 款';
+  statFilter.textContent = selected.length === 0 ? '未啟用篩選' : '已選 ' + selected.length + ' 個標籤：' + selected.join('、');
+}
+
+function onFilterChange() { renderProducts(); }
+
+document.getElementById('clearBtn').addEventListener('click', function() {
+  document.querySelectorAll('.tag-label input').forEach(function(el) { el.checked = false; });
+  renderProducts();
+});
+
+renderTags();
+renderProducts();
 </script>
 </body>
 </html>
